@@ -97,20 +97,30 @@ IO_PORT_C_CTRL equ $A1000C
 ; ----------------------------------------------------------
 
 ; When TH = 1
-PAD_UP         equ %00000001
-PAD_DOWN       equ %00000010
-PAD_LEFT       equ %00000100
-PAD_RIGHT      equ %00001000
-PAD_B          equ %00010000
-PAD_C          equ %00100000
+;PAD_UP         equ %00000001
+;PAD_DOWN       equ %00000010
+;PAD_LEFT       equ %00000100
+;PAD_RIGHT      equ %00001000
+;PAD_B          equ %00010000
+;PAD_C          equ %00100000
 
 ; When TH = 0
-PAD_A          equ %00010000
-PAD_START      equ %00100000
+;PAD_A          equ %00010000
+;PAD_START      equ %00100000
 
 ; TH control bit (bit 6 in control register)
-IO_TH_OUTPUT   equ %01000000
-IO_TH_INPUT    equ %00000000
+;IO_TH_OUTPUT   equ %01000000
+;IO_TH_INPUT    equ %00000000
+
+; jp result when stored in 1 byte - SACBRLDU
+PAD_START      equ %10000000
+PAD_A          equ %01000000
+PAD_C          equ %00100000
+PAD_B          equ %00010000
+PAD_RIGHT      equ %00001000
+PAD_LEFT       equ %00000100
+PAD_DOWN       equ %00000010
+PAD_UP         equ %00000001
 
 
 ; ==========================================================
