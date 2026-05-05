@@ -6,7 +6,6 @@
 ; ==========================================================
 ; VDP (Video Display Processor)
 ; ==========================================================
-
 VDP_DATA        equ $C00000      ; Data port
 VDP_CTRL        equ $C00004      ; Control port
 VDP_CNTR        equ $C00008      ; H/V counter
@@ -52,7 +51,6 @@ VDP_VSRAM_RADDR     equ $00000030
 ; ==========================================================
 ; Z80 (Sound CPU)
 ; ==========================================================
-
 Z80_RAM        equ $A00000
 Z80_BANK       equ $A06000
 Z80_RAMMODE    equ $A11000
@@ -69,7 +67,6 @@ Z80_RESET_CLEAR    equ $0100
 ; ==========================================================
 ; YM2612 (FM Sound Chip)
 ; ==========================================================
-
 YM_ADDR_0      equ $A04000
 YM_DATA_0      equ $A04001
 YM_ADDR_1      equ $A04002
@@ -126,7 +123,12 @@ RAM_END        equ $FFFFFF
 SCREEN_H_TILES  equ 40
 SCREEN_V_TILES  equ 28
 
-
+; ==========================================================
+; Colours - 0000BBB0GGG0RRR0, word with 3 bit colour depth
+; ==========================================================
+CRAM_WHITE equ $0eee
+CRAM_GREY  equ $0888
+CRAM_BLACK equ $0000
 
 ; ==========================================================
 ; Helper Macros (optional, vasm syntax)
@@ -134,8 +136,8 @@ SCREEN_V_TILES  equ 28
 MY_MACRO macro
     move.w \1,\2
     endm
-; VRAM_ADDR_BUILDER _d0, _d1, _a0
-VRAM_ADDR_BUILDER macro
+; SET_VRAM_ADDR _d0, _d1, _a0   where _d0 contains data, _d1 is temp register and _a0 is the vdp control port address
+SET_VRAM_WADDR macro
     move.w      \1,\2
     andi.w      #$3fff,\1
     ori.w       #$4000,\1
@@ -145,6 +147,40 @@ VRAM_ADDR_BUILDER macro
     move.w      \2,(\3)
     endm
 
+REQUEST_Z80_BUS macro
+    inline
+    move.w      #Z80_BUS_REQUEST,(Z80_BUS_REQ)
+    .wait_z80_bus_ready:
+        btst.b      #$0,(Z80_BUS_REQ)
+        bne.b       .wait_z80_bus_ready
+    einline
+    endm
+
+; SET_VRAM_ADDR _d0/_d7, _a6/_a3, _d4 (optional)  where _d0 contains data, _d1 is temp register and _a0 is the vdp control port address
+;    move.w      d0,($4,a4)
+;    add.w       d4,d0
+;    move.w      d0,d1
+;    lea         (L000129ce),a2
+;    rol.w       #$7,d1
+;    andi.w      #$38,d1             ; max offset - L000129ce + $80*$38
+;    movea.l     ($4,a2,d1.w),a6
+;    movea.l     ($0,a2,d1.w),a2
+;    andi.w      #$0fff,d0
+;    add.w       d0,d0
+;    add.w       d0,d0
+;    adda.l      ($0,a2,d0*$1),a6    ; max offset - L000129ce + $fff*$4
+;
+;    move.w      d7,($4,a4)
+;    move.w      d7,d1
+;    lea         (L000129ce),a2
+;    rol.w       #$7,d1
+;    andi.w      #$38,d1
+;    movea.l     ($4,a2,d1.w),a3
+;    movea.l     ($0,a2,d1.w),a2
+;    andi.w      #$0fff,d7
+;    add.w       d7,d7
+;    add.w       d7,d7
+;    adda.l      ($0,a2,d7*$1),a3
 ; ==========================================================
 ; End of File
 ; ==========================================================
