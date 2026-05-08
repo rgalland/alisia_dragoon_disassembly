@@ -6,9 +6,9 @@
 ; ==========================================================
 ; VDP (Video Display Processor)
 ; ==========================================================
-VDP_DATA        equ $C00000      ; Data port
-VDP_CTRL        equ $C00004      ; Control port
-VDP_CNTR        equ $C00008      ; H/V counter
+VDP_DATA        equ $c00000      ; Data port
+VDP_CTRL        equ $c00004      ; Control port
+VDP_CNTR        equ $c00008      ; H/V counter
 
 ; VDP Register Commands (write via control port)
 ; see https://segaretro.org/Sega_Mega_Drive/VDP_registers
@@ -19,9 +19,9 @@ VDP_REG_WINDOW      equ $8300
 VDP_REG_PLANE_B     equ $8400
 VDP_REG_SPRITE      equ $8500
 VDP_REG_BG_COLOR    equ $8700
-VDP_REG_MODE4       equ $8C00
-VDP_REG_HSCROLL     equ $8D00
-VDP_REG_AUTOINC     equ $8F00
+VDP_REG_MODE4       equ $8c00
+VDP_REG_HSCROLL     equ $8d00
+VDP_REG_AUTOINC     equ $8f00
 VDP_REG_SCROLLSIZE  equ $9000
 VDP_REG_WINDOW_H    equ $9100
 VDP_REG_WINDOW_V    equ $9200
@@ -51,11 +51,11 @@ VDP_VSRAM_RADDR     equ $00000030
 ; ==========================================================
 ; Z80 (Sound CPU)
 ; ==========================================================
-Z80_RAM        equ $A00000
-Z80_BANK       equ $A06000
-Z80_RAMMODE    equ $A11000
-Z80_BUS_REQ    equ $A11100
-Z80_RESET      equ $A11200
+Z80_RAM        equ $a00000
+Z80_BANK       equ $a06000
+Z80_RAMMODE    equ $a11000
+Z80_BUS_REQ    equ $a11100
+Z80_RESET      equ $a11200
 
 Z80_BUS_REQUEST    equ $0100
 Z80_BUS_RELEASE    equ $0000
@@ -63,39 +63,36 @@ Z80_BUS_RELEASE    equ $0000
 Z80_RESET_ASSERT   equ $0000
 Z80_RESET_CLEAR    equ $0100
 
-
 ; ==========================================================
 ; YM2612 (FM Sound Chip)
 ; ==========================================================
-YM_ADDR_0      equ $A04000
-YM_DATA_0      equ $A04001
-YM_ADDR_1      equ $A04002
-YM_DATA_1      equ $A04003
-
+YM_ADDR_0      equ $a04000
+YM_DATA_0      equ $a04001
+YM_ADDR_1      equ $a04002
+YM_DATA_1      equ $a04003
 
 ; ==========================================================
 ; PSG (Programmable Sound Generator)
 ; ==========================================================
 
-PSG_DATA       equ $C00011
-
+PSG_DATA       equ $c00011
 
 ; ==========================================================
 ; I/O (Controllers)
 ; ==========================================================
 
 ; Version register
-IO_VERSION     equ $A10000
+IO_VERSION     equ $a10000
 
 ; Data ports (controller input/output)
-IO_PORT_A_DATA equ $A10002
-IO_PORT_B_DATA equ $A10004
-IO_PORT_C_DATA equ $A10006
+IO_PORT_A_DATA equ $a10002
+IO_PORT_B_DATA equ $a10004
+IO_PORT_C_DATA equ $a10006
 
 ; Control ports (direction + TH line control)
-IO_PORT_A_CTRL equ $A10008
-IO_PORT_B_CTRL equ $A1000A
-IO_PORT_C_CTRL equ $A1000C
+IO_PORT_A_CTRL equ $a10008
+IO_PORT_B_CTRL equ $a1000a
+IO_PORT_C_CTRL equ $a1000c
 
 ; jp result when stored in 1 byte - SACBRLDU
 ; see https://segaretro.org/Sega_Mega_Drive/Control_pad_inputs
@@ -107,14 +104,15 @@ PAD_RIGHT      equ %00001000
 PAD_LEFT       equ %00000100
 PAD_DOWN       equ %00000010
 PAD_UP         equ %00000001
+PAD_NO_KEY     equ %00000000
 
 ; ==========================================================
 ; System / Memory Map
 ; ==========================================================
 
 ROM_START      equ $000000
-RAM_START      equ $FF0000
-RAM_END        equ $FFFFFF
+RAM_START      equ $ff0000
+RAM_END        equ $ffffff
 
 ; ==========================================================
 ; Game specific (might get moved out of here evenually
@@ -155,6 +153,15 @@ REQUEST_Z80_BUS macro
         bne.b       .wait_z80_bus_ready
     einline
     endm
+
+; read_monster_selection_keys _d0   ; register that will have values
+read_monster_selection_keys MACRO
+    bsr.w       wait_for_vblank
+    bsr.w       jp_read
+    bsr.w       process_demo_monster_selection_keys
+    move.b      (jp1_result),\1
+    ENDM
+
 
 ; SET_VRAM_ADDR _d0/_d7, _a6/_a3, _d4 (optional)  where _d0 contains data, _d1 is temp register and _a0 is the vdp control port address
 ;    move.w      d0,($4,a4)
