@@ -162,32 +162,21 @@ read_monster_selection_keys MACRO
     move.b      (jp1_result),\1
     ENDM
 
+; MACRO5 _d ; _d is a d register
+MACRO5 MACRO
+    move.w      \1,($4,a6)
+    move.w      \1,d1
+    lea         (L000129ce),a2
+    rol.w       #$7,d1
+    andi.w      #$0038,d1
+    movea.l     ($4,a2,d1.w),a3
+    movea.l     ($0,a2,d1.w),a2
+    andi.w      #$0fff,\1
+    add.w       \1,\1
+    add.w       \1,\1
+    adda.l      ($0,a2,\1.w),a3
+    ENDM
 
-; SET_VRAM_ADDR _d0/_d7, _a6/_a3, _d4 (optional)  where _d0 contains data, _d1 is temp register and _a0 is the vdp control port address
-;    move.w      d0,($4,a4)
-;    add.w       d4,d0
-;    move.w      d0,d1
-;    lea         (L000129ce),a2
-;    rol.w       #$7,d1
-;    andi.w      #$38,d1             ; max offset - L000129ce + $80*$38
-;    movea.l     ($4,a2,d1.w),a6
-;    movea.l     ($0,a2,d1.w),a2
-;    andi.w      #$0fff,d0
-;    add.w       d0,d0
-;    add.w       d0,d0
-;    adda.l      ($0,a2,d0*$1),a6    ; max offset - L000129ce + $fff*$4
-;
-;    move.w      d7,($4,a4)
-;    move.w      d7,d1
-;    lea         (L000129ce),a2
-;    rol.w       #$7,d1
-;    andi.w      #$38,d1
-;    movea.l     ($4,a2,d1.w),a3
-;    movea.l     ($0,a2,d1.w),a2
-;    andi.w      #$0fff,d7
-;    add.w       d7,d7
-;    add.w       d7,d7
-;    adda.l      ($0,a2,d7*$1),a3
 ; ==========================================================
 ; End of File
 ; ==========================================================

@@ -1,38 +1,39 @@
     include 'include/hardware.i'
+    include 'include/palettes.i'
 ; WRAM allocation
 DAT_00ff0000 equ $00ff0000
 DAT_00ff0001 equ $00ff0001
 DAT_00ff0002 equ $00ff0002
 DAT_00ff0004 equ $00ff0004
-DAT_00ff0006 equ $00ff0006
+new_alisia_life_bar_level equ $00ff0006
 DAT_00ff000a equ $00ff000a
 DAT_00ff000e equ $00ff000e
-DAT_00ff000f equ $00ff000f
+vblank_counter equ $00ff000f
 DAT_00ff0010 equ $00ff0010
 DAT_00ff0012 equ $00ff0012
-DAT_00ff0013 equ $00ff0013  ; only bottom 4 bits are used
+palette_update_flags equ $00ff0013  ; only bottom 4 bits are used
 DAT_00ff0014 equ $00ff0014
 DAT_00ff0016 equ $00ff0016
 DAT_00ff0018 equ $00ff0018
 DAT_00ff0019 equ $00ff0019
 DAT_00ff001a equ $00ff001a
 DAT_00ff001c equ $00ff001c
-DAT_00ff001d equ $00ff001d
-DAT_00ff001e equ $00ff001e
+new_alisia_level equ $00ff001d
+DAT_00ff001e equ $00ff001e      ; written to but not used?
 DAT_00ff001f equ $00ff001f
-DAT_00ff0020 equ $00ff0020
-DAT_00ff0021 equ $00ff0021
-DAT_00ff0022 equ $00ff0022
+monster_selection_index equ $00ff0020
+new_dragon_level equ $00ff0021
+update_dragon_hud_flag equ $00ff0022
 process_dma_data_flag equ $00ff0023  ; flag to process data from 00ffc130 array
 DAT_00ff0024 equ $00ff0024
 DAT_00ff0026 equ $00ff0026
 jp1_result equ $00ff0028    ; JP1 result
 jp2_result equ $00ff0029    ; JP2 result
-DAT_00ff002a equ $00ff002a
-DAT_00ff002e equ $00ff002e
-DAT_00ff0032 equ $00ff0032
+new_alisia_life_bar_length equ $00ff002a
+new_dragon_life_bar_level equ $00ff002e
+new_dragon_life_bar_length equ $00ff0032
 DAT_00ff0036 equ $00ff0036
-DAT_00ff0038 equ $00ff0038
+dialogue_strings_ptr equ $00ff0038
 DAT_00ff003a equ $00ff003a
 DAT_00ff003c equ $00ff003c
 DAT_00ff003e equ $00ff003e
@@ -43,14 +44,14 @@ DAT_00ff0046 equ $00ff0046
 DAT_00ff0048 equ $00ff0048
 DAT_00ff004a equ $00ff004a
 DAT_00ff004c equ $00ff004c
-DAT_00ff0056 equ $00ff0056
+alisia_level_update_flag equ $00ff0056
 DAT_00ff0057 equ $00ff0057
 DAT_00ff0058 equ $00ff0058
 DAT_00ff005a equ $00ff005a
 DAT_00ff005c equ $00ff005c
 DAT_00ff005e equ $00ff005e
 DAT_00ff0060 equ $00ff0060
-DAT_00ff008c equ $00ff008c
+DAT_00ff008c equ $00ff008c      ; written to but never read
 DAT_00ff008e equ $00ff008e
 DAT_00ff0090 equ $00ff0090
 DAT_00ff0092 equ $00ff0092
@@ -77,15 +78,15 @@ DAT_00ff00ba equ $00ff00ba
 DAT_00ff00bc equ $00ff00bc
 DAT_00ff00be equ $00ff00be
 DAT_00ff00c0 equ $00ff00c0
-DAT_00ff00c2 equ $00ff00c2
-DAT_00ff00c3 equ $00ff00c3
-DAT_00ff00c4 equ $00ff00c4
-DAT_00ff00c6 equ $00ff00c6
+new_alisia_power equ $00ff00c2
+DAT_00ff00c3 equ $00ff00c3  ; initialised but not used it would seem
+DAT_00ff00c4 equ $00ff00c4  ; written to but not used it would seem
+DAT_00ff00c6 equ $00ff00c6  ; written to but not used it would seem
 z80_reg8_value equ $00ff00c8
 DAT_00ff00c9 equ $00ff00c9
 DAT_00ff00ca equ $00ff00ca
 DAT_00ff00ce equ $00ff00ce
-DAT_00ff0100 equ $00ff0100
+DAT_00ff0100 equ $00ff0100  ; used to store $328 bytes of code but never used
 normal_hard_plus1 equ $00ff01a2
 level_id equ $00ff01a3
 hv_counter_values equ $00ff01a4
@@ -107,8 +108,8 @@ palettes_7 equ $00ff0390
 wait_for_blank_flag equ $00ff0428 ; cleared during VBLANK    
 display_enable_flag equ $00ff0429
 bg_reset_flag equ $00ff042a
-DAT_00ff042b equ $00ff042b
-DAT_00ff042c equ $00ff042c
+DAT_00ff042b equ $00ff042b          ; bg1 h scrolling update flag tbd
+DAT_00ff042c equ $00ff042c          ; bg1 v scrolling update flag tbd
 vram_to_vram_type equ $00ff042d
 DAT_00ff042e equ $00ff042e
 DAT_00ff042f equ $00ff042f
@@ -119,31 +120,31 @@ DAT_00ff0433 equ $00ff0433
 DAT_00ff0434 equ $00ff0434
 DAT_00ff0435 equ $00ff0435
 DAT_00ff0436 equ $00ff0436
-DAT_00ff0437 equ $00ff0437
-DAT_00ff0438 equ $00ff0438
-DAT_00ff0439 equ $00ff0439
+current_alisia_level equ $00ff0437
+current_alisia_power equ $00ff0438
+stage_demo_flag equ $00ff0439
 DAT_00ff043a equ $00ff043a
 DAT_00ff043b equ $00ff043b
 DAT_00ff043c equ $00ff043c
 DAT_00ff043d equ $00ff043d
 DAT_00ff043e equ $00ff043e
 DAT_00ff043f equ $00ff043f
-DAT_00ff0440 equ $00ff0440
-DAT_00ff0441 equ $00ff0441
+current_dragon_level equ $00ff0440
+current_dragon_power equ $00ff0441
 DAT_00ff0442 equ $00ff0442
 DAT_00ff0443 equ $00ff0443
 DAT_00ff0444 equ $00ff0444
 DAT_00ff0445 equ $00ff0445
 DAT_00ff0446 equ $00ff0446
-DAT_00ff0447 equ $00ff0447
+dragon_xp equ $00ff0447 ; 0-$3c
 DAT_00ff0448 equ $00ff0448
 DAT_00ff0449 equ $00ff0449
 DAT_00ff044a equ $00ff044a
 DAT_00ff044b equ $00ff044b
 DAT_00ff044c equ $00ff044c
 DAT_00ff044d equ $00ff044d
-dma_data_array_index equ $00ff044e
-DAT_00ff044f equ $00ff044f      ; 00ffc130 index
+dma_data_array_write_index equ $00ff044e
+dma_data_array_read_index equ $00ff044f      ; 00ffc130 index
 DAT_00ff0450 equ $00ff0450
 DAT_00ff0451 equ $00ff0451
 play_demo_flag equ $00ff0452
@@ -202,14 +203,14 @@ DAT_00ff04c2 equ $00ff04c2
 DAT_00ff04c4 equ $00ff04c4
 DAT_00ff04c6 equ $00ff04c6
 DAT_00ff04c8 equ $00ff04c8
-DAT_00ff04ca equ $00ff04ca
+tile_action_code equ $00ff04ca
 normal_hard equ $00ff04cc
 jp1_mode equ $00ff04ce          ; jp1_mode
 vblank_enable_flag equ $00ff04d0      ; vblank process flag
 ;DAT_00ff04d1 equ $00ff04d1
 DAT_00ff04d2 equ $00ff04d2
 ;DAT_00ff04d3 equ $00ff04d3
-DAT_00ff04d4 equ $00ff04d4
+alisia_arrow_status equ $00ff04d4
 DAT_00ff04d6 equ $00ff04d6
 DAT_00ff04d8 equ $00ff04d8
 lv_demo_pad_counter equ $00ff04da
@@ -222,7 +223,7 @@ DAT_00ff04e6 equ $00ff04e6
 DAT_00ff04e8 equ $00ff04e8
 DAT_00ff04ea equ $00ff04ea
 DAT_00ff04ec equ $00ff04ec
-DAT_00ff04ee equ $00ff04ee
+playable_level_id equ $00ff04ee
 DAT_00ff04f0 equ $00ff04f0
 DAT_00ff04f2 equ $00ff04f2
 DAT_00ff04f6 equ $00ff04f6
@@ -250,118 +251,80 @@ DAT_00ff0534 equ $00ff0534
 DAT_00ff0536 equ $00ff0536
 DAT_00ff0538 equ $00ff0538
 DAT_00ff053a equ $00ff053a
-DAT_00ff053c equ $00ff053c
+bg1_tilemap_address equ $00ff053c
 DAT_00ff053e equ $00ff053e
 DAT_00ff0540 equ $00ff0540
 DAT_00ff0542 equ $00ff0542
 DAT_00ff0544 equ $00ff0544
 DAT_00ff0546 equ $00ff0546
-DAT_00ff0548 equ $00ff0548
+bg2_tilemap_address equ $00ff0548
 DAT_00ff054c equ $00ff054c
 DAT_00ff0550 equ $00ff0550
 DAT_00ff0554 equ $00ff0554
 hscroll_dma_data_src_ptr equ $00ff0558
-DAT_00ff055c equ $00ff055c
-DAT_00ff0560 equ $00ff0560
-DAT_00ff0564 equ $00ff0564
-DAT_00ff0568 equ $00ff0568
-DAT_00ff056c equ $00ff056c
-DAT_00ff0570 equ $00ff0570
+DAT_00ff055c equ $00ff055c  ; address pointer
+DAT_00ff0560 equ $00ff0560  ; address pointer
+DAT_00ff0564 equ $00ff0564  ; address pointer
+DAT_00ff0568 equ $00ff0568  ; address pointer
+current_alisia_life_bar_level equ $00ff056c
+alisia_life_bar_length equ $00ff0570
 DAT_00ff0574 equ $00ff0574
-DAT_00ff0578 equ $00ff0578
-DAT_00ff057c equ $00ff057c
-DAT_00ff0580 equ $00ff0580
-DAT_00ff0584 equ $00ff0584
-DAT_00ff0588 equ $00ff0588
-DAT_00ff058c equ $00ff058c
-DAT_00ff0590 equ $00ff0590
-DAT_00ff0594 equ $00ff0594
-DAT_00ff0598 equ $00ff0598
+current_dragon_life_bar_level equ $00ff0578
+dragon_life_bar_length equ $00ff057c
+DAT_00ff0580 equ $00ff0580  ; address pointer
+DAT_00ff0584 equ $00ff0584  ; address pointer
+DAT_00ff0588 equ $00ff0588  ; address pointer
+DAT_00ff058c equ $00ff058c  ; address pointer
+DAT_00ff0590 equ $00ff0590  ; address pointer
+DAT_00ff0594 equ $00ff0594  ; address pointer
+monster_selection_pointer equ $00ff0598  ; address pointer
 demo_monster_select_key_pointer equ $00ff059c  ; demo_monster_select_key_pointer
-lv_demo_pattern_pointer equ $00ff05a0
-DAT_00ff05a4 equ $00ff05a4
-DAT_00ff05a8 equ $00ff05a8
+lv_demo_pattern_pointer equ $00ff05a0  ; address pointer
+DAT_00ff05a4 equ $00ff05a4  ; address pointer
+DAT_00ff05a8 equ $00ff05a8  ; address pointer
 DAT_00ff05ac equ $00ff05ac
 DAT_00ff05b0 equ $00ff05b0
-DAT_00ff05b2 equ $00ff05b2
-DAT_00ff05b4 equ $00ff05b4
+unused_saved_address equ $00ff05b4  ; probably not the case
 start_options_index equ $00ff05b8 ; counter during intro credits and flashing psb otherwise start options index 
-DAT_00ff05bc equ $00ff05bc
+stack_pointer_during_intro equ $00ff05bc
+;================================ HUD ==================================================================================
+hud_data equ $00ff05c0              ; 40 bytes for HUD rows 0
+hud_row0_data equ hud_data          ; 40 words for HUD rows 0
+hud_row1_data equ hud_data+$80      ; 40 words for HUD rows 1
+hud_row2_data equ hud_data+$100     ; 40 words for HUD rows 2
+hud_row3_data equ hud_data+$180  ; 40 words for HUD rows 3
+; variable locations on row 1 and 2 in HUD
+hud_alisia_life_bar equ hud_data+$80+$10    ; row1+8 tiles=alisia energy level
+hud_top_dragon_face equ hud_data+$80+$2a        ; row1+21 tiles=dragon face top
+hud_dragon_life_bar equ hud_data+$80+$34    ; row1+26 tiles=dragon life bar
+hud_dragon_temp_arrow equ hud_data+$80+$36   ; row1+27 tiles=dragon arrow when switching dragons
+hud_alisia_arrow equ hud_data+$100+$12  ; row2+9 tiles=alisia arrow
+hud_alisia_power equ hud_data+$100+$14  ; row2+10 tiles=alisia power
+hud_bottom_dragon_face equ hud_data+$100+$2a  ; row2+21 tiles=dragon face bottom
+hud_monster_level equ hud_data+$100+$34  ; row2+26 tiles=dragon power
+hud_monster_power equ hud_data+$100+$38  ; row2+28 tiles=dragon power
+;================================ End HUD ==============================================================================
 
-DAT_00ff05c0 equ $00ff05c0  ; 40 bytes for HUD rows 1
-DAT_00ff0640 equ $00ff0640  ; 40 bytes for HUD rows 2
-DAT_00ff0650 equ $00ff0650
-DAT_00ff066a equ $00ff066a
-DAT_00ff0674 equ $00ff0674
-DAT_00ff0676 equ $00ff0676
-DAT_00ff06c0 equ $00ff06c0  ; 40 bytes for HUD rows 3
-DAT_00ff06d2 equ $00ff06d2
-DAT_00ff06d4 equ $00ff06d4
-DAT_00ff06ea equ $00ff06ea
-DAT_00ff06f0 equ $00ff06f0
-DAT_00ff06f4 equ $00ff06f4
-DAT_00ff06f8 equ $00ff06f8
-DAT_00ff0740 equ $00ff0740  ; 40 bytes for HUD rows 4
-bg_hscroll_data equ $00ff07c0   ; 340 bytes
-bg_hscroll_data2 equ $00ff0900  ; 340 bytes
-;DAT_00ff09c2 equ $00ff09c2
-DAT_00ff0a40 equ $00ff0a40
-DAT_00ff0a42 equ $00ff0a42
-DAT_00ff0a80 equ $00ff0a80
-DAT_00ff0aa0 equ $00ff0aa0
-DAT_00ff0ac2 equ $00ff0ac2
-DAT_00ff0ae2 equ $00ff0ae2
-DAT_00ff0b02 equ $00ff0b02
-DAT_00ff0b22 equ $00ff0b22
-DAT_00ff0b42 equ $00ff0b42
-DAT_00ff0b62 equ $00ff0b62
-DAT_00ff0b82 equ $00ff0b82
-DAT_00ff0c22 equ $00ff0c22
-DAT_00ff0c82 equ $00ff0c82
-DAT_00ff0bc2 equ $00ff0bc2
-DAT_00ff0d20 equ $00ff0d20
-DAT_00ff0d40 equ $00ff0d40
+bg_hscroll_data equ $00ff07c0   ; should be $600 bytes long
 DAT_00ff0dc0 equ $00ff0dc0
-DAT_00ff0dc2 equ $00ff0dc2
-DAT_00ff0dc4 equ $00ff0dc4
-DAT_00ff0dc6 equ $00ff0dc6
-DAT_00ff0dc8 equ $00ff0dc8
-DAT_00ff0dca equ $00ff0dca
-DAT_00ff0dcc equ $00ff0dcc
-DAT_00ff0dce equ $00ff0dce
-DAT_00ff0dd0 equ $00ff0dd0
-DAT_00ff0dd2 equ $00ff0dd2
-DAT_00ff0dd4 equ $00ff0dd4
-
-DAT_00ff0e00 equ $00ff0e00
-DAT_00ff0e02 equ $00ff0e02
-DAT_00ff0e04 equ $00ff0e04
-DAT_00ff0e06 equ $00ff0e06
-DAT_00ff0e10 equ $00ff0e10
-DAT_00ff0e74 equ $00ff0e74
-DAT_00ff0eb0 equ $00ff0eb0
-
 DAT_00ff13c0 equ $00ff13c0
 DAT_00ff14c0 equ $00ff14c0
 DAT_00ff15c0 equ $00ff15c0
 DAT_00ff16c0 equ $00ff16c0
-DAT_00ff17c0 equ $00ff17c0  ; array of 8 byte variables - DMA control byte + 3 byte src address + ? -
-;DAT_00ff17c2 equ $00ff17c2
-DAT_00ff17d0 equ $00ff17d0
-DAT_00ff17eb equ $00ff17eb
+sprite_table_data equ $00ff17c0  ; sprite data array stored in ram (78 sprites max?)
 bg1_tilemap_data equ $00ff1a4c  ; 2240 bytes
-DAT_00ff1a48 equ $00ff1a48
+DAT_00ff1a48 equ $00ff1a48  ; $4b12 bytes up to $00ff655a
 DAT_00ff1ab0 equ $00ff1ab0
 DAT_00ff3a48 equ $00ff3a48
 
-DAT_00ff655c equ $00ff655c
+DAT_00ff655c equ $00ff655c  ; $4b12 bytes up to $00ffb06e
 bg2_tilemap_data equ $00ff6560
 
-DAT_00ffb070 equ $00ffb070
+DAT_00ffb070 equ $00ffb070  ; scratch memory used imn placed for string manipulation
 ;DAT_00ffb072 equ $00ffb072
-sound_test_number_string equ $00ffb170  ; at lease 3 bytes but perhaps includes 0 at the end
+sound_test_number_string equ $00ffb170  ; at least 3 bytes but perhaps includes 0 at the end
 
-DAT_00ffc070 equ $00ffc070
+DAT_00ffc070 equ $00ffc070        ; pointer
 DAT_00ffc0f0 equ $00ffc0f0
 dma_data_array equ $00ffc130      ; DMA data array - 32 x cfg+datasrc(l), vramaddr(w), length(w)
 DAT_00ffc230 equ $00ffc230
@@ -370,7 +333,7 @@ DAT_00ffc372 equ $00ffc372
 DAT_00ffc472 equ $00ffc472
 DAT_00ffc474 equ $00ffc474
 DAT_00ffc476 equ $00ffc476
-DAT_00ffc4ca equ $00ffc4ca
+d5_d7_a0_a2 equ $00ffc4ca       ; 16 bytes for these registers
 DAT_00ffc50a equ $00ffc50a
 DAT_00ffc900 equ $00ffc900
 DAT_00ffc90a equ $00ffc90a
@@ -378,27 +341,28 @@ DAT_00ffcd0a equ $00ffcd0a
 DAT_00ffd10a equ $00ffd10a
 DAT_00ffd50a equ $00ffd50a
 DAT_00ffd90a equ $00ffd90a
-DAT_00ffd918 equ $00ffd918
-DAT_00ffd91c equ $00ffd91c
-DAT_00ffd920 equ $00ffd920
-DAT_00ffd925 equ $00ffd925
-DAT_00ffd926 equ $00ffd926
-DAT_00ffd945 equ $00ffd945
-DAT_00ffd94a equ $00ffd94a
-DAT_00ffd985 equ $00ffd985
-DAT_00ffd98a equ $00ffd98a
-DAT_00ffd9c5 equ $00ffd9c5
-DAT_00ffda05 equ $00ffda05
-DAT_00ffda45 equ $00ffda45
-DAT_00ffda85 equ $00ffda85
-DAT_00ffda8a equ $00ffda8a
+; DAT_00ffd90a description  - 384 bytes (6x64)
+; $0=dragon status (0,1,2,3,4,5 where 2 might be nothng selected or dead dragon?)
+; $e=dragon life;
+; $12=?
+; $16=?
+; $1c=?
+; $2d=?
+; $2e=?
+; $30=?
+; $32=?
+; $34=?
+; $3a= sprite index
+; $3b= number of sprites
+; $3e=?
+         
+DAT_00ffda8a equ $00ffda8a      ; 24 bytes?
 DAT_00ffda96 equ $00ffda96
-DAT_00ffdaa2 equ $00ffdaa2  ; 24 bytes
-
-DAT_00ffdaba equ $00ffdaba  ; 320 bytes saved here from L00014232
-DAT_00ffdbfa equ $00ffdbfa  ; 40 bytes
-DAT_00ffdc22 equ $00ffdc22  ; 320 + 40 bytes
-DAT_00ffdd94 equ $00ffdd94
+palette_update_data equ $00ffdaa2  ; 24 bytes (vblank counter, vblank counter, ram palette address)
+monster_data_array equ $00ffdaba  ; 320 bytes saved here from default_monster_data $40 for each monster (5 in total)
+monster_stats_array equ $00ffdbfa  ; 40 bytes for monster stats
+player_stats equ $00ffdc22  ; 320 + 40 bytes
+DAT_00ffdd94 equ $00ffdd94          ; graphics scratch memory for decompressing tilesets
 DAT_00fffd98 equ $00fffd98
 
     org $0
@@ -492,18 +456,18 @@ Rom_CheckSum:
     org $200
 Sys_Reset:  ;L00000200
 	tst.l       IO_PORT_A_CTRL
-	bne.b       L0000020e
+	bne.b       .L0000020e
 	tst.w       IO_PORT_C_CTRL
-L0000020e:
-	bne.b       branch_to_init_game  ;.+126
+.L0000020e:
+	bne.b       .branch_to_init_game  ;.+126
 	lea         INIT_CONFIG_TABLE(pc),a5
 	movem.w     (a5)+,d5-d7 ; init some D registers from table values
 	movem.l     (a5)+,a0-A4 ; init some A registers from table values
 	move.b      -$10ff(a1),d0   ; Z80_BUS_REQ - $10FF = $A11100 - $10FF = $A10001 = VERSION_REGISTER mirror
 	andi.b      #$0F,d0
-	beq.b       L0000022e
+	beq.b       .L0000022e
 	move.l      #"SEGA",$2F00(a1); Z80_BUS_REQ + $2F00 = $A11100 - $2F00 = $A14000 = VERSION_REGISTER
-L0000022e:
+.L0000022e:
 	move.w      (a4),d0 ; warning to be removed as expected behaviour
 	moveq       #0,d0
 	movea.l     d0,a6
@@ -549,7 +513,7 @@ L0000022e:
 	move.w      d0,(a2)
 	movem.l     (a6),d0-d7/A0-A6
 	move.w      #$2700,SR
-branch_to_init_game:
+.branch_to_init_game:
 	bra.b       init_game
 
 INIT_CONFIG_TABLE:
@@ -591,8 +555,8 @@ init_game:
 
 .Bypass_CS:
     movea.l     #0,a6
-    movea.l     #L0001509a+2,a0
-    movea.l     #DAT_00fffd98,a1
+    movea.l     #(L0001509a+$2),a0
+    movea.l     #(DAT_00fffd98),a1
     move.l      #$0,d0
     lsr.l       #$2,d0      ; what's the point?
     bra.b       .copy_routines_to_ram
@@ -609,7 +573,7 @@ init_game:
     move.w      #$f880,(hscroll_vram_addr)       ; hv window related variable
     clr.w       (vblank_enable_flag)
     clr.b       (vram_to_vram_type)
-    clr.b       (DAT_00ff0013)
+    clr.b       (palette_update_flags)
     bsr.w       clear_palettes_0_to_3
     bsr.w       clear_palettes_4_to_7
     bsr.w       reset_bgs   ; init some ram but not sure what it is for yet.
@@ -630,7 +594,7 @@ start_game:
     tst.w       d0                              ; always zero if no buttons are pressed
     beq.w       play_demo                       ; branch if no start button
     clr.b       (play_demo_flag)                ; else clear looped flag and show title screen
-    bsr.w       L00003fae                       ; init a lot of variables
+    bsr.w       init_new_game_variables         ; init a lot of variables
     move.b      #$0,(level_id)                  ; reset stage id
 .main_loop:
     bsr.b       level_id_override
@@ -638,7 +602,7 @@ start_game:
     bsr.w       L000040dc
     bsr.w       L00004528
     clr.b       (vram_to_vram_type)
-    clr.b       (DAT_00ff0013)
+    clr.b       (palette_update_flags)
     tst.b       (DAT_00ff0454)
     bne.b       .main_loop
     tst.b       (DAT_00ff0451)
@@ -669,7 +633,7 @@ level_id_override:
 .valid_level_id:
     ext.w       d1
     lea         (override_level_id_array),a0
-    move.b      ($0,a0,d1*$1),d1  ;= 00030405
+    move.b      ($0,a0,d1.w),d1  ;= 00030405
     move.b      d1,(level_id)
 .exit_level_id_override:
 	rts
@@ -678,11 +642,11 @@ play_demo:  ; this will play the demo, level id is increment but is reset when c
     move.b      #$1,(play_demo_flag)
     move.b      (level_id),d0
     cmpi.b      #$4,d0
-    bcs.b       .L0
+    bcs.b       .valid_level_id
     moveq       #$0,d0
-.L0:
+.valid_level_id:
     move.b      d0,(level_id)
-    bsr.w       L00003fae
+    bsr.w       init_new_game_variables
     bsr.b       init_demo_pattern
     bsr.w       init_vdp
     bsr.w       L000040dc
@@ -699,31 +663,31 @@ init_demo_pattern:  ; linked to demo level 1 to 4
     beq.b       .init_lv3_demo_pattern
     cmpi.b      #$3,d0
     beq.b       .init_lv4_demo_pattern
-    move.b      #$00,(DAT_00ff001d)
-    move.l      #$0000000c,(DAT_00ff0006)
-    move.l      #$0000000c,(DAT_00ff002a)
-    move.l      #L00014a0a,(lv_demo_pattern_pointer)
+    move.b      #$00,(new_alisia_level)
+    move.l      #$0000000c,(new_alisia_life_bar_level)
+    move.l      #$0000000c,(new_alisia_life_bar_length)
+    move.l      #lv1_demo_alisia_movement,(lv_demo_pattern_pointer)
     rts
 
 .init_lv2_demo_pattern:
-    move.b      #$01,(DAT_00ff001d)
-    move.l      #$00000010,(DAT_00ff0006)
-    move.l      #$00000010,(DAT_00ff002a)
-    move.l      #L00014a46,(lv_demo_pattern_pointer)
+    move.b      #$01,(new_alisia_level)
+    move.l      #$00000010,(new_alisia_life_bar_level)
+    move.l      #$00000010,(new_alisia_life_bar_length)
+    move.l      #lv2_demo_alisia_movement,(lv_demo_pattern_pointer)
     rts
 
 .init_lv3_demo_pattern:
-    move.b      #$01,(DAT_00ff001d)
-    move.l      #$00000014,(DAT_00ff0006)
-    move.l      #$00000014,(DAT_00ff002a)
-    move.l      #L00014aae,(lv_demo_pattern_pointer)
+    move.b      #$01,(new_alisia_level)
+    move.l      #$00000014,(new_alisia_life_bar_level)
+    move.l      #$00000014,(new_alisia_life_bar_length)
+    move.l      #lv3_demo_alisia_movement,(lv_demo_pattern_pointer)
     rts
 
 .init_lv4_demo_pattern:
-    move.b      #$01,(DAT_00ff001d)
-    move.l      #$00000018,(DAT_00ff0006)
-    move.l      #$00000018,(DAT_00ff002a)
-    move.l      #L00014afa,(lv_demo_pattern_pointer)
+    move.b      #$01,(new_alisia_level)
+    move.l      #$00000018,(new_alisia_life_bar_level)
+    move.l      #$00000018,(new_alisia_life_bar_length)
+    move.l      #lv4_demo_alisia_movement,(lv_demo_pattern_pointer)
     rts
 
 copy_sega_jump_routines: ;(0000058a)
@@ -746,6 +710,7 @@ Trap0:      ; $000005a8
 override_level_id_array:
     db $00, $03, $04, $05, $06, $08, $0a, $0b
 
+;==== SEGA LOGO Assets and routines ====================================================================================
 display_sega_logo:  ; (000005b2)
     clr.b       (display_enable_flag)
     bsr.w       init_vdp
@@ -758,93 +723,94 @@ display_sega_logo:  ; (000005b2)
     jsr         fill_bg_hscroll_data
     clr.l       (bg1_vscroll_value)
     move        #$2700,SR
-    move.l      #VDP_VRAM_WADDR,(VDP_CTRL)
+    move.l      #VDP_VRAM_WADDR,(VDP_CTRL)  ; $0000 VRAM WADDR
     lea         (sega_logo_tiles,PC),a0
     lea         (VDP_DATA),a1
-    move.w      #((SEGA_LOGO_SIZE-1)/4),d0       ; copy 620 bytes
-    .L0:
+    move.w      #((SEGA_LOGO_SIZE-1)/4),d0  ; copy $620 bytes or $31 (49) 49 tiles 
+    .copy_49_tiles:
         move.l      (a0)+,(a1)
-        dbf         d0,.L0
+        dbf         d0,.copy_49_tiles
     lea         (sega_logo_tilemap),a0
-    moveq       #$b,d5
-    moveq       #$3,d6          ; load d6 with $3 for 4 L1 loops
-    move.l      #$461c0003,d0   ; sega logo tilemap address location $c61c
+    moveq       #$b,d5          ; 12 columns
+    moveq       #$3,d6          ; 4 rows
+    ; update tilemap in 512x256 mode
+    move.l      #$461c0003,d0   ; sega logo tilemap address location $c61c (columns $0e, row $c)
     .vtiles:
         move.w      d5,d7       ; reload htiles counter
         move.l      d0,(VDP_CTRL)
         .htiles:
             move.w      (a0)+,(VDP_DATA)
             dbf         d7,.htiles
-        addi.l      #$00800000,d0 ; next line
+        addi.l      #$800000,d0 ; next line $469c0003 -> $c69c (column $0e, row $d)
         dbf         d6,.vtiles
-    move.w      #$0000,(palettes_4)       ; black
-    move.w      #CRAM_WHITE,(palettes_4+2)     ; white
-    moveq       #$0,d5
-    moveq       #$28,d6
-    moveq       #$0,d7
+    move.w      #$0000,(palettes_4)             ; black
+    move.w      #CRAM_WHITE,(palettes_4+2)      ; white
+    moveq       #$0,d5      ; load vblank counter
+    moveq       #$28,d6     ; sega colour index
+    moveq       #$0,d7      ; reset counter
     move.b      #$1,(display_enable_flag)
     move        #$2300,SR
-    lea         (L000006ce,PC,d6*$1),a0
+    lea         (sega_logo_colours,PC,d6.w),a0
     lea         (palettes_4+4),a1
-    moveq       #$a,d0
-    .L3:
+    moveq       #$a,d0  ; copy 11 colours
+    .copy_11_colours:
         move.w      (a0)+,(a1)+
-        dbf         d0,.L3
+        dbf         d0,.copy_11_colours
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     bsr.w       jp_read
     move.b      (jp1_result),d0
     andi.b      #PAD_START,d0
-    beq.b       .L0000067e
-    move.b      #$1,(DAT_00ffb070)  ; set if start is pressed during sega logo - will not allow to jump to title screen
-.L0000067e:
+    beq.b       .read_jp
+    move.b      #$1,(DAT_00ffb070)  ; ?
+.read_jp:
     bsr.w       wait_for_vblank
     bsr.w       jp_read
     move.b      (jp1_result),d0
     andi.b      #PAD_START,d0
     beq.b       .L4
     tst.b       (DAT_00ffb070)
-    beq.b       .L000006cc
+    beq.b       .exit
     bra.w       .L000006a4
 .L4:
     clr.b       (DAT_00ffb070)
 .L000006a4:
-    tst.b       (DAT_00ff0013)
-    bne.b       .L0000067e
+    tst.b       (palette_update_flags)
+    bne.b       .read_jp
 .wait_pad_start:
     jsr         wait_for_vblank
-    bsr.b       L0000070c           ; load intro
+    bsr.b       update_sega_logo_colours    ; load intro
     addq.w      #$1,d7
-    cmpi.w      #$0078,d7
-    bcc.b       .L000006cc
-    bsr.w       jp_read
+    cmpi.w      #$0078,d7                   ; inc counter
+    bcc.b       .exit                       ; leave when d7 >= $78 (about 2 seconds)
+    bsr.w       jp_read                     ; otherwise keep ready jp
     move.b      (jp1_result),d0
     andi.b      #PAD_START,d0
     beq.b       .wait_pad_start
-.L000006cc:
+.exit:
     rts
 
-L000006ce:
+sega_logo_colours:
     dw   $0ec0, $0ea0, $0e80, $0e60, $0e40, $0e20, $0e00, $0c00
     dw   $0a00, $0800, $0600, $0800, $0a00, $0c00, $0e00, $0e20
     dw   $0e40, $0e60, $0e80, $0ea0, $0ec0, $0ea0, $0e80, $0e60
     dw   $0e40, $0e20, $0e00, $0c00, $0a00, $0800, $0600
 
-L0000070c:
+update_sega_logo_colours:
     movem.l     A1-A0/d0,-(SP)
-    subq.w      #$1,d5
-    bpl.b       L00000730
-    move.w      #$0003,d5
-    move.w      d6,d0
-    bmi.b       L00000730
+    subq.w      #$1,d5  ; dec counter
+    bpl.b       .exit
+    move.w      #$0003,d5   ; reload counter
+    move.w      d6,d0       ; load colour index
+    bmi.b       .exit
     subq.w      #$2,d6
-    lea         (L000006ce,PC,d0*$1),a0
-    lea         (palettes_0+$4),a1
-    moveq       #$a,d0
-    .L0:
+    lea         (sega_logo_colours,PC,d0.w),a0
+    lea         (palettes_0+$4),a1  ; colour #2 in palette 0
+    moveq       #$a,d0  ; 11 colours
+    .copy_11_colours:
         move.w      (a0)+,(a1)+
-        dbf         d0,.L0
-L00000730:
+        dbf         d0,.copy_11_colours
+.exit:
     movem.l     (SP)+,d0/A0-A1
     rts
 
@@ -855,190 +821,190 @@ sega_logo_tilemap: ;(00000736)
     dw $0025, $0026, $0027, $0028, $0029, $002A, $002B, $002C, $002D, $002E, $002F, $0030
 
 sega_logo_tiles:
-    incbin "include/graphics/logo_graphics.bin"
+    incbin "include/graphics/sega_logo_tileset.bin"
 sega_logo_tiles_end:
 SEGA_LOGO_SIZE equ (sega_logo_tiles_end-sega_logo_tiles)
+;==== End SEGA LOGO Assets and routines ================================================================================
 
-L00000db6:
-    movea.l     (DAT_00ff0584),a0
-    move.b      (a0),d7
+L00000db6:  ; TODO
+    movea.l     (DAT_00ff0584),a0   ; will contain L000d0000+offset
+    move.b      (a0),d7             ; for level 1 (0) d7=$13
     ext.w       d7
-    move.b      ($1,a0),d6
+    move.b      ($1,a0),d6          ; d6=$02
     ext.w       d6
-    bmi.w       L00000ffa
-    move.w      (DAT_00ff0002),d2
+    bmi.w       L00000ffa   ; rts
+    move.w      (DAT_00ff0002),d2   ; DAT_00ff0002 initialised during level loading
     lsr.w       #$8,d2
     cmp.w       d7,d2
-    bcc.w       L00000ffa
-    move.w      (DAT_00ff0004),d1
+    bcc.w       L00000ffa   ; rts
+    move.w      (DAT_00ff0004),d1   ; DAT_00ff0004 initialised during level loading
     lsr.w       #$8,d1
     cmp.w       d6,d1
-    bcc.w       L00000ffa
+    bcc.w       L00000ffa   ; rts
     mulu.w      d7,d1
     add.w       d2,d1
     add.w       d1,d1
-    move.w      ($4,a0,d1*$1),d0
-    bmi.w       L00000ffa
+    move.w      ($4,a0,d1.w),d0     ; d0
+    bmi.w       L00000ffa   ; rts
     lea         (L000d0000),a4
-    lea         ($0,a4,d0*$1),a3
+    lea         ($0,a4,d0.w),a3
     move.l      a3,d0
     cmp.l       (DAT_00ff0590),d0
-    beq.b       L00000e36
+    beq.b       .L00000e36
     movea.l     (DAT_00ff0590),a5
     move.l      d0,(DAT_00ff0590)
     lea         (DAT_00ff01b0),a1
     movea.l     a3,a4
-L00000e1c:
-    move.w      (a5)+,d0
-    bmi.b       L00000e36
-L00000e20:
-    move.w      (a4),d1
-    bmi.b       L00000e2e
-    cmp.w       d1,d0
-    beq.b       L00000e1c
-    bcs.b       L00000e2e
-    addq.w      #$2,a4
-    bra.b       L00000e20
-L00000e2e:
-    bclr.b      #$1,($0,a1,d0*$1)
-    bra.b       L00000e1c
-
-L00000e36:
+    .L00000e1c:
+        move.w      (a5)+,d0
+        bmi.b       .L00000e36
+        .L00000e20:
+            move.w      (a4),d1
+            bmi.b       .L00000e2e
+            cmp.w       d1,d0
+            beq.b       .L00000e1c
+            bcs.b       .L00000e2e
+            addq.w      #$2,a4
+            bra.b       .L00000e20
+    .L00000e2e:
+        bclr.b      #$1,($0,a1,d0.w)
+        bra.b       .L00000e1c
+.L00000e36:
     movea.l     a0,a5
-L00000e38:
-    move.w      (a3)+,d0
-    bmi.w       L00000ffa
-    move.w      d0,d3
-    lea         (DAT_00ff01b0),a1
-    adda.w      d0,a1
-    move.b      (a1),d6
-    lea         (L000d0000),a0
-    adda.w      ($2,a5),a0
-    lsl.w       #$4,d0
-    adda.w      d0,a0
-    move.b      ($e,a0),d5
-    move.b      d5,d0
-    and.b       (normal_hard_plus1),d0
-    beq.b       L00000e38
-    btst.l      #$0,d6
-    bne.b       L00000e38
-    move.w      (DAT_00ff0002),d1
-    move.w      (DAT_00ff0004),d2
-    move.w      (a0),d0
-    cmp.w       d0,d1
-    bcs.w       L00000f68
-    move.w      ($2,a0),d0
-    cmp.w       d0,d2
-    bcs.w       L00000f68
-    move.w      ($4,a0),d0
-    cmp.w       d0,d1
-    bhi.w       L00000f68
-    move.w      ($6,a0),d0
-    cmp.w       d0,d2
-    bhi.w       L00000f68
-    tst.w       ($c,a0)
-    bmi.w       L00000f6e
-    btst.l      #$1,d6
-    bne.w       L00000f62
-    ori.b       #$2,d6
-    btst.l      #$5,d5
-    beq.b       L00000ecc
-    btst.l      #$2,d6
-    bne.w       L00000f62
-    btst.l      #$3,d6
-    bne.w       L00000f62
-    ori.b       #$8,d6
-L00000ecc:                 ;XREF[1]:     00000eb6(j)
-    moveq       #$0,d4
-    btst.l      #$6,d5
-    beq.b       L00000ee8
-    btst.l      #$3,d6
-    bne.w       L00000f62
-    ori.b       #$8,d6
-    btst.l      #$2,d6
-    beq.b       L00000ee8
-    moveq       #$1,d4
-L00000ee8:
-    btst.l      #$7,d5
-    beq.b       L00000ef2
-    ori.b       #$1,d6
-L00000ef2:
-    bsr.w       L000020b2
-    tst.b       d0
-    bmi.w       L00000ffa
-    bsr.w       L00002240
-    move.w      d3,($3a,a4)
-    move.b      ($f,a0),d0
-    ext.w       d0
-    add.w       d0,d0
-    add.w       d0,d0
-    lea         (DAT_00ffc0f0),a2
-    adda.w      d0,a2
-    move.w      ($2,a2),($52,a4)
-    move.w      #$00ff,($2,a4)
-    move.w      ($c,a0),d0
-    move.w      d0,($4,a4)
-    add.w       d4,d0
-    move.w      d0,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1             ; max offset - L000129ce + $80*$38
-    movea.l     ($4,a2,d1*$1),a6
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d0
-    add.w       d0,d0
-    add.w       d0,d0
-    adda.l      ($0,a2,d0*$1),a6
-    move.l      a6,($6,a4)
-    move.w      ($8,a0),($20,a4)
-    move.w      ($a,a0),($22,a4)
-    move.b      d5,($1,a4)
-L00000f62:
-    move.b      d6,(a1)
-    bra.w       L00000e38
-L00000f68:
-    andi.b      #-$3,d6
-    bra.b       L00000f62
-L00000f6e:
-    btst.l      #$1,d6
-    bne.b       L00000f62
-    btst.l      #$7,d5
-    beq.b       L00000f7e
-    ori.b       #$1,d6
-L00000f7e:
-    ori.b       #$2,d6
-    move.b      ($f,a0),d0
-    ext.w       d0
-    add.w       d0,d0
-    add.w       d0,d0
-    lea         (DAT_00ffc0f0),a2
-    adda.w      d0,a2
-    move.w      ($8,a0),d0
-    move.w      d0,(a2)+
-    move.w      ($a,a0),d1
-    move.w      d1,(a2)
-    move.l      a3,-(SP)
-    bsr.w       L00003358
-    movea.l     (SP)+,a3
-    bra.b       L00000f62
+    .L00000e38:
+        move.w      (a3)+,d0
+        bmi.w       L00000ffa   ; rts
+        move.w      d0,d3
+        lea         (DAT_00ff01b0),a1
+        adda.w      d0,a1
+        move.b      (a1),d6
+        lea         (L000d0000),a0
+        adda.w      ($2,a5),a0
+        lsl.w       #$4,d0
+        adda.w      d0,a0
+        move.b      ($e,a0),d5
+        move.b      d5,d0
+        and.b       (normal_hard_plus1),d0
+        beq.b       .L00000e38
+        btst.l      #$0,d6
+        bne.b       .L00000e38
+        move.w      (DAT_00ff0002),d1
+        move.w      (DAT_00ff0004),d2
+        move.w      (a0),d0
+        cmp.w       d0,d1
+        bcs.w       .L00000f68
+        move.w      ($2,a0),d0
+        cmp.w       d0,d2
+        bcs.w       .L00000f68
+        move.w      ($4,a0),d0
+        cmp.w       d0,d1
+        bhi.w       .L00000f68
+        move.w      ($6,a0),d0
+        cmp.w       d0,d2
+        bhi.w       .L00000f68
+        tst.w       ($c,a0)
+        bmi.w       .L00000f6e
+        btst.l      #$1,d6
+        bne.w       .L00000f62
+        ori.b       #$2,d6
+        btst.l      #$5,d5
+        beq.b       .L00000ecc
+        btst.l      #$2,d6
+        bne.w       .L00000f62
+        btst.l      #$3,d6
+        bne.w       .L00000f62
+        ori.b       #$8,d6
+    .L00000ecc:                 ;XREF[1]:     00000eb6(j)
+        moveq       #$0,d4
+        btst.l      #$6,d5
+        beq.b       .L00000ee8
+        btst.l      #$3,d6
+        bne.w       .L00000f62
+        ori.b       #$8,d6
+        btst.l      #$2,d6
+        beq.b       .L00000ee8
+        moveq       #$1,d4
+    .L00000ee8:
+        btst.l      #$7,d5
+        beq.b       .L00000ef2
+        ori.b       #$1,d6
+    .L00000ef2:
+        bsr.w       L000020b2   ; returns number of non zero 64 blocks
+        tst.b       d0
+        bmi.w       L00000ffa   ; rts
+        bsr.w       L00002240   ; a4 pointing at $00ffb070+$40*non empty structs
+        move.w      d3,($3a,a4) ; a4 pointing at $00ffb070+$40*non empty structs
+        move.b      ($f,a0),d0
+        ext.w       d0
+        add.w       d0,d0
+        add.w       d0,d0       ; point at long words
+        lea         (DAT_00ffc0f0),a2
+        adda.w      d0,a2
+        move.w      ($2,a2),($52,a4)
+        move.w      #$00ff,($2,a4)
+        move.w      ($c,a0),d0
+        move.w      d0,($4,a4)
+        add.w       d4,d0
+        move.w      d0,d1
+        lea         (L000129ce),a2
+        rol.w       #$7,d1
+        andi.w      #$0038,d1             ; max offset +$38 max
+        movea.l     ($4,a2,d1.w),a6
+        movea.l     ($0,a2,d1.w),a2
+        andi.w      #$0fff,d0
+        add.w       d0,d0
+        add.w       d0,d0
+        adda.l      ($0,a2,d0.w),a6
+        move.l      a6,($6,a4)
+        move.w      ($8,a0),($20,a4)
+        move.w      ($a,a0),($22,a4)
+        move.b      d5,($1,a4)
+    .L00000f62:
+        move.b      d6,(a1)
+        bra.w       .L00000e38
+    .L00000f68:
+        andi.b      #-$3,d6
+        bra.b       .L00000f62
+    .L00000f6e:
+        btst.l      #$1,d6
+        bne.b       .L00000f62
+        btst.l      #$7,d5
+        beq.b       .L00000f7e
+        ori.b       #$1,d6
+    .L00000f7e:
+        ori.b       #$2,d6
+        move.b      ($f,a0),d0
+        ext.w       d0
+        add.w       d0,d0
+        add.w       d0,d0
+        lea         (DAT_00ffc0f0),a2
+        adda.w      d0,a2
+        move.w      ($8,a0),d0
+        move.w      d0,(a2)+
+        move.w      ($a,a0),d1
+        move.w      d1,(a2)
+        move.l      a3,-(SP)
+        bsr.w       add_palette_to_dma_data_array
+        movea.l     (SP)+,a3
+        bra.b       .L00000f62
 
 L00000faa:
-    bsr.w       L000020b2
+    bsr.w       L000020b2   ; returns number of non zero 64 blocks
     tst.b       d0
-    bmi.w       L00000ffa
+    bmi.w       L00000ffa   ; rts
     bsr.w       L00002240
     move.w      #$00ff,($2,a4)
     move.w      d7,($4,a4)
     move.w      d7,d1
     lea         (L000129ce),a2
     rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
+    andi.w      #$0038,d1
+    movea.l     ($4,a2,d1.w),a3
+    movea.l     ($0,a2,d1.w),a2
     andi.w      #$0fff,d7
     add.w       d7,d7
     add.w       d7,d7
-    adda.l      ($0,a2,d7*$1),a3
+    adda.l      ($0,a2,d7.w),a3
     move.l      a3,($6,a4)
     move.w      #$0000,($20,a4)
     move.w      #$0000,($22,a4)
@@ -1051,12 +1017,9 @@ L00000ffc:
     clr.b       (DAT_00ff044a)
     clr.b       (DAT_00ff044b)
     lea         (DAT_00ffda8a),a0
-	clr.l       (a0)+
-	clr.l       (a0)+
-	clr.l       (a0)+
-	clr.l       (a0)+
-	clr.l       (a0)+
-	clr.l       (a0)+
+	REPT 6
+	    clr.l       (a0)+
+	ENDR
 	moveq       #-1,d0
 	move.w      d0,(DAT_00ff04fa)
     move.b      d0,(DAT_00ff044c)
@@ -1064,7 +1027,7 @@ L00000ffc:
     move.w      #$0001,(DAT_00ff04be)
     clr.b       (DAT_00ff000e)
     clr.b       (DAT_00ff0449)
-    lea         (DAT_00ffb070),a6
+    lea         (DAT_00ffb070),a6   ; 128 byte structures
     move.w      #$001f,d7
     L00001052:
         move.w      d7,-(SP)
@@ -1101,9 +1064,9 @@ L00000ffc:
         tst.b       (DAT_00ff0001)
         bne.b       .L000010e0
         bsr.w       L00001378
-        move.l      (DAT_00ff002e),(DAT_00ffd918)
+        move.l      (new_dragon_life_bar_level),(DAT_00ffd90a+$e)
         bsr.w       L00001452
-        move.l      (DAT_00ffd918),(DAT_00ff002e)
+        move.l      (DAT_00ffd90a+$e),(new_dragon_life_bar_level)
         bsr.w       L000012a6
         tst.b       (a6)
         beq.b       L00001114
@@ -1132,34 +1095,22 @@ L00000ffc:
         adda.w      #$80,a6
         dbf         d7,L00001052
     move.l      (DAT_00ff058c),d0
-    beq.w       L00001324
+    beq.w       L00001324   ; rts
     movea.l     d0,a6
     move.l      (DAT_00ff000a),d0
     sub.l       d0,($2a,a6)
-    bpl.w       L00001324
+    bpl.w       L00001324   ; rts
 L0000113e:                 ;XREF[1]:     000015e2(j)
     addq.l      #$1,(DAT_00ff00ce)
-
 L00001144:
     move.w      ($4e,a6),d0
     bmi.b       L0000117a
 L0000114a:                 ;XREF[3]:     00001430(j),
     clr.w       ($48,a6)
-    move.w      d0,($4,a6)
-    move.w      d0,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d0
-    add.w       d0,d0
-    add.w       d0,d0
-    adda.l      ($0,a2,d0*$1),a3
+    MACRO5 d0
     move.l      a3,($6,a6)
     rts
-
-L0000117a:                 ;XREF[1]:     00001148(j)
+L0000117a:
     clr.b       (a6)
 L0000117c:
     move.w      ($52,a6),d7
@@ -1168,29 +1119,28 @@ L0000117c:
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.b      (hv_counter_values),d0
-    bsr.b       L000011e6
+    bsr.b       .L000011e6
     moveq       #$1,d3
     jsr         L000082fc
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.b      (hv_counter_values+1),d0
-    bsr.b       L000011e6
+    bsr.b       .L000011e6
     moveq       #$5,d3
     jsr         L000082fc
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.b      (hv_counter_values+2),d0
-    bsr.b       L000011e6
+    bsr.b       .L000011e6
     moveq       #$a,d3
     jsr         L000082fc
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.b      (hv_counter_values+3),d0
-    bsr.b       L000011e6
+    bsr.b       .L000011e6
     moveq       #$f,d3
     jmp         L000082fc.l
-
-L000011e6:
+.L000011e6:
     move.b      d0,d3
     lsr.b       #$4,d3
     andi.w      #$f,d0
@@ -1203,55 +1153,55 @@ L000011e6:
     add.w       d3,d2
     rts
 
-L00001204:
+L00001204:  ; a6=(DAT_00ffb070)
     btst.b      #$2,($44,a6)
-    bne.w       L00001324
+    bne.w       L00001324   ; rts
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$0078,d1
-    bls.w       L00001324
+    bls.w       L00001324   ; rts
     cmpi.w      #$01c8,d1
-    bcc.w       L00001324
+    bcc.w       L00001324   ; rts
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$98,d2
-    bls.w       L00001324
+    bls.w       L00001324   ; rts
     cmpi.w      #$0168,d2
-    bcc.w       L00001324
+    bcc.w       L00001324   ; rts
     move.w      (DAT_00ff0002),d5
     sub.w       (DAT_00ff01a8),d5
     addi.w      #$80,d5
     cmp.w       d5,d1
-    bcs.b       L00001282
+    bcs.b       .L00001282
     addq.b      #$1,(DAT_00ff044b)
     subi.w      #$a0,d2
-    bmi.w       L00001324
+    bmi.w       L00001324   ; rts
     lsr.w       #$4,d2
     cmpi.w      #$c,d2
-    bcc.w       L00001324
+    bcc.w       L00001324   ; rts
     lea         (DAT_00ffda96),a0
     adda.w      d2,a0
     addq.b      #$1,(a0)
     rts
-L00001282:                 ;XREF[1]:     0000125c(j)
+.L00001282:                 ;XREF[1]:     0000125c(j)
     addq.b      #$1,(DAT_00ff044a)
     subi.w      #$a0,d2
-    bmi.w       L00001324
+    bmi.w       L00001324   ; rts
     lsr.w       #$4,d2
     cmpi.w      #$c,d2
-    bcc.w       L00001324
+    bcc.w       L00001324   ; rts
     lea         (DAT_00ffda8a),a0
     adda.w      d2,a0
     addq.b      #$1,(a0)
     rts
 
-L000012a6:
+L000012a6:  ; a6=(DAT_00ffb070)
     btst.b      #$2,($44,a6)
-    bne.w       L00001324
+    bne.w       L00001324   ; rts
     tst.b       ($2a,a6)
-    bmi.w       L00001324
+    bmi.w       L00001324   ; rts
     move.w      ($20,a6),d3
     move.w      d3,d5
     move.w      ($22,a6),d4
@@ -1264,9 +1214,9 @@ L000012a6:
     moveq       #$a,d7
     .L000012dc:
         move.w      (a3)+,d0
-        beq.w       L00001324
+        beq.w       L00001324   ; rts
         cmpi.w      #$3,d0
-        beq.w       L00001324
+        beq.w       L00001324   ; rts
         move.w      (a3)+,d1
         move.w      (a3)+,d2
         addq.w      #$2,a3
@@ -1303,7 +1253,7 @@ L00001326:                 ;XREF[1]:     0000131e(j)
 
 L0000133a:
     btst.b      #$5,($44,a6)
-    beq.b       L00001324
+    beq.b       L00001324   ; rts
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     move.w      ($20,a6),d3
@@ -1311,78 +1261,78 @@ L0000133a:
     ext.w       d0
     add.w       d3,d0
     cmp.w       d0,d1
-    bhi.b       L00001324
+    bhi.b       L00001324   ; rts
     addi.w      #$14,d1
     move.b      ($66,a6),d0
     ext.w       d0
     add.w       d3,d0
     cmp.w       d0,d1
-    bcs.b       L00001324
+    bcs.b       L00001324   ; rts
     move.b      (DAT_00ff0449),(DAT_00ff044c)
     rts
 
 L00001378:
     btst.b      #$7,($44,a6)
-    beq.b       L00001324
+    beq.b       L00001324   ; rts
     move.w      ($20,a6),d3
     move.w      d3,d5
     move.w      ($22,a6),d4
     move.w      d4,d6
     btst.b      #$7,(DAT_00ff0000)
-    bne.w       L0000143e
+    bne.w       .L0000143e
     subi.w      #$7,d3
     addi.w      #$8,d5
     subi.w      #$14,d4
     addi.w      #$14,d6
-L000013a8:                 ;XREF[1]:     0000144e(j)
-    move.w      (DAT_00ff0002),d1
-    move.w      (DAT_00ff0004),d2
-    move.b      ($66,a6),d0
-    ext.w       d0
-    add.w       d3,d0
-    cmp.w       d0,d1
-    blt.w       L00001324
-    move.b      ($67,a6),d0
-    ext.w       d0
-    add.w       d4,d0
-    cmp.w       d0,d2
-    blt.w       L00001324
-    move.b      ($68,a6),d0
-    ext.w       d0
-    add.w       d5,d0
-    cmp.w       d0,d1
-    bgt.w       L00001324
-    move.b      ($69,a6),d0
-    ext.w       d0
-    add.w       d6,d0
-    cmp.w       d0,d2
-    bgt.w       L00001324
-    move.l      ($2e,a6),d0
-    beq.b       L0000142c
-    tst.b       (DAT_00ff0019)
-    bne.b       L0000142c
-    sub.l       d0,(DAT_00ff0006)
-    bpl.b       L00001408
-    clr.l       (DAT_00ff0006)
-L00001408:                 ;XREF[1]:     00001400(j)
-    bset.b      #$3,(DAT_00ff0000)
-    move.b      #$1e,(DAT_00ff0018)
-    move.b      #$28,(DAT_00ff0019)
-    moveq       #-$79,d0
-    bsr.w       write_z80_reg12
-    addq.l      #$1,(DAT_00ff05b0)
-L0000142c:                 ;XREF[2]:     000013f0(j),
-    move.w      ($7e,a6),d0
-    bpl.w       L0000114a
-    move.w      ($18,a6),d0
-    bpl.w       L0000114a
-    rts
-L0000143e:                 ;XREF[1]:     00001394(j)
-    subi.w      #$7,d3
-    addi.w      #$8,d5
-    subi.w      #$14,d4
-    addi.w      #$2,d6
-    bra.w       L000013a8
+    .L000013a8:                 ;XREF[1]:     0000144e(j)
+        move.w      (DAT_00ff0002),d1
+        move.w      (DAT_00ff0004),d2
+        move.b      ($66,a6),d0
+        ext.w       d0
+        add.w       d3,d0
+        cmp.w       d0,d1
+        blt.w       L00001324   ; rts
+        move.b      ($67,a6),d0
+        ext.w       d0
+        add.w       d4,d0
+        cmp.w       d0,d2
+        blt.w       L00001324   ; rts
+        move.b      ($68,a6),d0
+        ext.w       d0
+        add.w       d5,d0
+        cmp.w       d0,d1
+        bgt.w       L00001324   ; rts
+        move.b      ($69,a6),d0
+        ext.w       d0
+        add.w       d6,d0
+        cmp.w       d0,d2
+        bgt.w       L00001324   ; rts
+        move.l      ($2e,a6),d0
+        beq.b       .L0000142c
+        tst.b       (DAT_00ff0019)
+        bne.b       .L0000142c
+        sub.l       d0,(new_alisia_life_bar_level)
+        bpl.b       .L00001408
+        clr.l       (new_alisia_life_bar_level)
+    .L00001408:                 ;XREF[1]:     00001400(j)
+        bset.b      #$3,(DAT_00ff0000)
+        move.b      #$1e,(DAT_00ff0018)
+        move.b      #$28,(DAT_00ff0019)
+        moveq       #-$79,d0
+        bsr.w       write_z80_reg12
+        addq.l      #$1,(DAT_00ff05b0)
+    .L0000142c:                 ;XREF[2]:     000013f0(j),
+        move.w      ($7e,a6),d0
+        bpl.w       L0000114a
+        move.w      ($18,a6),d0
+        bpl.w       L0000114a
+        rts
+    .L0000143e:                 ;XREF[1]:     00001394(j)
+        subi.w      #$7,d3
+        addi.w      #$8,d5
+        subi.w      #$14,d4
+        addi.w      #$2,d6
+        bra.w       .L000013a8
 
 L00001452:
     lea         (DAT_00ffd90a),a3
@@ -1431,7 +1381,7 @@ L00001452:
         bset.b      #$1,($1b,a3)
         btst.b      #$4,($1b,a3)
         bne.b       .L00001536
-        move.b      (DAT_00ff0020),d0
+        move.b      (monster_selection_index),d0
         cmpi.b      #$1,d0
         beq.b       .L000014fe
         moveq       #$c,d0
@@ -1453,7 +1403,7 @@ L00001452:
     .L00001536:
         move.w      d7,-(SP)
         move.l      ($2e,a6),d0
-        move.b      (DAT_00ff0020),d7
+        move.b      (monster_selection_index),d7
         cmpi.b      #$1,d7
         bne.b       .L0000154a
         moveq       #$0,d0
@@ -1513,35 +1463,36 @@ L00001452:
         dbf         d7,.L0000145a
     rts
 
-L000015f0:                 ;XREF[1]:     0000108a(j)
+L000015f0:
     subq.w      #$1,($48,a6)
     bra.w       L000010b0
-L000015f8:                 ;XREF[1]:     0000107e(j)
+
+L000015f8:
     move.w      ($6c,a6),d0
     cmp.w       ($24,a6),d0
-    beq.b       L00001620
-    bmi.b       L00001612
+    beq.b       .L00001620
+    bmi.b       .L00001612
     addq.w      #$1,($24,a6)
     move.b      ($6b,a6),($6e,a6)
     bra.w       L00001086
-L00001612:                 ;XREF[1]:     00001602(j)
+.L00001612:                 ;XREF[1]:     00001602(j)
     subq.w      #$1,($24,a6)
     move.b      ($6b,a6),($6e,a6)
     bra.w       L00001086
-L00001620:                 ;XREF[1]:     00001600(j)
+.L00001620:                 ;XREF[1]:     00001600(j)
     bclr.b      #$4,($47,a6)
     bra.w       L00001086
 
 L0000162a:
     lea         (DAT_00ffc230),a0
     clr.w       d1
-L00001632:
-    cmp.b       (a0),d0
-    bcs.b       L0000163c
-    addq.w      #$2,a0
-    addq.w      #$1,d1
-    bra.b       L00001632
-L0000163c:
+    .L00001632:
+        cmp.b       (a0),d0
+        bcs.b       .L0000163c
+        addq.w      #$2,a0
+        addq.w      #$1,d1
+        bra.b       .L00001632
+.L0000163c:
     move.w      (DAT_00ff04be),d2
     sub.w       d1,d2
     move.w      d2,d3
@@ -1577,7 +1528,7 @@ L00001668:  ; d7=offset to read word from a1 and added to a0, a6=dst
 L0000169c:
     move.w      d7,$1a(a6)
     add.w       d7,d7
-    lea         (game_palettes+$320),a2
+    lea         (game_palettes+$320),a2     ; last palette
     adda.w      d7,a2
     move.w      (a2),d0
     lea         (L00098140),a2
@@ -1588,17 +1539,17 @@ L0000169c:
     move.w      $22(a6),$56(a6)
     bra.w       L00001ec0
     
-L000016ce:
-    bsr.w       L000020b2
+L000016ce:  ; a6=?
+    bsr.w       L000020b2   ; returns number of non zero 64 blocks
     move.l      d0,d7
     move.b      d7,$71(a6)
-    bmi.w       L00001324
+    bmi.w       L00001324   ; rts
     bsr.w       L00002240
-    move.w      d4,$4(a4)
+    move.w      d4,($4,a4)
     move.w      d4,d1
     lea         (L000129ce),a2
     rol.w       #$7,d1
-    andi.w      #$38,d1
+    andi.w      #$0038,d1
     movea.l     ($4,a2,d1.w),a3
     movea.l     (a2,d1.w),a2
     andi.w      #$0fff,d4
@@ -1628,48 +1579,47 @@ L00001748:
 
 L00001754:
     tst.b       d2
-    beq.b       L0000177c
+    beq.b       .L0000177c
     addq.b      #$1,d2
-    beq.b       L000017a2
+    beq.b       .L000017a2
     subq.b      #$1,d2
     lea         (DAT_00ffb070),a3
     moveq       #$1f,d1
-    tst.b       (a6)
-    beq.b       L00001772
-    cmp.b       $2(a3),d2
-    bne.b       L00001772
-    clr.l       (a3)
-L00001772:
-    adda.w      #$80,a3
-    dbra        d1,$00001766
-	rts
-
-L0000177c:
+    .L00001766:
+        tst.b       (a6)
+        beq.b       .L00001772
+        cmp.b       ($2,a3),d2
+        bne.b       .L00001772
+        clr.l       (a3)
+    .L00001772:
+        adda.w      #$80,a3
+        dbra        d1,.L00001766
+        rts
+.L0000177c:
     move.w      d7,-(SP)
     ori.b       #$80,d7
     lea         (DAT_00ffb070),a3
     moveq       #$1f,d1
-L0000178a:
-    tst.b       (a3)
-    beq.b       L00001796
-    cmp.b       $2(a3),d7
-    bne.b       L00001796
-    clr.l       (a3)
-L00001796:
-    adda.w      #$80,a3
-    dbra        d1,L0000178a
+    .L0000178a:
+        tst.b       (a3)
+        beq.b       .L00001796
+        cmp.b       ($2,a3),d7
+        bne.b       .L00001796
+        clr.l       (a3)
+    .L00001796:
+        adda.w      #$80,a3
+        dbra        d1,.L0000178a
     move.w      (SP)+,d7
     rts
-
-L000017a2:
+.L000017a2:
     move.b      $71(a6),d0
-    bmi.w       L00001324
+    bmi.w       L00001324   ; rts
     ext.w       d0
     lsl.w       #$7,d0
     lea         (DAT_00ffb070),a3
     adda.w      d0,a3
     tst.b       (a3)
-    beq.w       L00001324
+    beq.w       L00001324   ; rts
     clr.l       (a3)
     rts
 
@@ -1789,153 +1739,83 @@ L000018ea:
     bsr.w       read_z80_reg16
     move.b      d0,d7
     rts
-; write functions which could be changed to macros
+
+; a6=src, var=index, var2=dst address pointer, d7=?, d6=?
+; WRITE_TO_ARRAY _index, _dst_array ; uses data from a6+$20, a6+$22, d7 and d6
+WRITE_TO_ARRAY MACRO
+    move.w      (\1),d0
+    addq.w      #$8,(\1)
+    andi.w      #$03ff,d0
+    lea         (\2),a0
+    adda.w      d0,a0
+    move.w      ($20,a6),(a0)+
+    move.w      ($22,a6),(a0)+
+    move.w      d7,(a0)+
+    move.w      d6,(a0)+
+    rts
+    ENDM
+
+; READ_FROM_ARRAY _index, _dst_array ; uses data from a6+$20, a6+$22, d7 and d6
+READ_FROM_ARRAY MACRO
+    move.w      (\1),d0
+    lsl.w       #$3,d7
+    sub.w       d7,d0
+    andi.w      #$03ff,d0
+    lea         (\2),a0
+    adda.w      d0,a0
+    move.w      (a0)+,($20,a6)
+    move.w      (a0)+,($22,a6)
+    move.w      (a0)+,d7
+    move.w      (a0)+,d6
+    rts
+    ENDM
+
+; CLEAR_ARRAY _index, _dst_array
+CLEAR_ARRAY MACRO
+    clr.w       (\1)
+    lea         (\2),a0
+    move.w      #$00ff,d7
+    .clear_data:
+        clr.l       (a0)+
+        dbf         d7,.clear_data
+    rts
+    ENDM
+
 L000018f2:
-    move.w      (DAT_00ff04c0),d0
-    addq.w      #$8,(DAT_00ff04c0)
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffc90a),a0
-    adda.w      d0,a0
-    move.w      ($20,a6),(a0)+
-    move.w      ($22,a6),(a0)+
-    move.w      d7,(a0)+
-    move.w      d6,(a0)+
-    rts
-
+    WRITE_TO_ARRAY DAT_00ff04c0,DAT_00ffc90a
 L00001918:
-    move.w      (DAT_00ff04c2),d0
-    addq.w      #$8,(DAT_00ff04c2)
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffcd0a),a0
-    adda.w      d0,a0
-    move.w      ($20,a6),(a0)+
-    move.w      ($22,a6),(a0)+
-    move.w      d7,(a0)+
-    move.w      d6,(a0)+
-    rts
-
+    WRITE_TO_ARRAY DAT_00ff04c2,DAT_00ffcd0a
 L0000193e:
-    move.w      (DAT_00ff04c4),d0
-    addq.w      #$8,(DAT_00ff04c4)
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffd10a),a0
-    adda.w      d0,a0
-    move.w      ($20,a6),(a0)+
-    move.w      ($22,a6),(a0)+
-    move.w      d7,(a0)+
-    move.w      d6,(a0)+
-    rts
-
+    WRITE_TO_ARRAY DAT_00ff04c4,DAT_00ffd10a
 L00001964:
-    move.w      (DAT_00ff04c6),d0
-    addq.w      #$0008,(DAT_00ff04c6)
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffd50a),a0
-    adda.w      d0,a0
-    move.w      ($20,a6),(a0)+
-    move.w      ($22,a6),(a0)+
-    move.w      d7,(a0)+
-    move.w      d6,(a0)+
-    rts
-; read functions which could be changed to macros
+    WRITE_TO_ARRAY DAT_00ff04c6,DAT_00ffd50a
 L0000198a:
-    move.w      (DAT_00ff04c0),d0
-    lsl.w       #$3,d7
-    sub.w       d7,d0
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffc90a),a0
-    adda.w      d0,a0
-    move.w      (a0)+,($20,a6)
-    move.w      (a0)+,($22,a6)
-    move.w      (a0)+,d7
-    move.w      (a0)+,d6
-    rts
-
+    READ_FROM_ARRAY DAT_00ff04c0,DAT_00ffc90a
 L000019ae:
-    move.w      (DAT_00ff04c2),d0
-    lsl.w       #$3,d7
-    sub.w       d7,d0
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffcd0a),a0
-    adda.w      d0,a0
-    move.w      (a0)+,($20,a6)
-    move.w      (a0)+,($22,a6)
-    move.w      (a0)+,d7
-    move.w      (a0)+,d6
-    rts
-
+    READ_FROM_ARRAY DAT_00ff04c2,DAT_00ffcd0a
 L000019d2:
-    move.w      (DAT_00ff04c4),d0
-    lsl.w       #$3,d7
-    sub.w       d7,d0
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffd10a),a0
-    adda.w      d0,a0
-    move.w      (a0)+,($20,a6)
-    move.w      (a0)+,($22,a6)
-    move.w      (a0)+,d7
-    move.w      (a0)+,d6
-    rts
-
+    READ_FROM_ARRAY DAT_00ff04c4,DAT_00ffd10a
 L000019f6:
-    move.w      (DAT_00ff04c6),d0
-    lsl.w       #$3,d7
-    sub.w       d7,d0
-    andi.w      #$03ff,d0
-    lea         (DAT_00ffd50a),a0
-    adda.w      d0,a0
-    move.w      (a0)+,($20,a6)
-    move.w      (a0)+,($22,a6)
-    move.w      (a0)+,d7
-    move.w      (a0)+,d6
-    rts
-
+    READ_FROM_ARRAY DAT_00ff04c6,DAT_00ffd50a
 L00001a1a:
-    clr.w       (DAT_00ff04c0)
-    lea         (DAT_00ffc90a),a0
-    move.w      #$00ff,d7
-    .L00001a2a:
-        clr.l       (a0)+
-        dbf         d7,.L00001a2a
-    rts
-
+    CLEAR_ARRAY DAT_00ff04c0,DAT_00ffc90a
 L00001a32:
-    clr.w       (DAT_00ff04c2)
-    lea         (DAT_00ffcd0a),a0
-    move.w      #$00ff,d7
-    .L00001a42:
-        clr.l       (a0)+
-        dbf         d7,.L00001a42
-    rts
-
+    CLEAR_ARRAY DAT_00ff04c2,DAT_00ffcd0a
 L00001a4a:
-    clr.w       (DAT_00ff04c4)
-    lea         (DAT_00ffd10a),a0
-    move.w      #$00ff,d7
-    .L00001a5a:
-        clr.l       (a0)+
-        dbf         d7,.L00001a5a
-    rts
-
+    CLEAR_ARRAY DAT_00ff04c4,DAT_00ffd10a
 L00001a62:
-    clr.w       (DAT_00ff04c6)
-    lea         (DAT_00ffd50a),a0
-    move.w      #$00ff,d7
-    .L00001a72:
-        clr.l       (a0)+
-        dbf         d7,.L00001a72
-    rts
+    CLEAR_ARRAY DAT_00ff04c6,DAT_00ffd50a
 
-L00001a7a:
-    mulu.w      (DAT_00ff0470),d2
+set_bg1_tile_attributes:  ; set bg1 tile attributes - d2=row, d1=column, d3=new attributes
+    mulu.w      (DAT_00ff0470),d2   ; might contain screen width
     add.w       d1,d2
     lea         (bg1_tilemap_data),a0
     adda.w      d2,a0
-    andi.w      #$07ff,(a0)
-    or.w        d3,(a0)
+    andi.w      #$07ff,(a0) ; clear attributes but keep tile id
+    or.w        d3,(a0)     ; copy new attributes
     rts
 
-L00001a92:
+set_bg2_tile_attributes:  ; set bg2 tile attributes - d2=row, d1=column, d3=new attributes
     mulu.w      (DAT_00ff0470),d2
     add.w       d1,d2
     lea         (bg2_tilemap_data),a0
@@ -1944,16 +1824,19 @@ L00001a92:
     or.w        d3,(a0)
     rts
 
+; d0=byte offset, d1=rom palette offset - if bit 15 is set:
+; add palette 4-7 to dma queue and refill the equivalent of 2 palettes from palette_0 + byte offset
+; otherwise copy 16 colour from rom palette to palette_0+byte offset and palette_4+byte offset
 L00001aaa:
     lea         (palettes_0),a1
     lea         (palettes_4),a2
     tst.w       d1
-    bpl.b       L00001ac2
-    movea.l     a2,a1
+    bpl.b       .L00001ac2
+    movea.l     a2,a1   ; use palette 4
     moveq       #$1,d2
-    bsr.w       L000036fe
-L00001ac2:
-    lsl.w       #$5,d1  ; * 32
+    bsr.w       prepare_dma_palette_transfer
+.L00001ac2:
+    lsl.w       #$5,d1  ; * 32 to point at palettes and push flag out
     lea         (game_palettes),a0
     adda.w      d1,a0
     adda.w      d0,a1
@@ -1964,33 +1847,13 @@ L00001ac2:
         move.l      d0,(a2)+
     ENDR
     rts
-
+; 5 routines that call L000129ce
 L00001b02:
-    move.w      d0,($4,a6)
-    move.w      d0,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d0
-    add.w       d0,d0
-    add.w       d0,d0
-    adda.l      ($0,a2,d0*$1),a3
-    jmp         (a3)
+    MACRO5 d0
+    jmp         (a3)        ; jump to (a3)
 
-L00001b2a:
-    move.w      d7,($4,a6)
-    move.w      d7,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d7
-    add.w       d7,d7
-    add.w       d7,d7
-    adda.l      ($0,a2,d7*$1),a3
+L00001b2a:  ; identitical to previous with d7 instead of d0
+    MACRO5 d7
     jmp         (a3)
 
 L00001b52:
@@ -2001,123 +1864,94 @@ L00001b52:
     tst.b       (a0)
     rts
 
-L00001b62:
-    move.w      d0,($4,a6)
-    move.w      d0,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d0
-    add.w       d0,d0
-    add.w       d0,d0
-    adda.l      ($0,a2,d0*$1),a3
+L00001b62: ; d0=?
+    MACRO5 d0
     move.l      a3,($6,a6)
     rts
 
-L00001b8e:
-    move.w      d7,($4,a6)
-    move.w      d7,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d7
-    add.w       d7,d7
-    add.w       d7,d7
-    adda.l      ($0,a2,d7*$1),a3
+L00001b8e: ; d7=?
+    MACRO5 d7
     move.l      a3,($6,a6)
     rts
 
-L00001bba:
+L00001bba:  ; d7=?
     move.w      ($4,a6),-(SP)
-    move.w      d7,($4,a6)
-    move.w      d7,d1
-    lea         (L000129ce),a2
-    rol.w       #$7,d1
-    andi.w      #$38,d1
-    movea.l     ($4,a2,d1*$1),a3
-    movea.l     ($0,a2,d1*$1),a2
-    andi.w      #$0fff,d7
-    add.w       d7,d7
-    add.w       d7,d7
-    adda.l      ($0,a2,d7*$1),a3
+    MACRO5 d7
     jsr         (a3)
     move.w      (SP)+,($4,a6)
 	rts
 
 L00001bec:
 	lea         (DAT_00ffc230),a5
-L00001bf2:
-	move.b      (a5)+,d0
-    cmpi.b      #$8,d0
-    bcc.b       L00001c0c
-    move.b      (a5)+,d0
-    ext.w       d0
-    lsl.w       #$7,d0
-    lea         (DAT_00ffb070),a6
-    adda.w      d0,a6
-    bsr.b       L00001c32
-    bra.b       L00001bf2
-L00001c0c:
+    .L00001bf2:
+        move.b      (a5)+,d0
+        cmpi.b      #$8,d0
+        bcc.b       .exit
+        move.b      (a5)+,d0
+        ext.w       d0
+        lsl.w       #$7,d0
+        lea         (DAT_00ffb070),a6
+        adda.w      d0,a6
+        bsr.b       L00001c32
+        bra.b       .L00001bf2
+.exit:
     move.l      a5,(DAT_00ff0588)
 	rts
 
 L00001c14:
 	movea.l     (DAT_00ff0588),a5
-L00001c1a:
-    move.b      (a5),d0
-    bmi.w       L00001cce
-    ext.w       d0
-    lsl.w       #$7,d0
-    lea         (DAT_00ffb070),a6
-    adda.w      d0,a6
-    bsr.b       L00001c32
-    addq.w      #$2,a5
-    bra.b       L00001c1a
+    .L00001c1a:
+        move.b      (a5),d0
+        bmi.w       L00001cce   ; rts
+        ext.w       d0
+        lsl.w       #$7,d0
+        lea         (DAT_00ffb070),a6
+        adda.w      d0,a6
+        bsr.b       L00001c32
+        addq.w      #$2,a5
+        bra.b       .L00001c1a
 
 L00001c32:
     move.w      ($16,a6),d0
     subq.w      #$1,($14,a6)
-    bne.b       L00001c76
+    bne.b       .L00001c76
     btst.b      #$3,($47,a6)
-    beq.b       L00001c50
+    beq.b       .L00001c50
     bset.b      #$7,($47,a6)
     bclr.b      #$3,($47,a6)
-L00001c50:                 ;XREF[1]:     00001c42(j)
+.L00001c50:                 ;XREF[1]:     00001c42(j)
     movea.l     ($10,a6),a0
     move.w      (a0)+,($14,a6)
     move.w      (a0)+,d0
     move.w      (a0),d1
-    bne.b       L00001c6e
+    bne.b       .L00001c6e
     bset.b      #$3,($47,a6)
     move.w      ($2,a0),d1
     movea.l     ($c,a6),a0
     adda.w      d1,a0
-L00001c6e:                 ;XREF[1]:     00001c5c(j)
+.L00001c6e:                 ;XREF[1]:     00001c5c(j)
     move.l      a0,($10,a6)
     move.w      d0,($16,a6)
-L00001c76:                 ;XREF[1]:     00001c3a(j)
+.L00001c76:
+L00001c76:
     tst.w       d0
-    bmi.b       L00001cce
+    bmi.b       L00001cce   ; rts
     btst.b      #$6,($44,a6)
     bne.b       L00001cd0
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L00001cce
+    bls.b       L00001cce   ; rts
     cmpi.w      #$210,d1
-    bcc.b       L00001cce
+    bcc.b       L00001cce   ; rts
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L00001cce
+    bls.b       L00001cce   ; rts
     cmpi.w      #$1b0,d2
-    bcc.b       L00001cce
+    bcc.b       L00001cce   ; rts
     move.w      (DAT_00ff04c8),d3
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
@@ -2128,21 +1962,21 @@ L00001cce:
 
 L00001cd0:
     btst.b      #$1,($47,a6)
-    bne.b       L00001d34
+    bne.b       .L00001d34
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L00001cce
+    bls.b       L00001cce   ; rts
     cmpi.w      #$210,d1
-    bcc.b       L00001cce
+    bcc.b       L00001cce   ; rts
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L00001cce
+    bls.b       L00001cce   ; rts
     cmpi.w      #$1b0,d2
-    bcc.b       L00001cce
+    bcc.b       L00001cce   ; rts
     move.w      (DAT_00ff04c8),d3
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
@@ -2153,7 +1987,7 @@ L00001cd0:
     bset.b      #$1,($47,a6)
     rts
 
-L00001d34:                 ;XREF[1]:     00001cd6(j)
+.L00001d34:                 ;XREF[1]:     00001cd6(j)
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.w      (DAT_00ff04c8),d3
@@ -2165,21 +1999,21 @@ L00001d34:                 ;XREF[1]:     00001cd6(j)
 
 L00001d56:
     move.b      ($51,a6),d0
-    beq.b       L00001d8c
+    beq.b       .L00001d8c
     subq.b      #$1,d0
-    beq.b       L00001dd6
+    beq.b       .L00001dd6
     subq.b      #$1,d0
-    beq.w       L00001e20
+    beq.w       .L00001e20
     subq.b      #$1,d0
-    beq.w       L00001e68
+    beq.w       .L00001e68
     move.w      ($4a,a6),d1
     move.w      ($4c,a6),d2
     add.w       d1,($20,a6)
     add.w       d2,($22,a6)
     move.w      ($20,a6),($58,a6)
     move.w      ($22,a6),($5a,a6)
-    bra.w       L00001eb0
-L00001d8c:                 ;XREF[1]:
+    bra.w       .L00001eb0
+.L00001d8c:                 ;XREF[1]:
     move.b      ($26,a6),d0
     ext.w       d0
     mulu.w      ($24,a6),d0
@@ -2187,14 +2021,14 @@ L00001d8c:                 ;XREF[1]:
     add.w       d0,($20,a6)
     move.w      ($5e,a6),d0
     add.w       d0,($60,a6)
-    bpl.b       L00001dba
+    bpl.b       .L00001dba
     clr.w       ($4c,a6)
-L00001dac:                 ;XREF[1]:
+.L00001dac:                 ;XREF[1]:
     move.w      ($58,a6),d0
     cmp.w       ($20,a6),d0
-    bls.w       L00001eb0
+    bls.w       .L00001eb0
     rts
-L00001dba:                 ;XREF[1]:
+.L00001dba:                 ;XREF[1]:
     move.b      ($27,a6),d0
     ext.w       d0
     mulu.w      ($24,a6),d0
@@ -2202,8 +2036,8 @@ L00001dba:                 ;XREF[1]:
     add.w       d0,($22,a6)
     move.w      ($5c,a6),d0
     sub.w       d0,($60,a6)
-    bra.b       L00001dac
-L00001dd6:                 ;XREF[1]:
+    bra.b       .L00001dac
+.L00001dd6:                 ;XREF[1]:
     move.b      ($26,a6),d0
     ext.w       d0
     mulu.w      ($24,a6),d0
@@ -2211,14 +2045,14 @@ L00001dd6:                 ;XREF[1]:
     add.w       d0,($20,a6)
     move.w      ($5e,a6),d0
     add.w       d0,($60,a6)
-    bpl.b       L00001e04
+    bpl.b       .L00001e04
     clr.w       ($4c,a6)
-L00001df6:                 ;XREF[1]:
+.L00001df6:                 ;XREF[1]:
     move.w      ($58,a6),d0
     cmp.w       ($20,a6),d0
-    bcc.w       L00001eb0
+    bcc.w       .L00001eb0
     rts
-L00001e04:                 ;XREF[1]:
+.L00001e04:                 ;XREF[1]:
     move.b      ($27,a6),d0
     ext.w       d0
     mulu.w      ($24,a6),d0
@@ -2226,32 +2060,8 @@ L00001e04:                 ;XREF[1]:
     add.w       d0,($22,a6)
     move.w      ($5c,a6),d0
     sub.w       d0,($60,a6)
-    bra.b       L00001df6
-L00001e20:                 ;XREF[1]:
-    move.b      ($27,a6),d0
-    ext.w       d0
-    mulu.w      ($24,a6),d0
-    move.w      d0,($4c,a6)
-    add.w       d0,($22,a6)
-    move.w      ($5c,a6),d0
-    add.w       d0,($60,a6)
-    bpl.b       L00001e4c
-    clr.w       ($4a,a6)
-L00001e40:                 ;XREF[1]:
-    move.w      ($5a,a6),d0
-    cmp.w       ($22,a6),d0
-    bls.b       L00001eb0
-    rts
-L00001e4c:                 ;XREF[1]:
-    move.b      ($26,a6),d0
-    ext.w       d0
-    mulu.w      ($24,a6),d0
-    move.w      d0,($4a,a6)
-    add.w       d0,($20,a6)
-    move.w      ($5e,a6),d0
-    sub.w       d0,($60,a6)
-    bra.b       L00001e40
-L00001e68:                 ;XREF[1]:
+    bra.b       .L00001df6
+.L00001e20:                 ;XREF[1]:
     move.b      ($27,a6),d0
     ext.w       d0
     mulu.w      ($24,a6),d0
@@ -2259,14 +2069,14 @@ L00001e68:                 ;XREF[1]:
     add.w       d0,($22,a6)
     move.w      ($5c,a6),d0
     add.w       d0,($60,a6)
-    bpl.b       L00001e94
+    bpl.b       .L00001e4c
     clr.w       ($4a,a6)
-L00001e88:                 ;XREF[1]:
+.L00001e40:                 ;XREF[1]:
     move.w      ($5a,a6),d0
     cmp.w       ($22,a6),d0
-    bcc.b       L00001eb0
+    bls.b       .L00001eb0
     rts
-L00001e94:                 ;XREF[1]:
+.L00001e4c:                 ;XREF[1]:
     move.b      ($26,a6),d0
     ext.w       d0
     mulu.w      ($24,a6),d0
@@ -2274,8 +2084,32 @@ L00001e94:                 ;XREF[1]:
     add.w       d0,($20,a6)
     move.w      ($5e,a6),d0
     sub.w       d0,($60,a6)
-    bra.b       L00001e88
-L00001eb0:
+    bra.b       .L00001e40
+.L00001e68:                 ;XREF[1]:
+    move.b      ($27,a6),d0
+    ext.w       d0
+    mulu.w      ($24,a6),d0
+    move.w      d0,($4c,a6)
+    add.w       d0,($22,a6)
+    move.w      ($5c,a6),d0
+    add.w       d0,($60,a6)
+    bpl.b       .L00001e94
+    clr.w       ($4a,a6)
+.L00001e88:                 ;XREF[1]:
+    move.w      ($5a,a6),d0
+    cmp.w       ($22,a6),d0
+    bcc.b       .L00001eb0
+    rts
+.L00001e94:                 ;XREF[1]:
+    move.b      ($26,a6),d0
+    ext.w       d0
+    mulu.w      ($24,a6),d0
+    move.w      d0,($4a,a6)
+    add.w       d0,($20,a6)
+    move.w      ($5e,a6),d0
+    sub.w       d0,($60,a6)
+    bra.b       .L00001e88
+.L00001eb0:
     move.w      ($58,a6),($54,a6)
     move.w      ($5a,a6),($56,a6)
     movea.l     ($1c,a6),a2
@@ -2285,21 +2119,21 @@ L00001ec0:
     rol.w       #$4,d0
     andi.w      #$f,d0
     subq.w      #$1,d0
-    beq.w       L00001fb6
+    beq.w       .L00001fb6
     subq.w      #$1,d0
-    beq.w       L00001fd8
+    beq.w       .L00001fd8
     subq.w      #$1,d0
-    beq.b       L00001f36
+    beq.b       .L00001f36
     subq.w      #$1,d0
-    beq.w       L00001f7e
+    beq.w       .L00001f7e
     move.b      d1,($50,a6)
     cmpi.b      #-$1,d1
     bne.b       L00001ec0
     btst.b      #$7,($46,a6)
-    beq.b       L00001f22
+    beq.b       .L00001f22
     move.w      ($1a,a6),d7
     add.w       d7,d7
-    lea         (game_palettes+$320),a2
+    lea         (game_palettes+$320),a2     ; last palette
     adda.w      d7,a2
     move.w      (a2),d0
     lea         (L00098140),a2
@@ -2309,86 +2143,86 @@ L00001ec0:
     move.w      ($20,a6),($54,a6)
     move.w      ($22,a6),($56,a6)
     bra.b       L00001ec0
-L00001f22:                 ;XREF[1]:
+.L00001f22:                 ;XREF[1]:
     move.w      #$ffff,($1a,a6)
     move.w      ($58,a6),($20,a6)
     move.w      ($5a,a6),($22,a6)
     rts
-L00001f36:                 ;XREF[1]:
+.L00001f36:                 ;XREF[1]:
     move.w      d1,d2
     lsr.w       #$6,d1
     andi.w      #$3f,d1
     btst.l      #$5,d1
-    beq.b       L00001f48
+    beq.b       .L00001f48
     ori.w       #$FFC0,d1
-L00001f48:                 ;XREF[1]:
+.L00001f48:                 ;XREF[1]:
     andi.w      #$3f,d2
     btst.l      #$5,d2
-    beq.b       L00001f56
+    beq.b       .L00001f56
     ori.w       #$FFC0,d2
-L00001f56:                 ;XREF[1]:
+.L00001f56:                 ;XREF[1]:
     btst.b      #$6,($46,a6)
-    beq.b       L00001f60
+    beq.b       .L00001f60
     neg.w       d2
-L00001f60:                 ;XREF[1]:
+.L00001f60:                 ;XREF[1]:
     btst.b      #$5,($46,a6)
-    beq.b       L00001f6a
+    beq.b       .L00001f6a
     neg.w       d1
-L00001f6a:                 ;XREF[1]:
+.L00001f6a:                 ;XREF[1]:
     move.w      d1,($4a,a6)
     move.w      d2,($4c,a6)
     move.b      #$4,($51,a6)
     move.l      a2,($1c,a6)
     rts
-L00001f7e:                 ;XREF[1]:
+.L00001f7e:                 ;XREF[1]:
     andi.w      #$0fff,d1
-    btst.l      #$b,d1
-    beq.b       L00001f8c
+    btst.l      #$b,d1  ; test bit 11
+    beq.b       .L00001f8c
     ori.w       #$f000,d1
-L00001f8c:                 ;XREF[1]:
+.L00001f8c:                 ;XREF[1]:
     move.w      (a2)+,d2
     btst.b      #$6,($46,a6)
-    beq.b       L00001f98
+    beq.b       .L00001f98
     neg.w       d2
-L00001f98:                 ;XREF[1]:
+.L00001f98:                 ;XREF[1]:
     btst.b      #$5,($46,a6)
-    beq.b       L00001fa2
+    beq.b       .L00001fa2
     neg.w       d1
-L00001fa2:                 ;XREF[1]:
+.L00001fa2:                 ;XREF[1]:
     move.w      d1,($4a,a6)
     move.w      d2,($4c,a6)
     move.b      #$4,($51,a6)
     move.l      a2,($1c,a6)
     rts
-L00001fb6:                 ;XREF[1]:
+.L00001fb6:                 ;XREF[1]:
     move.w      d1,d2
     lsr.w       #$6,d1
     andi.w      #$3f,d1
     btst.l      #$5,d1
-    beq.b       L00001fc8
+    beq.b       .L00001fc8
     ori.w       #$ffc0,d1
-L00001fc8:                 ;XREF[1]:
+.L00001fc8:                 ;XREF[1]:
     andi.w      #$3f,d2
     btst.l      #$5,d2
-    beq.b       L00001fe8
+    beq.b       .L00001fe8
     ori.w       #$ffc0,d2
-    bra.b       L00001fe8
-L00001fd8:                 ;XREF[1]:
+    bra.b       .L00001fe8
+.L00001fd8:                 ;XREF[1]:
     andi.w      #$fff,d1
     btst.l      #$b,d1
-    beq.b       L00001fe6
+    beq.b       .L00001fe6
     ori.w       #$f000,d1
-L00001fe6:                 ;XREF[1]:
+.L00001fe6:                 ;XREF[1]:
     move.w      (a2)+,d2
-L00001fe8:                 ;XREF[2]:
+.L00001fe8:                 ;XREF[2]:
     btst.b      #$6,($46,a6)
-    beq.b       L00001ff2
+    beq.b       .L00001ff2
     neg.w       d2
-L00001ff2:                 ;XREF[1]:
+.L00001ff2:                 ;XREF[1]:
     btst.b      #$5,($46,a6)
-    beq.b       L00001ffc
+    beq.b       .L00001ffc
     neg.w       d1
-L00001ffc:                 ;XREF[1]:
+.L00001ffc:                 ;XREF[1]:
     move.l      a2,($1c,a6)
     add.w       ($20,a6),d1
     move.w      d1,($58,a6)
@@ -2398,30 +2232,30 @@ L00001ffc:                 ;XREF[1]:
     sub.w       ($56,a6),d2
     clr.b       d0
     tst.w       d1
-    beq.b       L00002026
+    beq.b       .L00002026
     moveq       #-$1,d0
     tst.w       d1
-    bmi.b       L00002026
+    bmi.b       .L00002026
     moveq       #$1,d0
-L00002026:                 ;XREF[2]:
+.L00002026:                 ;XREF[2]:
     move.b      d0,($26,a6)
     clr.b       d0
     tst.w       d2
-    beq.b       L00002038
+    beq.b       .L00002038
     moveq       #-$1,d0
     tst.w       d2
-    bmi.b       L00002038
+    bmi.b       .L00002038
     moveq       #$1,d0
-L00002038:                 ;XREF[2]:
+.L00002038:                 ;XREF[2]:
     move.b      d0,($27,a6)
     neg.w       d1
-    bpl.b       L00002042
+    bpl.b       .L00002042
     neg.w       d1
-L00002042:                 ;XREF[1]:
+.L00002042:                 ;XREF[1]:
     neg.w       d2
-    bpl.b       L00002048
+    bpl.b       .L00002048
     neg.w       d2
-L00002048:                 ;XREF[1]:
+.L00002048:                 ;XREF[1]:
     move.w      d1,d3
     add.w       d3,d3
     move.w      d3,($5c,a6)
@@ -2431,64 +2265,63 @@ L00002048:                 ;XREF[1]:
     move.w      ($54,a6),($20,a6)
     move.w      ($56,a6),($22,a6)
     cmp.w       d1,d2
-    bhi.b       L0000208c
+    bhi.b       .L0000208c
     move.w      ($58,a6),d0
     cmp.w       ($54,a6),d0
-    bls.b       L0000207e
+    bls.b       .L0000207e
     clr.b       ($51,a6)
     neg.w       d1
     move.w      d1,($60,a6)
     rts
-
-L0000207e:                 ;XR
+.L0000207e:                 ;XR
     move.b      #$1,($51,a6)
     neg.w       d1
     move.w      d1,($60,a6)
     rts
-L0000208c:                 ;XR
+.L0000208c:                 ;XR
     move.w      ($5a,a6),d0
     cmp.w       ($56,a6),d0
-    bls.b       L000020a4
+    bls.b       .L000020a4
     move.b      #$2,($51,a6)
     neg.w       d2
     move.w      d2,($60,a6)
     rts
-L000020a4:                 ;XR
+.L000020a4:                 ;XR
     move.b      #$3,($51,a6)
     neg.w       d2
     move.w      d2,($60,a6)
     rts
 
-L000020b2:
+L000020b2:  ; returns d0 as number of non zero 64 bytes structures from DAT_00ffb070 + a4 current address
     moveq       #$0,d0
     lea         (DAT_00ffb070),a4
     tst.b       (a4)
-    beq.w       L0000223e
+    beq.w       .exit
     REPT 31
         addq.w      #$1,d0
         adda.w      #$80,a4
         tst.b       (a4)
-        beq.w       L0000223e
+        beq.w       .exit
     ENDR
-    lea         (DAT_00ffc070),a4
+    lea         (DAT_00ffc070),a4   ; place a4 at the next $1000 block although $20*$80=$1000
     clr.l       (a4)
     moveq       #-$1,d0
-L0000223e:
+.exit:
 	rts
 
-L00002240:
+L00002240:  ; clear 128 bytes from a4 and reinitialise some variables
 	move.l      a4,-(SP)
 	REPT 32
 	    clr.l      (a4)+
 	ENDR
 	movea.l     (SP)+,a4
-    move.b      #$1,(a4)
+    move.b      #$01,(a4)
     moveq       #-$1,d0
     move.w      d0,($a,a4)
     move.w      d0,($1a,a4)
-    move.w      #$1,($24,a4)
+    move.w      #$0001,($24,a4)
     move.w      d0,($34,a4)
-    move.b      #$4,($44,a4)
+    move.b      #$04,($44,a4)
     move.b      #$80,($47,a4)
     move.w      d0,($4e,a4)
     move.b      d0,($50,a4)
@@ -2509,13 +2342,12 @@ L000022be:  ; d1 contain data to compare, returns d0=-1 if unsuccessful and 0 ot
         beq.w       .addr_equals_d1
     ENDR
     REPT 16
-         adda.w      #$80,a0
-         cmp.b       (a0),d1
-         beq.b       .addr_equals_d1
+        adda.w      #$80,a0
+        cmp.b       (a0),d1
+        beq.b       .addr_equals_d1 ; smal branching instruction
     ENDR
     moveq       #-$1,d0
     rts
-
 .addr_equals_d1:
     subq.w      #$2,a0  ; A0=A0-2 why?
     rts
@@ -2532,7 +2364,7 @@ update_vram_alt_tilemap:  ;(000023ee)
             addi.w      #$400,d1        ; alternative tile from top half location of VRAM
             move.w      d1,(VDP_DATA)
             dbf         d7,.htiles
-        addi.l      #$00800000,d0     ; +80h in VRAM (data wasted in 320p mode on each line)
+        addi.l      #$800000,d0     ; +80h in VRAM (data wasted in 320p mode on each line)
         dbf         d6,.vtiles
     move        #$2300,SR
     rts
@@ -2547,7 +2379,7 @@ update_vram_tilemap:  ; (0000241e) d0 contains VRAM WADDR and A0 tilemap data so
         .htiles:
             move.w      (a0)+,(VDP_DATA)
             dbf         d7,.htiles
-        addi.l      #$00800000,d0     ; +80h in VRAM (data wasted in 320p mode on each line)
+        addi.l      #$800000,d0     ; +80h in VRAM (data wasted in 320p mode on each line)
         dbf         d6,.vtiles
     move        #$2300,SR
     rts
@@ -2561,45 +2393,45 @@ reset_bgs:
     move.l      d0,(bg1_vscroll_value)
     move.b      #$1,(bg_reset_flag)
     clr.b       (DAT_00ff044d)
-    clr.b       (DAT_00ff0013)
+    clr.b       (palette_update_flags)
     clr.b       (vram_to_vram_type)
 	rts
 
 reset_window_registers:  ; (0000247c)
 	move.w      #$2700,SR
 	move.w      #VDP_REG_WINDOW_H,VDP_CTRL
-	move.w      #VDP_REG_WINDOW_V,VDP_CTRL
+	move.w      #VDP_REG_WINDOW_V,VDP_CTRL  ; hide HUD
 	move.w      #$f800,(hscroll_vram_addr)   ; reset hscroll address to default value
 	move.w      #$2300,SR
 	rts
 
-L0000249e:   ; HUD or pause to select dragon?
+init_hud_tilemap:   ; Initialise HUD when game starts   
 	move.w      #$2700,SR
 	move.w      #VDP_REG_WINDOW_H,VDP_CTRL
-	move.w      #VDP_REG_WINDOW_V+$4,VDP_CTRL
-	lea         (L0006d28c),a0
-	lea         (DAT_00ff05c0),a1
+	move.w      #VDP_REG_WINDOW_V+$4,VDP_CTRL        ; show HUD
+	lea         (hud_tilemap),a0                     ; window tilemap data
+	lea         (hud_row0_data),a1
 	moveq       #(SCREEN_H_TILES-1),d6             ; 40 words
     .L0:
         move.w      (a0)+,d0
         addi.w      #$8680,d0
         move.w      d0,(a1)+
         dbf         d6,.L0
-	lea         (DAT_00ff0640),a1
+	lea         (hud_row1_data),a1
 	moveq       #(SCREEN_H_TILES-1),d6             ; 40 words
     .L1:
 	    move.w      (a0)+,d0
-	    addi.w      #$8680,d0
-	    move.w      d0,(a1)+
-	    dbf         d6,.L1
-	lea         (DAT_00ff06c0),a1
+        addi.w      #$8680,d0
+        move.w      d0,(a1)+
+        dbf         d6,.L1
+	lea         (hud_row2_data),a1
 	moveq       #(SCREEN_H_TILES-1),d6             ; 40 words
     .L2:
         move.w      (a0)+,d0
         addi.w      #$8680,d0
         move.w      d0,(a1)+
         dbf         d6,.L2
-	lea         (DAT_00ff0740),a1
+	lea         (hud_row3_data),a1
 	moveq       #(SCREEN_H_TILES-1),d6             ; 40 words
     .L3:
         move.w      (a0)+,d0
@@ -2656,12 +2488,12 @@ disable_display:  ; clear bit
     rts
 
 ; A1 is source address
-copy_16_words_to_00ff066a:  ; copies 16 words from A1 to 00ff066a
-    lea         (DAT_00ff066a),a0
+change_hud_dragon_top_tiles:  ; copies 16 words from A1 to 00ff066a
+    lea         (hud_top_dragon_face),a0
     bra.b       copy_16_words
 ; A1 is source address
-copy_16_words_to_00ff06ea:  ; copies 16 words from A1 to 00ff06ea
-    lea         (DAT_00ff06ea),a0
+change_hud_dragon_bottom_tiles:  ; copies 16 words from A1 to 00ff06ea
+    lea         (hud_bottom_dragon_face),a0
 copy_16_words:
 	REPT 16
 	    move.w (a1)+,(a0)+
@@ -2871,7 +2703,7 @@ read_z80_reg16:
 	rts
 
 clear_640_bytes_from_00ff17c0: ;(00002820)
-	lea         (DAT_00ff17c0),a0
+	lea         (sprite_table_data),a0
 	move.w      #$0140,d0
 	bra.w       clear_n_words_from_a0
 
@@ -2883,7 +2715,7 @@ L0000282e:
     movea.l     (DAT_00ff0514),a0
     adda.w      d0,a0
     move.w      d3,d6
-    lea         (DAT_00ff17c0),a1
+    lea         (sprite_table_data),a1
     lsl.w       #$3,d3
     adda.w      d3,a1
     move.w      (a0)+,d7
@@ -2892,7 +2724,7 @@ L0000282e:
     .L00002856:
         movem.w     d2-d1,-(SP)
         cmpi.b      #$4f,d6
-        beq.w       L000028fc
+        beq.w       L000028fc   ; stack, d3=d6 and rts
         addq.b      #$1,d6
         move.b      (a0)+,d0
         ext.w       d0
@@ -2926,17 +2758,17 @@ L00002894:
     adda.w      d0,a0
     move.w      d3,d6
 
-L000028aa:
-    lea         (DAT_00ff17c0),a1
+L000028aa:  ; a0=sprite table data array, d1=?
+    lea         (sprite_table_data),a1
     lsl.w       #$3,d3
     adda.w      d3,a1
     move.w      (a0)+,d7
     andi.w      #$1f,d7
-    subq.w      #$1,d7
+    subq.w      #$1,d7  ; 32 max
     .L000028bc:
         movem.w     d2-d1,-(SP)
         cmpi.b      #$4f,d6
-        beq.w       L000028fc
+        beq.w       L000028fc   ; stack, d3=d6 and rts
         addq.b      #$1,d6
         move.b      (a0)+,d0
         ext.w       d0
@@ -2966,22 +2798,23 @@ L000028fc:
     move.w      d6,d3
     rts
 
-; d3=offset, d0=value compared max is $4f, d1, d2, d4 and d5 are saved
-L00002904:
+; d1=hpos, d2=vpos, d3=sprite index (0-127), d4=tile id, d5=vh size
+; returns d3++
+update_sprite_in_sprite_table: ; (00002904)
     move.w      d0,-(SP)
     move.w      d3,d0
-    lea         (DAT_00ff17c0),a1
+    lea         (sprite_table_data),a1
     lsl.w       #$3,d3  ; x8
     adda.w      d3,a1   ; add offset
     cmpi.b      #$4f,d0
-    beq.w       .L00002926  ; leave if d0=$4f
+    beq.w       .exit  ; leave if d0=$4f
     addq.b      #$1,d0      ; else add 1
     move.w      d2,(a1)+    ; save d2
     or.b        d0,d5
     move.w      d5,(a1)+    ; save d5|d0
     move.w      d4,(a1)+    ; save d4
     move.w      d1,(a1)+    ; save d1
-.L00002926:
+.exit:
     move.w      d0,d3       ; restore d3
     move.w      (SP)+,d0
     rts
@@ -3000,10 +2833,10 @@ L0000292c:
         andi.b      #$f0,d0
         cmpi.b      #$e0,d0
         bne.b       .L0
-        andi.b      #$f,d2
+        andi.b      #$0f,d2
     .L0:
-        andi.b      #$f,d1
-        cmpi.b      #$e,d1
+        andi.b      #$0f,d1
+        cmpi.b      #$0e,d1
         bne.b       .L1
         andi.b      #$f0,d2
     .L1:
@@ -3013,7 +2846,7 @@ L0000292c:
     move.l      #(DAT_00ffdd94),d2
     move.w      #$0800,d3
     bsr.w       add_item_to_dma_data_array
-    bra.w       L00003406
+    bra.w       dma_copied_or_decompressed_tiles
 
 clear_palettes_0_to_3:  ;(00002988)
     movem.l     A0/d7,-(SP)
@@ -3035,18 +2868,18 @@ clear_palettes_4_to_7:  ;(000029a2)
     movem.l     (SP)+,d7/A0
     rts
 
-L000029bc:   ; update HUD tile, d1=column, d2=row, d3=item?, d5=value
-    ror.w       #$3,d5              ; rotate d5
-    addi.w      #$8680,d5           ; d5=d5+$8680
-    lea         (DAT_00ff05c0),a0   ;
-    lsl.w       #$7,d2              ;
-    adda.w      d2,a0               ;
-    add.w       d1,d1               ;
-    adda.w      d1,a0               ; A0=A0+d2*128+d1*2
+update_hud_level_tilemap:   ; update HUD power bar, d1=column, d2=row, d3=item?, d5=value
+    ror.w       #$3,d5              ; d5/8?
+    addi.w      #$8680,d5           ; d5=d5+$8680 (VRAM address HUD tileset location?)
+    lea         (hud_row0_data),a0  ;
+    lsl.w       #$7,d2              ; always 2 so wil give $100 got row 2 in window tilemap
+    adda.w      d2,a0               ; add row offset to base address
+    add.w       d1,d1               ; d1*2  each item is a word in tilemap
+    adda.w      d1,a0               ; add column offset to base address
     move.w      d3,d4               ; d4=d3
-    andi.w      #$f,d4              ; mask
-    add.w       d5,d4               ; d4=d4+d5
-    move.w      d4,(a0)             ; (a0)=d4
+    andi.w      #$f,d4              ; mask for max value
+    add.w       d5,d4               ; add til VRAM offset
+    move.w      d4,(a0)             ; (a0)=d4   to save new tile
     rts
 
 init_vdp:   ; L000029dc
@@ -3096,7 +2929,7 @@ vram_to_vram_dma: ;d0=src, d1=vram_addr, d2=length    ;(00002a3a)
     move        #$2300,SR
     rts
 
-vram_fill_dma: ; d0=vram_addr, d1=? d2=length   (00002a8c)
+vram_fill_dma: ; d0=vram_src_addr, d1=vdp_data?, d2=length   (00002a8c)
     move        #$2700,SR
     movem.l     A0/d4-d0,-(SP)
     lea         (VDP_CTRL),a0
@@ -3210,7 +3043,7 @@ copy_n_words_to_vram:
     move.w      #VDP_REG_AUTOINC+$2,(VDP_CTRL)
     move.w      d1,d3
     andi.w      #$3fff,d3
-    ori.w       #$4000,d3   ; write flag
+    ori.w       #$4000,d3   ; VRAM + write flag
     swap        d3
     rol.w       #$2,d1
     andi.w      #$3,d1
@@ -3245,9 +3078,9 @@ init_io_controllers:
 	move.b      d0,IO_PORT_C_CTRL+1
 	rts
 
-L00002c3a:
+update_hv_counter:
     move.l      d1,-(SP)
-    move.l      (hv_counter_values),d1 ; d1=current hv counter vlaue stored in RAM
+    move.l      (hv_counter_values),d1 ; d1=current hv counter value stored in RAM
     bne.b       .L0
     move.w      (VDP_CNTR),d1   ; read new value from counter when 0
 .L0:
@@ -3268,154 +3101,155 @@ L00002c3a:
 
 L00002c6a:
     movem.l     d2-d1,-(SP)
-    move.w      d0,d2   ; save d0 in d2
-    bsr.b       L00002c3a
+    move.w      d0,d2   ; save d0 in d2 $6, $20 or $60
+    bsr.b       update_hv_counter
     andi.l      #$0000ffff,d0
     divu.w      d2,d0
     swap        d0
     movem.l     (SP)+,d1-d2
     rts
 
-L00002c82:   ; d2=?, a0=palette 4-7, sets DAT_00ff0013 palette flags, DAT_00ffdaa2= palette address
+set_palette_update_data:   ; d2=update counter, a0=palette 4-7, sets palette_update_flags palette flags, palette_update_data= palette address
     move        #$2700,SR
     movem.l     A1/d1,-(SP)
-    lea         (DAT_00ffdaa2),a1 ; A1 is base address
-    bset.b      d1,(DAT_00ff0013)
+    lea         (palette_update_data),a1 ; A1 is base address
+    bset.b      d1,(palette_update_flags)
     mulu.w      #$6,d1      ; index * 6
     adda.w      d1,a1       ; 0,6,12,18 offsets
     move.b      d2,(a1)     ; save d2 to address
     move.b      d2,($1,a1)  ; save d2 again to next address
-    move.l      a0,($2,a1)  ; save A0 to next address
+    move.l      a0,($2,a1)  ; save palette address
     movem.l     (SP)+,d1/A1
     move        #$2300,SR
     rts
 
-wait_for_00ff013_clear: ; (00002cb0)
+wait_for_palette_flags_clear: ; (00002cb0)
     bsr.w       wait_for_vblank
-    tst.b       (DAT_00ff0013)
-    bne.b       wait_for_00ff013_clear
+    tst.b       (palette_update_flags)
+    bne.b       wait_for_palette_flags_clear
     rts
 
-L00002cbe:
-    move.b      (DAT_00ff0013),d7
+process_palette_update_data:    ; only called during VBLANK
+    move.b      (palette_update_flags),d7
     beq.w       branch_to_rts
     addq.b      #$1,(DAT_00ff044d)
     move.b      (DAT_00ff044d),d2
     andi.b      #$3,d2
-    beq.b       L00002d3a   ; when bit1-0="00"
+    beq.b       .process_palette4_update_data
     cmpi.b      #$1,d2
-    beq.w       L00002d7a   ; when bit1-0="01"
+    beq.w       .process_palette5_update_data
     cmpi.b      #$2,d2
-    beq.w       L00002db6   ; when bit1-0="10"
-    andi.b      #$8,d7      ; when bit1-0="11", check if highest palette refresh flag is set
-    beq.w       branch_to_rts   ; leave if clear
-    subq.b      #$1,(DAT_00ffdaa2+$13)  ; --
+    beq.w       .process_palette6_update_data
+    andi.b      #$8,d7      ; update palette 7 data
+    beq.w       branch_to_rts   ; leave if flag is not set
+    subq.b      #$1,(palette_update_data+$13)  ; --
     bne.w       branch_to_rts           ; branch while > 0
-    movea.l     (DAT_00ffdaa2+$2),a0    ;
+    movea.l     (palette_update_data+$2),a0    ;
     lea         (palettes_0),a1
     moveq       #$0,d1
-    bsr.w       L00002df2
-    move.b      (DAT_00ffdaa2+$12),(DAT_00ffdaa2+$13)
-    movea.l     (DAT_00ffdaa2+$14),a0
+    bsr.w       modify_current_colours
+    move.b      (palette_update_data+$12),(palette_update_data+$13)
+    movea.l     (palette_update_data+$14),a0
     lea         (palettes_3),a1
     moveq       #$f,d1
-    bsr.w       L00002df2
+    bsr.w       modify_current_colours
     tst.b       d2
     bne.w       branch_to_rts
-    bclr.b      #$3,(DAT_00ff0013)
+    bclr.b      #$3,(palette_update_flags)
     rts
 
-L00002d3a:
+.process_palette4_update_data: 
     andi.b      #$1,d7
-    beq.w       branch_to_rts
-    subq.b      #$1,(DAT_00ffdaa2+$1)
+    beq.w       branch_to_rts   ; leave if flag is not set
+    subq.b      #$1,(palette_update_data+$1)
     bne.w       branch_to_rts
-    move.b      (DAT_00ffdaa2),(DAT_00ffdaa2+$1)
-    movea.l     (DAT_00ffdaa2+$2),a0
+    move.b      (palette_update_data),(palette_update_data+$1)
+    movea.l     (palette_update_data+$2),a0
     addq.w      #$2,a0
     lea         (palettes_0+$2),a1
     moveq       #$e,d1
-    bsr.w       L00002df2
+    bsr.w       modify_current_colours   ; 15 colours
     tst.b       d2
     bne.w       branch_to_rts
-    bclr.b      #$0,(DAT_00ff0013)
+    bclr.b      #$0,(palette_update_flags)
     rts
 
-L00002d7a:
+.process_palette5_update_data: 
     andi.b      #$2,d7
-    beq.w       branch_to_rts
-    subq.b      #$1,(DAT_00ffdaa2+$7)
+    beq.w       branch_to_rts   ; leave if flag is not set
+    subq.b      #$1,(palette_update_data+$7)
     bne.w       branch_to_rts
-    move.b      (DAT_00ffdaa2+$6),(DAT_00ffdaa2+$7)
-    movea.l     (DAT_00ffdaa2+$8),a0
+    move.b      (palette_update_data+$6),(palette_update_data+$7)
+    movea.l     (palette_update_data+$8),a0
     lea         (palettes_1),a1
     moveq       #$f,d1
-    bsr.b       L00002df2
+    bsr.b       modify_current_colours
     tst.b       d2
     bne.w       branch_to_rts
-    bclr.b      #$1,(DAT_00ff0013)
+    bclr.b      #$1,(palette_update_flags)
     rts
 
-L00002db6:
+.process_palette6_update_data: 
     andi.b      #$4,d7
-    beq.w       branch_to_rts
-    subq.b      #$1,(DAT_00ffdaa2+$d)
+    beq.w       branch_to_rts   ; leave if flag is not set
+    subq.b      #$1,(palette_update_data+$d)
     bne.w       branch_to_rts
-    move.b      (DAT_00ffdaa2+$c),(DAT_00ffdaa2+$d)
-    movea.l     (DAT_00ffdaa2+$e),a0
+    move.b      (palette_update_data+$c),(palette_update_data+$d)
+    movea.l     (palette_update_data+$e),a0
     lea         (palettes_2),a1
     moveq       #$f,d1
-    bsr.b       L00002df2
+    bsr.b       modify_current_colours
     tst.b       d2
     bne.w       branch_to_rts
-    bclr.b      #$2,(DAT_00ff0013)
+    bclr.b      #$2,(palette_update_flags)
     rts
 
-L00002df2:
-    moveq       #$0,d2
-    .L00002df4:
-        move.b      (a0)+,d3
-        move.b      (a1),d4
-        andi.b      #$e,d3
-        andi.b      #$e,d4
-        moveq       #$2,d5
-        cmp.b       d3,d4
-        beq.b       .L00002e0e
-        bcs.b       .L00002e0a
+; d1 = number of colours to update, a0=new colours, a1=current colours
+modify_current_colours:      ; (00002df2)
+    moveq       #$0,d2              ; d2=$0
+    .process_colour:
+        move.b      (a0)+,d3        ; load new blue
+        move.b      (a1),d4         ; load current blue
+        andi.b      #$e,d3          ; check new blue
+        andi.b      #$e,d4          ; check current blue
+        moveq       #$2,d5          ; d5=$2
+        cmp.b       d3,d4           ; d4-d3
+        beq.b       .check_red      
+        bcs.b       .modify_current_blue
         moveq       #-$2,d5
-    .L00002e0a:
+    .modify_current_blue:
+        add.b       d5,(a1)         ; current blue--
+        addq.w      #$1,d2          ; d2=-1
+    .check_red:
+        addq.w      #$1,a1          ; next byte which contains g and r
+        move.b      (a0),d3         ; load new green red
+        move.b      (a1),d4         ; load current green red
+        andi.b      #$e,d3          ; check new red
+        andi.b      #$e,d4          ; check current red
+        moveq       #$2,d5          ; d5=$2
+        cmp.b       d3,d4           ; d4-d3
+        beq.b       .check_green
+        bcs.b       .modify_current_red
+        moveq       #-$2,d5
+    .modify_current_red:
         add.b       d5,(a1)
         addq.w      #$1,d2
-    .L00002e0e:
-        addq.w      #$1,a1
-        move.b      (a0),d3
-        move.b      (a1),d4
-        andi.b      #$e,d3
-        andi.b      #$e,d4
-        moveq       #$2,d5
-        cmp.b       d3,d4
-        beq.b       .L00002e2a
-        bcs.b       .L00002e26
-        moveq       #-$2,d5
-    .L00002e26:
-        add.b       d5,(a1)
-        addq.w      #$1,d2
-    .L00002e2a:
-        move.b      (a0)+,d3
-        move.b      (a1),d4
-        andi.b      #$e0,d3
-        andi.b      #$e0,d4
-        moveq       #$20,d5
-        cmp.b       d3,d4
-        beq.b       .L00002e44
-        bcs.b       .L00002e40
+    .check_green:
+        move.b      (a0)+,d3        ; load new green red    
+        move.b      (a1),d4         ; load current green red
+        andi.b      #$e0,d3         ; check new green         
+        andi.b      #$e0,d4         ; check current green     
+        moveq       #$20,d5         ; d5=$20
+        cmp.b       d3,d4           ; d4-d3
+        beq.b       .check_next_blue
+        bcs.b       .modify_current_green
         moveq       #-$20,d5
-    .L00002e40:
+    .modify_current_green:
         add.b       d5,(a1)
         addq.w      #$1,d2
-    .L00002e44:
+    .check_next_blue:
         addq.w      #$1,a1
-        dbf         d1,.L00002df4
+        dbf         d1,.process_colour
     rts
 
 fill_bottom_palette:  ; (00002e4c) d0=[0-3]: pallette 0 to 3, a0=src
@@ -3424,9 +3258,9 @@ fill_bottom_palette:  ; (00002e4c) d0=[0-3]: pallette 0 to 3, a0=src
     lsl.w       #$5,d0
     adda.w      d0,a1
     move.w      #$7,d0
-    .L00002e5e:
+    .L0:
         move.l      (a0)+,(a1)+
-        dbf         d0,.L00002e5e
+        dbf         d0,.L0
     movem.l     (SP)+,d0/A0-A1
     rts
 
@@ -3477,183 +3311,173 @@ L00002ede:
 ; end of not used
 ;=======================================================================================================================
 
-L00002ee2:
-    move.l      (DAT_00ff002a),d0
-    cmp.l       (DAT_00ff0570),d0
+update_alisia_life_bar_length:
+    move.l      (new_alisia_life_bar_length),d0
+    cmp.l       (alisia_life_bar_length),d0
     beq.w       branch_to_rts
-    move.l      d0,(DAT_00ff0570)
-    move.l      (DAT_00ff0006),d0
-    cmp.l       (DAT_00ff056c),d0
+    move.l      d0,(alisia_life_bar_length)
+    move.l      (new_alisia_life_bar_level),d0
+    cmp.l       (current_alisia_life_bar_level),d0
     bne.w       branch_to_rts
-    bra.b       L00002f20
+    bra.b       update_alisia_life_bar
 
-L00002f0a:
-    move.l      (DAT_00ff0006),d0
-    cmp.l       (DAT_00ff056c),d0
+update_alisia_life_bar_level:
+    move.l      (new_alisia_life_bar_level),d0
+    cmp.l       (current_alisia_life_bar_level),d0
     beq.w       branch_to_rts
-    move.l      d0,(DAT_00ff056c)
-L00002f20:
-    move.l      (DAT_00ff0570),d0
-    lsr.w       #$2,d0  ; *4 for n long words
-    subq.w      #$1,d0  ; -1
-    lea         (DAT_00ff0650),a0
+    move.l      d0,(current_alisia_life_bar_level)
+update_alisia_life_bar:
+    move.l      (alisia_life_bar_length),d0
+    lsr.w       #$2,d0  ; *4 as each energy bar is 2 tiles wide
+    subq.w      #$1,d0  ; -1 for dbf
+    lea         (hud_alisia_life_bar),a0
     movea.l     a0,a1
-    .L00002f32:
+    .update_bar_tilemap:
         move.w      #$86bd,(a1)+
         move.w      #$86be,(a1)+
-        dbf         d0,.L00002f32
-    move.l      (DAT_00ff0006),d0
-L00002f44:
-    subq.w      #$4,d0
-    bcs.b       L00002f56
-    move.w      #$86b9,(a0)+
-    move.w      #$86ba,(a0)+
-    tst.w       d0
-    bne.b       L00002f44
+        dbf         d0,.update_bar_tilemap
+    move.l      (new_alisia_life_bar_level),d0   ; ?
+    .L00002f44:
+        subq.w      #$4,d0
+        bcs.b       .L00002f56
+        move.w      #$86b9,(a0)+    ; full left
+        move.w      #$86ba,(a0)+    ; full right
+        tst.w       d0
+        bne.b       .L00002f44
     rts
+    .L00002f56:
+        addq.w      #$4,d0
+        beq.b       .L00002f70
+        cmpi.w      #$1,d0
+        beq.b       .L00002f7a
+        cmpi.w      #$2,d0
+        beq.b       .L00002f84
+        move.w      #$86b9,(a0)+    ; full left
+        move.w      #$86bc,(a0)+
+        rts
+    .L00002f70:
+        move.w      #$86bd,(a0)+
+        move.w      #$86be,(a0)+
+        rts    
+    .L00002f7a:
+        move.w      #$86bb,(a0)+
+        move.w      #$86be,(a0)+
+        rts
+    .L00002f84:
+        move.w      #$86b9,(a0)+    ; full left
+        move.w      #$86be,(a0)+
+        rts
 
-L00002f56:
-    addq.w      #$4,d0
-    beq.b       L00002f70
-    cmpi.w      #$1,d0
-    beq.b       L00002f7a
-    cmpi.w      #$2,d0
-    beq.b       L00002f84
-    move.w      #$86b9,(a0)+
-    move.w      #$86bc,(a0)+
-    rts
-
-L00002f70:
-    move.w      #$86bd,(a0)+
-    move.w      #$86be,(a0)+
-    rts
-
-L00002f7a:
-    move.w      #$86bb,(a0)+
-    move.w      #$86be,(a0)+
-    rts
-
-L00002f84:
-    move.w      #$86b9,(a0)+
-    move.w      #$86be,(a0)+
-    rts
-
-L00002f8e:
-    tst.b       (DAT_00ff0022)
+update_dragon_life_bar_length:
+    tst.b       (update_dragon_hud_flag)
     bmi.w       branch_to_rts
-    move.l      (DAT_00ff0032),d0
-    cmp.l       (DAT_00ff057c),d0
+    move.l      (new_dragon_life_bar_length),d0
+    cmp.l       (dragon_life_bar_length),d0
     beq.w       branch_to_rts
-    move.l      d0,(DAT_00ff057c)
-    move.l      (DAT_00ff002e),d0
-    cmp.l       (DAT_00ff0578),d0
+    move.l      d0,(dragon_life_bar_length)
+    move.l      (new_dragon_life_bar_level),d0
+    cmp.l       (current_dragon_life_bar_level),d0
     bne.w       branch_to_rts
-    lea         (DAT_00ff0674),a0
-    bra.b       L00002fec
+    lea         (hud_dragon_life_bar),a0
+    bra.b       update_dragon_life_bar
 
-L00002fc6:
-    tst.b       (DAT_00ff0022)
+update_dragon_life_bar_level:
+    tst.b       (update_dragon_hud_flag)
     bmi.w       branch_to_rts
-    move.l      (DAT_00ff002e),d0
-    cmp.l       (DAT_00ff0578),d0
+    move.l      (new_dragon_life_bar_level),d0
+    cmp.l       (current_dragon_life_bar_level),d0
     beq.w       branch_to_rts
-    move.l      d0,(DAT_00ff0578)
-    lea         (DAT_00ff0674),a0
-L00002fec:
-    move.l      (DAT_00ff057c),d0
+    move.l      d0,(current_dragon_life_bar_level)
+    lea         (hud_dragon_life_bar),a0
+update_dragon_life_bar:
+    move.l      (dragon_life_bar_length),d0
     lsr.w       #$2,d0
     subq.w      #$1,d0
     movea.l     a0,a1
-    .L00002ff8:
+    .restore_bg_tiles:
         move.w      #$86e5,(a1)+
         move.w      #$86e6,(a1)+
-        dbf         d0,.L00002ff8
-    move.l      (DAT_00ff002e),d0
-L0000300a:
-    subq.w      #$4,d0
-    bcs.b       L0000301e
-    move.w      #$86b9,(a0)+
-    move.w      #$86ba,(a0)+
-    tst.w       d0
-    bne.b       L0000300a
+        dbf         d0,.restore_bg_tiles
+    move.l      (new_dragon_life_bar_level),d0
+    .L0000300a: ; print full bar
+        subq.w      #$4,d0
+        bcs.b       .L0000301e      ; branch is not 4/4/
+        move.w      #$86b9,(a0)+    ; full left
+        move.w      #$86ba,(a0)+    ; full right
+        tst.w       d0
+        bne.b       .L0000300a
     bra.w       L0000308a
+    .L0000301e:
+        addq.w      #$4,d0
+        beq.b       .L0000303a  ; 0/4
+        cmpi.w      #$1,d0
+        beq.b       .L00003046  ; 1/4
+        cmpi.w      #$2,d0
+        beq.b       .L00003052  ; 2/4 and continue to 3/4 if not equal
+        move.w      #$86b9,(a0)+    ; full left
+        move.w      #$86e4,(a0)+    ; half right
+        bra.w       L0000308a
+    .L0000303a:
+        move.w      #$86e5,(a0)+    ; empty left
+        move.w      #$86e6,(a0)+    ; empty left
+        bra.w       L0000308a
+    .L00003046:
+        move.w      #$86e3,(a0)+    ; half left
+        move.w      #$86e6,(a0)+    ; empty right
+        bra.w       L0000308a
+    .L00003052:
+        move.w      #$86b9,(a0)+    ; full left
+        move.w      #$86e6,(a0)+    ; empty right
+        bra.w       L0000308a
 
-L0000301e:
-    addq.w      #$4,d0
-    beq.b       L0000303a
-    cmpi.w      #$1,d0
-    beq.b       L00003046
-    cmpi.w      #$2,d0
-    beq.b       L00003052
-    move.w      #$86b9,(a0)+
-    move.w      #$86e4,(a0)+
-    bra.w       L0000308a
-
-L0000303a:
-    move.w      #$86e5,(a0)+
-    move.w      #$86e6,(a0)+
-    bra.w       L0000308a
-
-L00003046:
-    move.w      #$86e3,(a0)+
-    move.w      #$86e6,(a0)+
-    bra.w       L0000308a
-
-L00003052:
-    move.w      #$86b9,(a0)+
-    move.w      #$86e6,(a0)+
-    bra.w       L0000308a
-
-L0000305e:
-    tst.b       (DAT_00ff0022)
+update_dragon_level:
+    tst.b       (update_dragon_hud_flag)
     bmi.w       branch_to_rts
-    move.b      (DAT_00ff0021),d3   ; current value
-    cmp.b       (DAT_00ff0440),d3   ; previous value
+    move.b      (new_dragon_level),d3   ; current value
+    cmp.b       (current_dragon_level),d3   ; previous value
     beq.w       branch_to_rts
-    move.b      d3,(DAT_00ff0440)   ; save as previous value
+    move.b      d3,(current_dragon_level)   ; save as previous value
     addq.b      #$1,d3
-    moveq       #$1a,d1             ; column
-    moveq       #$2,d2
+    moveq       #$1a,d1             ; HUD column
+    moveq       #$2,d2              ; HUD row
     moveq       #$0,d5
-    bsr.w       L000029bc
+    bsr.w       update_hud_level_tilemap
 L0000308a:
     tst.b       (DAT_00ff0442)
     bne.w       branch_to_rts
-    move.l      (DAT_00ff002e),d0
-    beq.w       L0000312c
+    move.l      (new_dragon_life_bar_level),d0
+    beq.w       .L0000312c
     cmpi.b      #$4,d0
-    bls.w       L000030ee
+    bls.w       .L000030ee
     cmpi.b      #$8,d0
-    bls.w       L0000312c
-    move.b      (DAT_00ff0020),d0
+    bls.w       .L0000312c
+    move.b      (monster_selection_index),d0
     ext.w       d0
     mulu.w      #$36,d0
-    move.b      (DAT_00ff0021),d1
+    move.b      (new_dragon_level),d1
     ext.w       d1
     mulu.w      #$12,d1
     lea         (L000724e6),a0
     adda.w      d0,a0
     adda.w      d1,a0
     lea         (palettes_5+$a),a1
-    move.l      (a0)+,(a1)+
-    move.l      (a0)+,(a1)+
-    move.l      (a0)+,(a1)+
-    move.l      (a0)+,(a1)+
+    REPT 4
+        move.l      (a0)+,(a1)+
+    ENDR
     move.w      (a0)+,(a1)+
     addq.w      #$2,a0
-    clr.w       (a1)+
+    clr.w       (a1)+   ; clear last tile as dragons don't use it
     move.w      #CRAM_WHITE,(a1)+
     moveq       #$1,d2
-    bra.w       L000036fe
-
-L000030ee:
-    move.b      #$ff,(DAT_00ff0440)
-    move.b      (DAT_00ff000f),d0
+    bra.w       prepare_dma_palette_transfer
+.L000030ee:
+    move.b      #$ff,(current_dragon_level)
+    move.b      (vblank_counter),d0
     move.b      d0,d1
     andi.b      #$f,d0
     bne.w       branch_to_rts
     andi.b      #$10,d1
-    beq.b       L0000312c
+    beq.b       .L0000312c
     lea         (palettes_5+$a),a1
     move.l      #$00040004,d0
     move.l      d0,(a1)+
@@ -3664,61 +3488,59 @@ L000030ee:
     clr.w       (a1)+
     move.w      d0,(a1)+
     moveq       #$1,d2
-    bra.w       L000036fe
-
-L0000312c:
-    move.b      (DAT_00ff0020),d0
+    bra.w       prepare_dma_palette_transfer
+.L0000312c:
+    move.b      (monster_selection_index),d0
     ext.w       d0
     mulu.w      #$16,d0
     lea         (L000725be),a0
     adda.w      d0,a0
     lea         (palettes_5+$a),a1
-    move.l      (a0)+,(a1)+
-    move.l      (a0)+,(a1)+
-    move.l      (a0)+,(a1)+
-    move.l      (a0)+,(a1)+
+    REPT 4
+        move.l      (a0)+,(a1)+
+    ENDR
     move.w      (a0)+,(a1)+
     addq.w      #$2,a0
     clr.w       (a1)+
     move.w      (a0)+,(a1)+
     moveq       #$1,d2
-    bra.w       L000036fe
+    bra.w       prepare_dma_palette_transfer
 
-L0000315c:
-    tst.b       (DAT_00ff0056)
+update_alisia_level:
+    tst.b       (alisia_level_update_flag)
     bne.w       branch_to_rts
-    move.b      (DAT_00ff001d),d3   ; current value
-    cmp.b       (DAT_00ff0437),d3   ; previous value
-    beq.b       L000031a0
-    move.b      d3,(DAT_00ff0437)   ; save as previous value
+    move.b      (new_alisia_level),d3   ; current value
+    cmp.b       (current_alisia_level),d3   ; previous value
+    beq.b       .L000031a0
+    move.b      d3,(current_alisia_level)   ; save as previous value
     addq.b      #$1,d3
-    moveq       #$8,d1              ; column
-    moveq       #$2,d2
+    moveq       #$8,d1              ; HUD column
+    moveq       #$2,d2              ; HUD row
     moveq       #$0,d5
-    bsr.w       L000029bc
+    bsr.w       update_hud_level_tilemap
     moveq       #$0,d0
     lea         (L000129e6),a0
-    move.b      (DAT_00ff001d),d3   ; offset 0 to 7
+    move.b      (new_alisia_level),d3   ; offset 0 to 7
     ext.w       d3
-    adda.w      d3,a0
+    adda.w      d3,a0                   ;
     move.b      (a0),d0
-    move.l      d0,(DAT_00ff000a)   ; push pointed byte value to ram
-L000031a0:
+    move.l      d0,(DAT_00ff000a)       ; push pointed byte value to ram
+.L000031a0:
     ext.w       d3
     tst.b       (DAT_00ff043e)
-    bne.b       L000031fc
-    move.b      (DAT_00ff00c2),d4
+    bne.b       .L000031fc
+    move.b      (new_alisia_power),d4
     cmpi.b      #$a,d4
-    bne.b       L000031be
+    bne.b       .L000031be
     cmpi.w      #$4,d3
-    bcc.b       L000031be
+    bcc.b       .L000031be
     addq.w      #$4,d3
-L000031be:
+.L000031be:
     lea         (palettes_1+$2),a0
     lea         (palettes_4+$22),a2
     lea         (L000143aa),a1
     lsl.w       #$4,d3
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.w      #$2,d0
     lsl.w       #$2,d0
     adda.w      d3,a1
@@ -3730,13 +3552,13 @@ L000031be:
     ENDR
     rts
 
-L000031fc:
+.L000031fc:
     lea         (palettes_1+$2),a0
     lea         (palettes_4+$22),a2
-    move.w      #$88,d0
+    move.w      #$0088,d0
     move.w      d0,(a0)+
     move.w      d0,(a2)+
-    move.w      #$4aa,d0
+    move.w      #$04aa,d0
     move.w      d0,(a0)+
     move.w      d0,(a2)+
     move.w      #$0acc,d0
@@ -3747,100 +3569,98 @@ L000031fc:
     move.w      d0,(a2)+
     rts
 
-L0000322a:
-    move.b      (DAT_00ff00c2),d2
-    cmp.b       (DAT_00ff0438),d2
-    beq.b       L00003262
-    move.b      d2,(DAT_00ff0438)
-    lea         (DAT_00ff06d4),a0
+update_alisia_power_bar:  ; return d1?
+    move.b      (new_alisia_power),d2
+    cmp.b       (current_alisia_power),d2
+    beq.b       .update_alisia_arrow
+    move.b      d2,(current_alisia_power)
+    lea         (hud_alisia_power),a0
     ext.w       d2
     move.w      d2,d0
-    lsl.w       #$3,d0
+    lsl.w       #$3,d0  ; d0*8
     move.w      d0,d1
-    add.w       d0,d0
-    add.w       d1,d0
-    lea         (L0001401a),a1
-    adda.w      d0,a1
+    add.w       d0,d0   ; d0*2
+    add.w       d1,d0   ; d0*2
+    lea         (alisia_power_tilemap),a1
+    adda.w      d0,a1   ; will add d2*32
     REPT 5
         move.l      (a1)+,(a0)+
     ENDR
-L00003262:
+.update_alisia_arrow:
     cmpi.b      #$8,d2
     bcs.w       branch_to_rts
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0       ; refresh flag
     andi.b      #$7,d0
     bne.w       branch_to_rts
-    move.w      (DAT_00ff04d4),d0
-    cmpi.w      #$86a7,d0
-    beq.b       L00003296
-    move.w      #$86a7,d0
-    move.w      d0,(DAT_00ff04d4)
-    move.w      d0,(DAT_00ff06d2)
+    move.w      (alisia_arrow_status),d0
+    cmpi.w      #$86a7,d0               ; arrow off tile in VRAM
+    beq.b       .alisia_arrow_on
+    move.w      #$86a7,d0               ; arrow off tile in VRAM
+    move.w      d0,(alisia_arrow_status)
+    move.w      d0,(hud_alisia_arrow)
+    rts
+.alisia_arrow_on:
+    move.w      #$86a8,d0               ; arrow on tile in VRAM
+    move.w      d0,(alisia_arrow_status)
+    move.w      d0,(hud_alisia_arrow)
     rts
 
-L00003296:
-    move.w      #$86a8,d0
-    move.w      d0,(DAT_00ff04d4)
-    move.w      d0,(DAT_00ff06d2)
-    rts
-
-L000032a8:
-    move.b      (DAT_00ff0022),d0
+update_dragon_power_bar:
+    move.b      (update_dragon_hud_flag),d0
     bmi.w       branch_to_rts
-    cmp.b       (DAT_00ff0441),d0
+    cmp.b       (current_dragon_power),d0
     beq.w       branch_to_rts
-    move.b      d0,(DAT_00ff0441)
+    move.b      d0,(current_dragon_power)
     ext.w       d0
     lsl.w       #$4,d0
-    lea         (L00014122),a1
+    lea         (monster_power_tilemap),a1
     adda.w      d0,a1
-    lea         (DAT_00ff06f8),a0
+    lea         (hud_monster_power),a0
     REPT 4
         move.l      (a1)+,(a0)+
     ENDR
     rts
 
-L000032de:
+process_dma_item:
     tst.b       (process_dma_data_flag)
     beq.w       branch_to_rts
-    move.b      (DAT_00ff044f),d0   ;  load offset
-    andi.w      #$f8,d0
-    lea         (dma_data_array),a0   ; VRAM DMA data array
+    move.b      (dma_data_array_read_index),d0   ;  load offset
+    andi.w      #$00f8,d0
+    lea         (dma_data_array),a0     ; VRAM DMA data array  (cfg+datasrc(l), vramaddr(w), length(w))
     adda.w      d0,a0
-    moveq       #$40,d2
-    move.w      ($6,a0),d0          ; attributes
+    moveq       #$40,d2                 ; number of bytes send at once
+    move.w      ($6,a0),d0              ; length
     beq.b       .clear_flag
-    bmi.b       L0000333a           ; jump if length >$8000
-    sub.w       d2,d0
+    bmi.b       L0000333a               ; jump if length >$8000
+    sub.w       d2,d0                   ; d0=d0-$40
     bpl.b       .L1
-    add.w       d0,d2               ; restitute if d0<0 so max will be $3f
-    clr.w       d0                  ; d0=$0    
+    add.w       d0,d2                   ; restitute if d0<0 so max will be $3f
+    clr.w       d0                      ; d0=$0    
 .L1:
-    move.w      d0,($6,a0)
+    move.w      d0,($6,a0)              ; save length for next time
     bne.b       .L0
-    addq.b      #$8,(DAT_00ff044f)  ; increment offset if current value is 0
+    addq.b      #$8,(dma_data_array_read_index)  ; increment dma item index if length is 0
 .L0:
     move.l      (a0),d0     ; DMA cfg+src addr
     move.w      ($4,a0),d1  ; VRAM ADDR
     moveq       #$1,d3      ; VRAM DMA
     bsr.w       cpu_to_vram_dma
-    add.w       d2,d2
-    add.l       d2,d0
-    add.w       d2,d1
-    move.l      d0,(a0)
-    move.w      d1,($4,a0)
+    add.w       d2,d2       ; lengthx2 for words
+    add.l       d2,d0       ; inc source address
+    add.w       d2,d1       ; inc vram address                        
+    move.l      d0,(a0)     ; save new src address
+    move.w      d1,($4,a0)  ; save new VRAM dst address                        
     rts
-
 .clear_flag:
     clr.b       (process_dma_data_flag)
 branch_to_rts:    ; (00003338)
     rts
 
-L0000333a:  ; d0, a0
-    andi.w      #$7fff,d0
-    move.w      d0,($6,a0)
-    move.l      a0,-(SP)
-    movea.l     (a0),a0
+L0000333a:
+    andi.w      #$7fff,d0       ; strip flag
+    move.w      d0,($6,a0)      ; save length for next time without flag
+    move.l      a0,-(SP)        ; push current item array address to stack
+    movea.l     (a0),a0         ; DMA cfg+src addr          
     lea         (DAT_00ffdd94),a1
     jsr         L0000fc04
     movea.l     (SP)+,a0
@@ -3848,14 +3668,14 @@ L0000333a:  ; d0, a0
     rts
 
 ; write palette data from rom to ram and then add to DMA FIFO
-L00003358:  ; d0=index, d1=length
+add_palette_to_dma_data_array:  ; d0=index, d1=length
     move.w      d1,d2
     lsl.w       #$5,d1
     lsl.w       #$3,d0
     lea         (L000cfd00),a3
     adda.w      d0,a3   ; a3=$000cfd00 + d0*8
     tst.w       d2
-    bmi.b       L000033be   ;>$8000
+    bmi.b       .L000033be   ;>$8000
     move.l      a0,-(SP)
     move.w      ($6,a3),d2
     move.w      d2,d3
@@ -3865,32 +3685,32 @@ L00003358:  ; d0=index, d1=length
     adda.w      d3,a0
     rol.w       #$4,d2
     lsr.w       #$1,d2
-    bcc.b       L00003390
+    bcc.b       .L00003390
     clr.w       d0
     bsr.w       fill_top_palette
     adda.w      #$20,a0
-L00003390:
+.L00003390:
     lsr.w       #$1,d2
-    bcc.b       L0000339e
+    bcc.b       .L0000339e
     moveq       #$1,d0
     bsr.w       fill_top_palette
     adda.w      #$20,a0
-L0000339e:
+.L0000339e:
     lsr.w       #$1,d2
-    bcc.b       L000033ac
+    bcc.b       .L000033ac
     moveq       #$2,d0
     bsr.w       fill_top_palette
     adda.w      #$20,a0
-L000033ac:
+.L000033ac:
     lsr.w       #$1,d2
-    bcc.b       L000033b6
+    bcc.b       .L000033b6
     moveq       #$3,d0
     bsr.w       fill_top_palette
-L000033b6:
+.L000033b6:
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     movea.l     (SP)+,a0
-L000033be:
+.L000033be:
     move.w      ($4,a3),d3
     beq.w       branch_to_rts
     move.l      (a3),d0
@@ -3898,256 +3718,255 @@ L000033be:
     add.l       d0,d2
     lsr.w       #$1,d3
     ori.w       #$8000,d3
-; d2=cfg/src addr, d1=VRAM addr, d3=len saved to dma_data_array + (dma_data_array_index)*8
+; d2=cfg/src addr, d1=VRAM addr, d3=len saved to dma_data_array + (dma_data_array_write_index)*8
 add_item_to_dma_data_array:
     movem.l     A0/d3-d0,-(SP)
-    move.b      (dma_data_array_index),d0
-    addq.b      #$8,(dma_data_array_index)
-    andi.w      #$f8,d0
+    move.b      (dma_data_array_write_index),d0
+    addq.b      #$8,(dma_data_array_write_index)
+    andi.w      #$00f8,d0
     lea         (dma_data_array),a0
     adda.w      d0,a0
     move.l      d2,(a0)+    ; cfg/src addr
     move.w      d1,(a0)+    ; vram addr
     move.w      d3,(a0)     ; len
-    move.b      #$1,(process_dma_data_flag)  ; flag to process dma data
+    move.b      #$01,(process_dma_data_flag)  ; flag to process dma data
     movem.l     (SP)+,d0-d3/A0
     rts
 
-L00003406:
+dma_copied_or_decompressed_tiles:
     movem.l     A6-A0/d7-d0,-(SP)
-    .L0000340a:
+    .decompress_and_process_dma_item:
         tst.b       (process_dma_data_flag)
         beq.b       .exit
-        jsr         L0000fc50
-        bsr.w       L000032de
-        bra.b       .L0000340a
+        jsr         copy_or_decompress_n_tiles       ; decompression?
+        bsr.w       process_dma_item
+        bra.b       .decompress_and_process_dma_item
 .exit:
     movem.l     (SP)+,d0-d7/A0-A6
     rts
 
 L00003424:
     sub.w       d1,d3
-    beq.w       L00003574
-    bmi.w       L000034d0
+    beq.w       .L00003574
+    bmi.w       .L000034d0
     sub.w       d2,d4
-    beq.w       L0000359c
-    bmi.b       L00003482
+    beq.w       .ret8
+    bmi.b       .L00003482
     ext.l       d4
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
     cmpi.w      #$6,d0
-    bcs.w       L0000359c
+    bcs.w       .ret8
     cmpi.w      #$13,d0
-    bcs.w       L000035a0
+    bcs.w       .ret9
     cmpi.w      #$22,d0
-    bcs.w       L000035a4
+    bcs.w       .ret10
     cmpi.w      #$35,d0
-    bcs.w       L000035a8
+    bcs.w       .ret11
     cmpi.w      #$4e,d0
-    bcs.w       L000035ac
+    bcs.w       .ret12
     cmpi.w      #$0078,d0
-    bcs.w       L000035b0
+    bcs.w       .ret13
     cmpi.w      #$d3,d0
-    bcs.w       L000035b4
+    bcs.w       .ret14
     cmpi.w      #$28a,d0
-    bcs.w       L000035b8
+    bcs.w       .ret15
     moveq       #$10,d0
     rts
-L00003482:
+.L00003482:
     neg.w       d4
     ext.l       d4
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
     cmpi.w      #$6,d0
-    bcs.w       L0000359c
+    bcs.w       .ret8
     cmpi.w      #$13,d0
-    bcs.w       L00003598
+    bcs.w       .ret7
     cmpi.w      #$22,d0
-    bcs.w       L00003594
+    bcs.w       .ret6
     cmpi.w      #$35,d0
-    bcs.w       L00003590
+    bcs.w       .ret5
     cmpi.w      #$4e,d0
-    bcs.w       L0000358c
+    bcs.w       .ret4
     cmpi.w      #$0078,d0
-    bcs.w       L00003588
+    bcs.w       .ret3
     cmpi.w      #$d3,d0
-    bcs.w       L00003584
+    bcs.w       .ret2
     cmpi.w      #$28a,d0
-    bcs.w       L00003580
+    bcs.w       .ret1
     moveq       #$0,d0
     rts
-
-L000034d0:
+.L000034d0:
     neg.w       d3
     sub.w       d2,d4
-    beq.w       L000035d8
-    bmi.b       L00003526
+    beq.w       .ret24
+    bmi.b       .L00003526
     ext.l       d4
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
     cmpi.w      #$6,d0
-    bcs.w       L000035d8
+    bcs.w       .ret24
     cmpi.w      #$13,d0
-    bcs.w       L000035d4
+    bcs.w       .ret23
     cmpi.w      #$22,d0
-    bcs.w       L000035d0
+    bcs.w       .ret22
     cmpi.w      #$35,d0
-    bcs.w       L000035cc
+    bcs.w       .ret21
     cmpi.w      #$4e,d0
-    bcs.w       L000035c8
+    bcs.w       .ret20
     cmpi.w      #$0078,d0
-    bcs.w       L000035c4
+    bcs.w       .ret19
     cmpi.w      #$d3,d0
-    bcs.w       L000035c0
+    bcs.w       .ret18
     cmpi.w      #$28a,d0
-    bcs.w       L000035bc
+    bcs.w       .ret17
     moveq       #$10,d0
     rts
-L00003526:
+.L00003526:
     neg.w       d4
     ext.l       d4
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
     cmpi.w      #$6,d0
-    bcs.w       L000035d8
+    bcs.w       .ret24
     cmpi.w      #$13,d0
-    bcs.w       L000035dc
+    bcs.w       .ret25
     cmpi.w      #$22,d0
-    bcs.w       L000035e0
+    bcs.w       .ret26
     cmpi.w      #$35,d0
-    bcs.w       L000035e4
+    bcs.w       .ret27
     cmpi.w      #$4e,d0
-    bcs.w       L000035e8
+    bcs.w       .ret28
     cmpi.w      #$0078,d0
-    bcs.w       L000035ec
+    bcs.w       .ret29
     cmpi.w      #$d3,d0
-    bcs.w       L000035f0
+    bcs.w       .ret30
     cmpi.w      #$28a,d0
-    bcs.w       L000035f4
+    bcs.w       .ret31
     moveq       #$0,d0
     rts
-L00003574:
+.L00003574:
     sub.w       d2,d4
-    bmi.b       L0000357c
+    bmi.b       .ret0
     moveq       #$10,d0
     rts
     ; TODO find macro to do this - already tried SET with REPT
-L0000357c:
+.ret0:
     moveq       #$0,d0
     rts
-L00003580:
+.ret1:
     moveq       #$1,d0
     rts
-L00003584:
+.ret2:
     moveq       #$2,d0
     rts
-L00003588:
+.ret3:
     moveq       #$3,d0
     rts
-L0000358c:
+.ret4:
     moveq       #$4,d0
     rts
-L00003590:
+.ret5:
     moveq       #$5,d0
     rts
-L00003594:
+.ret6:
     moveq       #$6,d0
     rts
-L00003598:
+.ret7:
     moveq       #$7,d0
     rts
-L0000359c:
+.ret8:
     moveq       #$8,d0
     rts
-L000035a0:
+.ret9:
     moveq       #$9,d0
     rts
-L000035a4:
+.ret10:
     moveq       #$a,d0
     rts
-L000035a8:
+.ret11:
     moveq       #$b,d0
     rts
-L000035ac:
+.ret12:
     moveq       #$c,d0
     rts
-L000035b0:
+.ret13:
     moveq       #$d,d0
     rts
-L000035b4:
+.ret14:
     moveq       #$e,d0
     rts
-L000035b8:
+.ret15:
     moveq       #$f,d0
     rts
-L000035bc:
+.ret17:
     moveq       #$11,d0
     rts
-L000035c0:
+.ret18:
     moveq       #$12,d0
     rts
-L000035c4:
+.ret19:
     moveq       #$13,d0
     rts
-L000035c8:
+.ret20:
     moveq       #$14,d0
     rts
-L000035cc:
+.ret21:
     moveq       #$15,d0
     rts
-L000035d0:
+.ret22:
     moveq       #$16,d0
     rts
-L000035d4:
+.ret23:
     moveq       #$17,d0
     rts
-L000035d8:
+.ret24:
     moveq       #$18,d0
     rts
-L000035dc:
+.ret25:
     moveq       #$19,d0
     rts
-L000035e0:
+.ret26:
     moveq       #$1a,d0
     rts
-L000035e4:
+.ret27:
     moveq       #$1b,d0
     rts
-L000035e8:
+.ret28:
     moveq       #$1c,d0
     rts
-L000035ec:
+.ret29:
     moveq       #$1d,d0
     rts
-L000035f0:
+.ret30:
     moveq       #$1e,d0
     rts
-L000035f4:
+.ret31:
     moveq       #$1f,d0
     rts
 
 L000035f8:
     sub.w       d1,d0
-    beq.b       L00003616
+    beq.b       .L00003616
     bmi.b       .L00003608
     cmpi.w      #$10,d0
-    bhi.b       L00003610
+    bhi.b       .L00003610
     .L00003604:
         addq.w      #$1,d1
-        bra.b       L00003612
+        bra.b       .L00003612
     .L00003608:
         neg.w       d0
         cmpi.w      #$10,d0
         bhi.b       .L00003604
-L00003610:
+.L00003610:
     subq.w      #$1,d1
-L00003612:
+.L00003612:
     andi.w      #$1f,d1
-L00003616:
+.L00003616:
     move.w      d1,d7
     add.w       d1,d1
     add.w       d1,d1
@@ -4169,7 +3988,7 @@ L00003616:
     add.w       d0,d3
     rts
 
-L00003642:
+L00003642:  ; get tilemap address from rom - d1=row, d2=column, a0=current address
     movem.w     d2-d1,-(SP)
     lsr.w       #$4,d1              ; d1=d1>>4
     lsr.w       #$4,d2              ; d2=d2>>4
@@ -4177,17 +3996,17 @@ L00003642:
     mulu.w      (DAT_00ff0470),d2   ; d2=d2*(DAT_00ff0470)
     adda.w      d2,a0               ; A0=A0+d2
     add.w       d1,d1               ; d1=d1+d1
-    adda.w      d1,a0               ; A0=A0+d1
+    adda.w      d1,a0               ; A0=A0+d1 - a0=a0+d2*16*(DAT_00ff0470)+d1*32
     movem.w     (SP)+,d1-d2
     rts
 
 L00003662:
     movem.w     d2-d0,-(SP)
     bsr.b       L00003642
-    andi.w      #$f,d1
+    andi.w      #$000f,d1
     move.w      (a0),d0
     lsr.w       #$5,d0
-    andi.w      #$7c0,d0
+    andi.w      #$07c0,d0
     lea         (L000134c0),a0
     adda.w      d0,a0
     add.w       d1,d1
@@ -4202,14 +4021,14 @@ L00003688:
     ext.w       d3
     bmi.b       L000036ca
     beq.b       L0000369e
-    andi.w      #$f,d2
+    andi.w      #$000f,d2
     sub.w       d2,d3
     subq.w      #$1,d3
     clr.b       d0
     rts
 L0000369e:                 ;XREF[1]:
     move.w      d2,d0
-    andi.w      #$f,d0
+    andi.w      #$000f,d0
     neg.w       d0
     subi.w      #$10,d2
     bsr.b       L00003662
@@ -4231,7 +4050,7 @@ L000036c2:                 ;XREF[1]:
     rts
 L000036ca:                 ;XREF[1]:
     move.w      d2,d0
-    andi.w      #$f,d0
+    andi.w      #$000f,d0
     neg.w       d0
     addi.w      #$10,d0
     addi.w      #$10,d2
@@ -4254,33 +4073,29 @@ L000036f2:
     andi.w      #$f800,d0
     rts
 
-L000036fe:      ;d2=1,2,4,6,8,a (only values seen in throughout the code)
+prepare_dma_palette_transfer:      ; (000036fe) d2=vblank counter
     movem.l     a0/d2-d1,-(SP)
     clr.w       d1
     lea         (palettes_4),a0
-    bsr.w       L00002c82   ; A0=palettes_4, d1=0
-    addq.w      #$1,d1
-    adda.w      #$20,a0
-    bsr.w       L00002c82   ; A0=palettes_5, d1=1
-    addq.w      #$1,d1
-    adda.w      #$20,a0
-    bsr.w       L00002c82   ; A0=palettes_6, d1=2
-    addq.w      #$1,d1
-    adda.w      #$20,a0
-    bsr.w       L00002c82   ; A0=palettes_7, d1=3
+    bsr.w       set_palette_update_data   ; A0=palette 4
+    REPT 3
+        addq.w      #$1,d1
+        adda.w      #$20,a0
+        bsr.w       set_palette_update_data   ; A0=palette 5, 6, 7
+    ENDR
     movem.l     (SP)+,d1-d2/a0
     rts
-; TODO check hardcoded values which must be addresses
-L00003732:
+
+load_lv1_graphics:  ; never called it would seem
     move.w      #$4000,d1
-    move.l      #$0003f428,d2   ; VRAM data
+    move.l      #(level1_tileset),d2
     move.w      #$0400,d3
     bsr.w       add_item_to_dma_data_array
-    lea         (L00069070),a0   ; palette
+    lea         (L00069070),a0   ; lv1 palette?
     moveq       #$2,d0
     bsr.w       fill_top_palette    ; +2
     moveq       #$1,d2
-    bra.w       L000036fe
+    bra.w       prepare_dma_palette_transfer
 
 L00003756:
     jmp         L0000117c
@@ -4295,7 +4110,7 @@ L00003768:  ; a6
     bsr.w       L00002c6a
     add.w       d0,d0   ; word pointer
     lea         (L00003798),a0
-    move.w      ($0,a0,d0*$1),d7
+    move.w      ($0,a0,d0.w),d7
     moveq       #$20,d0
     bsr.w       L00002c6a
     addi.w      #$200,d0
@@ -4311,11 +4126,11 @@ L00003798:
     dw $004e, $02ea, $02f3, $02f4, $02f5, $02f6
 
 L000037a4:
-    move.b      #$1,(DAT_00ff0056)
+    move.b      #$1,(alisia_level_update_flag)
     movem.l     A6-A0/d6-d0,-(SP)
     move.l      (DAT_00ff0510),-(SP)
     move.l      (DAT_00ff0514),-(SP)
-    move.w      (DAT_00ff04ee),d1
+    move.w      (playable_level_id),d1
     move.w      #$a200,d4
     move.b      (DAT_00ff0455),d0
     beq.b       L00003828
@@ -4346,8 +4161,8 @@ L00003828:
     lea         (L0006d9ba),a0
     lea         (DAT_00ffdd94),a1
     jsr         L0000fc04
-    move.w      #$20,d0
-    move.w      #$12,d1
+    move.w      #$0020,d0
+    move.w      #$0012,d1
     bsr.w       L00001aaa
     addq.b      #$1,(DAT_00ff0455)
 L0000384c:
@@ -4427,8 +4242,8 @@ L00003986
     .L000039d4:  ; save 7 colours
         move.w      (a0)+,d0     ; offset
         move.w      (a0)+,d1     ; colour
-        move.w      d1,($0,a1,d0*$1)
-        move.w      d1,($0,a2,d0*$1)
+        move.w      d1,($0,a1,d0.w)
+        move.w      d1,($0,a2,d0.w)
         dbf         d7,.L000039d4
     move.w      (a0)+,d0
     move.l      a0,(DAT_00ff05a4)    ; record current a0 value
@@ -4516,7 +4331,7 @@ L00003c82:
     move.w      (DAT_00ff04de),d1
     move.w      (DAT_00ff04e6),d2
     bsr.w       L0000282e
-    move.w      (DAT_00ff04ee),d0
+    move.w      (playable_level_id),d0
     addi.w      #$38,d1
     move.w      (DAT_00ff04e6),d2
     bsr.w       L0000282e
@@ -4526,7 +4341,7 @@ L00003c82:
     bra.w       L0000282e
 
 L00003cbe:
-    move.w      (DAT_00ff04ee),d0
+    move.w      (playable_level_id),d0
     cmpi.w      #$8,d0
     beq.w       L00003796
     move.w      #$d,d0
@@ -4543,7 +4358,7 @@ L00003cf4:
     bsr.w       L00002c6a
     add.w       d0,d0        ; word pointer
     lea         (L00003798),a0
-    move.w      ($0,a0,d0*$1),d7
+    move.w      ($0,a0,d0.w),d7
     rts
 
 L00003d08:
@@ -4552,36 +4367,36 @@ L00003d08:
     bsr.w       fill_top_palette
     lea         (L000144e2),a0
     move.l      a0,(DAT_00ff0594)
-    move.w      #$1,(DAT_00ff04d2)
-    move.w      #$b,(DAT_00ff0016)
+    move.w      #$0001,(DAT_00ff04d2)
+    move.w      #$000b,(DAT_00ff0016)
     moveq       #$1,d2
-    bra.w       L000036fe
+    bra.w       prepare_dma_palette_transfer
 
 L00003d36;
     move.w      d7,(DAT_00ff04fa)
-    move.l      a6,(DAT_00ff05b4)
+    move.l      a6,(unused_saved_address)
     rts
 
 L00003d44:
     movem.l     a6-a0/d7-d0,-(SP)
     move.w      d7,d0
-    bmi.b       L00003db6
+    bmi.b       .L00003db6
     btst.b      #$6,($44,a6)
-    bne.b       L00003dbc
+    bne.b       .L00003dbc
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L00003db6
+    bls.b       .L00003db6
     cmpi.w      #$210,d1
-    bcc.b       L00003db6
+    bcc.b       .L00003db6
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L00003db6
+    bls.b       .L00003db6
     cmpi.w      #$1b0,d2
-    bcc.b       L00003db6
+    bcc.b       .L00003db6
     move.w      (DAT_00ff04c8),d3
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
@@ -4594,27 +4409,26 @@ L00003d44:
     move.w      d3,d6
     bsr.w       L000028aa
     move.w      d3,(DAT_00ff04c8)
-L00003db6:
+.L00003db6:
     movem.l     (SP)+,d0-d7/a0-a6
     rts
-
-L00003dbc:
+.L00003dbc:
     btst.b      #$1,($47,a6)
-    bne.b       L00003e3a
+    bne.b       .L00003e3a
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L00003db6
+    bls.b       .L00003db6
     cmpi.w      #$210,d1
-    bcc.b       L00003db6
+    bcc.b       .L00003db6
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L00003db6
+    bls.b       .L00003db6
     cmpi.w      #$1b0,d2
-    bcc.b       L00003db6
+    bcc.b       .L00003db6
     move.w      (DAT_00ff04c8),d3
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
@@ -4632,49 +4446,44 @@ L00003dbc:
     bset.b      #$1,($47,a6)
     movem.l     (SP)+,d0-d7/a0-a6
     rts
-
-L00003e3a:
+.L00003e3a:
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.w      (DAT_00ff04c8),d3
-
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
     lea         (L0006e4e8),a0
-
     add.w       d0,d0
     adda.w      d0,a0
     move.w      (a0),d0
     lea         (L0006e5b2),a0
-
     adda.w      d0,a0
     move.w      d3,d6
     bsr.w       L000028aa
     move.w      d3,(DAT_00ff04c8)
-
     movem.l     (SP)+,d0-d7/a0-a6
     rts
 
 L00003e76:
     movem.l     a6-a0/d7-d0,-(SP)
     move.w      d7,d0
-    bmi.b       L00003ee8
+    bmi.b       .L00003ee8
     btst.b      #$6,($44,a6)
-    bne.b       L00003eee
+    bne.b       .L00003eee
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L00003ee8
+    bls.b       .L00003ee8
     cmpi.w      #$210,d1
-    bcc.b       L00003ee8
+    bcc.b       .L00003ee8
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L00003ee8
+    bls.b       .L00003ee8
     cmpi.w      #$1b0,d2
-    bcc.b       L00003ee8
+    bcc.b       .L00003ee8
     move.w      (DAT_00ff04c8),d3
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
@@ -4687,28 +4496,26 @@ L00003e76:
     move.w      d3,d6
     bsr.w       L000028aa
     move.w      d3,(DAT_00ff04c8)
-
-L00003ee8:
+.L00003ee8:
     movem.l     (SP)+,d0-d7/a0-a6
     rts
-
-L00003eee:
+.L00003eee:
     btst.b      #$1,($47,a6)
-    bne.b       L00003f6c
+    bne.b       .L00003f6c
     move.w      ($20,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L00003ee8
+    bls.b       .L00003ee8
     cmpi.w      #$210,d1
-    bcc.b       L00003ee8
+    bcc.b       .L00003ee8
     move.w      ($22,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L00003ee8
+    bls.b       .L00003ee8
     cmpi.w      #$1b0,d2
-    bcc.b       L00003ee8
+    bcc.b       .L00003ee8
     move.w      (DAT_00ff04c8),d3
     move.w      ($52,a6),d4
     move.w      ($34,a6),d5
@@ -4726,8 +4533,7 @@ L00003eee:
     bset.b      #$1,($47,a6)
     movem.l     (SP)+,d0-d7/a0-a6
     rts
-
-L00003f6c
+.L00003f6c
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.w      (DAT_00ff04c8),d3
@@ -4750,7 +4556,7 @@ L00003fa8:
     bra.w       L00001c76
 
     org $3fae
-L00003fae:
+init_new_game_variables:
     move.w      (audio_data_banks+$7ffc),(DAT_00ff0464)    ; not used
     move.w      (audio_data_banks+$7ffe),(DAT_00ff0466)    ; not used
     moveq       #$1,d0
@@ -4765,42 +4571,42 @@ L00003fae:
     clr.b       (DAT_00ff0450)
     clr.b       (DAT_00ff0451)
     clr.b       (DAT_00ff001c)
-    clr.b       (DAT_00ff0439)
+    clr.b       (stage_demo_flag)
     clr.b       (DAT_00ff0057)
-    move.b      #$4,(DAT_00ff0020)
-    move.b      #$1,(DAT_00ff00c3)
+    move.b      #$04,(monster_selection_index)
+    move.b      #$01,(DAT_00ff00c3) ; not used
     clr.l       (DAT_00ff00ca)
     clr.l       (DAT_00ff00ce)
     clr.l       (DAT_00ff05ac)
-    move.w      #$1,(DAT_00ff04f6)
+    move.w      #$0001,(DAT_00ff04f6)
     clr.w       (DAT_00ff04ba)
     clr.w       (DAT_00ff04bc)
     clr.w       (DAT_00ff04fc)
     clr.w       (DAT_00ff04fe)
-    move.l      #$c,(DAT_00ff0006)
-    move.l      #$c,(DAT_00ff002a)
-    clr.b       (DAT_00ff001d)
-    lea         (L00014232),a0
-    lea         (DAT_00ffdaba),a1
-    move.w      #$4f,d7
+    move.l      #$0000000c,(new_alisia_life_bar_level)
+    move.l      #$0000000c,(new_alisia_life_bar_length)
+    clr.b       (new_alisia_level)
+    lea         (default_monster_data),a0
+    lea         (monster_data_array),a1
+    move.w      #$004f,d7
     .copy_320_bytes:
         move.l      (a0)+,(a1)+
         dbf         d7,.copy_320_bytes
-    lea         (DAT_00ffdaba+$a),a0
+    lea         (monster_data_array+$a),a0
     lea         (L00012d60),a1
-    lea         (DAT_00ffdbfa),a2
+    lea         (monster_stats_array),a2
     moveq       #$3,d7
     .L1:
         movem.l     a2-a0/d7,-(SP)
         move.l      ($10,a1),d0
-        move.l      d0,(DAT_00ff002e)
+        move.l      d0,(new_dragon_life_bar_level)
         move.l      d0,(a2)
         move.l      ($14,a1),d0
-        move.l      d0,(DAT_00ff057c)
+        move.l      d0,(dragon_life_bar_length)
         move.l      d0,($4,a2)
         clr.b       ($8,a2)
         move.b      #$10,($9,a2)
-        bsr.w       L00002fec
+        bsr.w       update_dragon_life_bar
         movem.l     (SP)+,d7/a0-a2
         adda.w      #$40,a0     ; push pointer
         adda.w      #$18,a1     ; push pointer
@@ -4814,14 +4620,14 @@ L00003fae:
 ; TODO check hardcoded values
 L000040dc:  ; called when playing demo or when pressing start button at the title screen to start introduction
     clr.b       (display_enable_flag)
-    bsr.w       L000043fe
+    bsr.w       L000043fe       ; sound off
     moveq       #$0,d0
-    lea         (Z80_RAM+$b),a0
+    lea         (Z80_RAM+$b),a0 ; sound register again
     bsr.w       write_z80_reg
     bsr.w       set_gfx_320p_mode
-    clr.b       (DAT_00ff000f)
+    clr.b       (vblank_counter)
     clr.b       (DAT_00ff044d)
-    clr.b       (DAT_00ff0013)
+    clr.b       (palette_update_flags)
     clr.b       (vram_to_vram_type)
     clr.b       (DAT_00ff001f)
     clr.b       (jp1_result)
@@ -4836,9 +4642,9 @@ L000040dc:  ; called when playing demo or when pressing start button at the titl
     clr.b       (bg_reset_flag)
     move.b      #$ff,(DAT_00ff0446)
     move.w      #$46,(DAT_00ff00c0)
-    clr.b       (DAT_00ff0056)
-    bsr.w       L000043ca
-    move.b      #$07,(DAT_00ff00c2)
+    clr.b       (alisia_level_update_flag)
+    bsr.w       reset_power_stats               ; reset HUD stats (set to -1)
+    move.b      #$07,(new_alisia_power)
     move.w      #$3c,(DAT_00ff04b6)
     clr.b       (DAT_00ff043e)
     bsr.w       clear_palettes_0_to_3   ; clear bottom 4 palettes
@@ -4847,20 +4653,20 @@ L000040dc:  ; called when playing demo or when pressing start button at the titl
     clr.w       d0  ; palette 4
     bsr.w       fill_top_palette
     move.w      #CRAM_WHITE,(palettes_5+$1e)
-    bsr.w       L0000249e
+    bsr.w       init_hud_tilemap
     bsr.w       clear_640_bytes_from_00ff17c0
-    moveq       #$0,d1
-    move.l      #(L00069290),d2
-    move.w      #$9000,d3
-    jsr         L0000ff2a
+    moveq       #$0,d1              ; vram address
+    move.l      #(L00069290),d2     ; src addr
+    move.w      #$9000,d3           ; length
+    jsr         dma_tiles_to_vram
     move.w      #$2000,d1
     move.l      #(L0006a658),d2
     move.w      #$8800,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.w      #$3000,d1
     move.l      #(L0006ba22),d2
     move.w      #$8800,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     lea         (L0006c5f2),a0
     moveq       #$1,d1
     move.w      #$d000,d2
@@ -4868,18 +4674,18 @@ L000040dc:  ; called when playing demo or when pressing start button at the titl
     move.w      #$f200,d1
     move.l      #(L0006d42c),d2
     move.w      #$8180,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.w      #$f500,d1
     move.l      #(L000722f8),d2
     move.w      #$8180,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.l      #(L0006d5e8),d0
     move.w      #$fe80,d1
     move.w      #$0020,d2
     bsr.w       copy_n_words_to_vram
     move.l      #(L0006d3cc),d0
-    move.w      #$fec0,d1
-    move.w      #$0030,d2
+    move.w      #$fec0,d1   ; VRAM addr
+    move.w      #$0030,d2   ; length
     bsr.w       copy_n_words_to_vram
     move.l      #(L00070050),d0
     move.w      #$ff20,d1
@@ -4899,20 +4705,20 @@ L000040dc:  ; called when playing demo or when pressing start button at the titl
     move.l      #(L00077c38),(DAT_00ff0564)
     move.w      #$1,(DAT_00ff04aa)
     move.l      #(L0006ffdc),(DAT_00ff0568)
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     move.b      (level_id),d0
     ext.w       d0
     add.w       d0,d0
-    lea         (L000cff90),a0
-    adda.w      d0,a0
-    move.w      (a0),d0
-    lea         (L000d0000),a0
-    adda.w      d0,a0
-    move.l      a0,(DAT_00ff0584)
+    lea         (L000cff90),a0      ; constant array
+    adda.w      d0,a0               ; add level index offset x2
+    move.w      (a0),d0             ; read word used as new offset
+    lea         (L000d0000),a0      ; load a0
+    adda.w      d0,a0               ; point at words
+    move.l      a0,(DAT_00ff0584)   ; a0 to pointer
     move.b      #$1,(display_enable_flag)
     rts
 
-L000042e4:
+clear_wram_data:  ; DAT_00ffb070 to 
     movem.l     a6-a0/d7-d0,-(SP)
     lea         (DAT_00ffb070),a0
     move.w      #$03ff,d7
@@ -4934,8 +4740,8 @@ L000042e4:
     .clear_dma_data_array:                 ;XREF[1]:
         clr.l       (a0)+
         dbf         d7,.clear_dma_data_array
-    clr.b       (DAT_00ff044f)
-    clr.b       (dma_data_array_index)
+    clr.b       (dma_data_array_read_index)
+    clr.b       (dma_data_array_write_index)
     clr.b       (process_dma_data_flag)
     clr.w       (DAT_00ff04c0)
     clr.w       (DAT_00ff04c2)
@@ -4980,16 +4786,16 @@ L000042e4:
     movem.l     (SP)+,d0-d7/a0-a6
     rts
 
-L000043ca:
+reset_power_stats:
     moveq       #-$1,d0
-    move.b      d0,(DAT_00ff0437)
-    move.b      d0,(DAT_00ff0438)
-    move.b      d0,(DAT_00ff0440)
-    move.b      d0,(DAT_00ff0441)
-    move.l      d0,(DAT_00ff056c)
-    move.l      d0,(DAT_00ff0570)
-    move.l      d0,(DAT_00ff0578)
-    move.l      d0,(DAT_00ff057c)
+    move.b      d0,(current_alisia_level)
+    move.b      d0,(current_alisia_power)
+    move.b      d0,(current_dragon_level)
+    move.b      d0,(current_dragon_power)
+    move.l      d0,(current_alisia_life_bar_level)
+    move.l      d0,(alisia_life_bar_length)
+    move.l      d0,(current_dragon_life_bar_level)
+    move.l      d0,(dragon_life_bar_length)
     rts
 
     org $43fe
@@ -5020,7 +4826,7 @@ L000043fe:
     lea         (sound_sample_table),a6
     adda.w      d0,a6
     move.l      a0,-(SP)
-    adda.w      #$59,a0     ; Z80_RAM+$59
+    adda.w      #$59,a0     ; Z80_RAM+(Z80_RAM+$18)*$100+(Z80_RAM+$17)+$59
     movea.l     (a6)+,a3    ; copies address from pointer
     move.w      #$1d,d2     ; loops 30 times
     .L0:
@@ -5047,48 +4853,24 @@ L000043fe:
 
     org $4498
 sound_sample_table:
-    dl L0008d08c
-    dl L0008d0aa
-    dl L0008d1cc
-    dl L0008d2c0
-    dl L0008d2de
-    dl L0008d400
-    dl L0008d4b6
-    dl L0008d4d4
-    dl L0008d5f6
-    dl L0008d6d0
-    dl L0008d6ee
-    dl L0008d810
-    dl L0008d908
-    dl L0008d926
-    dl L0008da48
-    dl L0008daea
-    dl L0008db08
-    dl L0008dc2a
-    dl L0008dd4a
-    dl L0008dd68
-    dl L0008de8a
-    dl L0008df8c
-    dl L0008dfaa
-    dl L0008e0cc
-    dl L0008e1c4
-    dl L0008e1e2
-    dl L0008e304
-    dl L0008e3ca
-    dl L0008e3e8
-    dl L0008e50a
-    dl L0008e5c2
-    dl L0008e5e0
-    dl L0008e702
-    dl L0008e7bc
-    dl L0008e7da
-    dl L0008e8fc
+    dl L0008d08c, L0008d0aa, L0008d1cc
+    dl L0008d2c0, L0008d2de, L0008d400
+    dl L0008d4b6, L0008d4d4, L0008d5f6
+    dl L0008d6d0, L0008d6ee, L0008d810
+    dl L0008d908, L0008d926, L0008da48
+    dl L0008daea, L0008db08, L0008dc2a
+    dl L0008dd4a, L0008dd68, L0008de8a
+    dl L0008df8c, L0008dfaa, L0008e0cc
+    dl L0008e1c4, L0008e1e2, L0008e304
+    dl L0008e3ca, L0008e3e8, L0008e50a
+    dl L0008e5c2, L0008e5e0, L0008e702
+    dl L0008e7bc, L0008e7da, L0008e8fc
 
-L00004528:
+L00004528:  ; called whne pressing start button during the title screen or when demo starts
     move.l      SP,(DAT_00ff050c)
-    bsr.w       L000089ca   ; load level id assets
+    bsr.w       L000089ca   ; only called here - load level id assets
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
 L00004538:                 ;XREF[3]:
     bsr.w       wait_for_vblank
     bsr.w       jp_read
@@ -5097,82 +4879,83 @@ L00004538:                 ;XREF[3]:
 leave_demo_pattern:                 ;XREF[1]:
     move.b      (jp1_result),d0
     andi.b      #PAD_START,d0
-    bne.w       L00004e2a   ; PAD_START routine
+    bne.w       L00004e2a   ; PAD_START routine - will retart the game from the sega logo
     move.b      (jp1_result),d0
     andi.b      #PAD_C,d0
     bne.w       L00004f72   ; PAD_C routine (monster selection)
 L00004566:
     tst.b       (DAT_00ff0442)
-    beq.b       .L0000457e
+    beq.b       .check_jp2_results
     subq.b      #$1,(DAT_00ff0442)
-    bne.b       .L0000457e
-    move.b      #$ff,(DAT_00ff0440)
-.L0000457e:                 ;XREF[2]:
+    bne.b       .check_jp2_results
+    move.b      #$ff,(current_dragon_level) ; when DAT_00ff0442 becomes 0 
+.check_jp2_results:                 ;XREF[2]:
     tst.b       (jp2_en_flag)
     beq.b       L000045c8
     move.b      (jp2_result),d0
     andi.b      #PAD_A,d0
     beq.b       L000045c8
-    .L00004592:                 ;XREF[1]:
+    .wait_pad_a_released:                 ;XREF[1]:
         bsr.w       wait_for_vblank
         bsr.w       jp_read
         move.b      (jp2_result),d0
         andi.b      #PAD_A,d0
-        bne.b       .L00004592
-    .L000045a6:                 ;XREF[1]:
+        bne.b       .wait_pad_a_released
+    .wait_pad_a_pressed:                 ;XREF[1]:
         move.b      (jp2_result),d0
         andi.b      #PAD_B,d0
-        bne.w       L0000528c
+        bne.w       jp2_pad_a_b_pressed               ; PAD2 A and B pressed
         bsr.w       wait_for_vblank
         bsr.w       jp_read
         move.b      (jp2_result),d0
         andi.b      #PAD_A,d0
-        beq.b       .L000045a6
-L000045c8:
-    move.w      #$60,d1
-    move.w      #$80,d2
-    moveq       #$0,d3
-    move.w      #$8000,d4
-    move.w      #$f00,d5
-    bsr.w       L00002904
-    moveq       #$0,d1
-    move.w      #$f00,d5
-    bsr.w       L00002904
-    move.b      #$7,(DAT_00ff17d0+3)
-    move.w      #$7,(DAT_00ff04c8)
-    bsr.w       L00002c3a
-    addq.b      #$1,(DAT_00ff000f)
+        beq.b       .wait_pad_a_pressed
+
+L000045c8:  ; process A pressed on pad 2 PC was previous adddress, otherwise process pad 1 keys
+    move.w      #$0060,d1     ; hpos
+    move.w      #$0080,d2     ; vpos
+    moveq       #$0,d3      ; sprite #0
+    move.w      #$8000,d4   ; attr+tile id
+    move.w      #$0f00,d5   ; vh size
+    bsr.w       update_sprite_in_sprite_table   ; sprite #0
+    moveq       #$0,d1      ; h pos
+    move.w      #$0f00,d5   ; vh size
+    bsr.w       update_sprite_in_sprite_table   ; sprite #1
+    move.b      #$07,(sprite_table_data+$13)
+    move.w      #$0007,(DAT_00ff04c8)
+    bsr.w       update_hv_counter
+    addq.b      #$1,(vblank_counter)
     addq.l      #$1,(DAT_00ff05ac)
     bsr.w       L00008454
     bsr.w       L000083b4
     bsr.w       L0000791c
-    bsr.w       L00000db6
+    bsr.w       L00000db6   ; only called once
     bsr.w       L00000ffc
-    move.w      #$2,(DAT_00ff0478)
+    move.w      #$0002,(DAT_00ff0478)
     bsr.w       L00005e02
-    jsr         L0000d092.l
+    jsr         L0000d092
     bsr.w       L00007ef4
     bsr.w       L00001bec
     bsr.w       L00007122
-    jsr         L0000e1a4.l
+    jsr         L0000e1a4
     bsr.w       L00001c14
-    jsr         L0000fc50
-    bsr.w       L000032de
-    bsr.w       L00002ee2
-    bsr.w       L00002f0a
-    bsr.w       L00002f8e
-    bsr.w       L00002fc6
-    bsr.w       L0000305e
-    bsr.w       L0000315c
-    bsr.w       L0000322a
-    bsr.w       L000032a8
+    jsr         copy_or_decompress_n_tiles
+    bsr.w       process_dma_item
+    bsr.w       update_alisia_life_bar_length
+    bsr.w       update_alisia_life_bar_level
+    bsr.w       update_dragon_life_bar_length
+    bsr.w       update_dragon_life_bar_level
+    bsr.w       update_dragon_level
+    bsr.w       update_alisia_level
+    bsr.w       update_alisia_power_bar
+    bsr.w       update_dragon_power_bar
     bsr.w       L00004a96
     tst.b       (DAT_00ff001f)
     bne.w       L00004adc
     move.w      (DAT_00ff0002),d1
     move.w      (DAT_00ff0004),d2
     addi.w      #$14,d2
-    bsr.w       L000036f2
+    bsr.w       L000036f2   ; update h scrolling?
     rol.w       #$5,d0
     move.b      d0,(DAT_00ff001e)
     tst.b       (jp2_en_flag)
@@ -5181,27 +4964,27 @@ L000045c8:
     andi.b      #PAD_C,d0
     bne.w       L00004b04
 .L000046ae:                 ;XREF[1]:
-    tst.l       (DAT_00ff0006)
-    bne.w       L00004538
+    tst.l       (new_alisia_life_bar_level) ; $0000000c when 3 full life bars
+    bne.w       L00004538                   ; branch if life bar is not empty
     move.b      (DAT_00ffd90a),d0
-    cmpi.b      #$2,d0
+    cmpi.b      #$02,d0
     beq.w       L00004538
     tst.b       (DAT_00ff0450)
     bne.w       L00004538
     tst.b       (play_demo_flag)
     bne.w       L00004b04
-    move.b      #$1,(DAT_00ff0056)
+    move.b      #$01,(alisia_level_update_flag)
     clr.b       (DAT_00ff0442)
-    move.b      #$ff,(DAT_00ff0440)
-    move.b      #$1,(DAT_00ff0001)
+    move.b      #$ff,(current_dragon_level)
+    move.b      #$01,(DAT_00ff0001)
     clr.w       (DAT_00ff0016)
-    move.b      #$1,(DAT_00ff0439)
+    move.b      #$01,(stage_demo_flag)
     move.w      #$8000,(DAT_00ff0010)
     bclr.b      #$3,(DAT_00ff0000)
-    move.b      #$7,(DAT_00ff00c2)
-    bsr.w       L0000322a
+    move.b      #$07,(new_alisia_power)
+    bsr.w       update_alisia_power_bar
     moveq       #-$1,d0
-    bsr.w       write_z80_reg6
+    bsr.w       write_z80_reg6  ; stop music?
     lea         (palettes_1+$2),a1
     lea         (palettes_4+$22),a0
     move.l      (a1)+,(a0)+
@@ -5211,30 +4994,30 @@ L000045c8:
     ENDR
     clr.w       (a0)+
     moveq       #$1,d2
-    bsr.w       L000036fe
-    lea         (DAT_00ff066a),a0
+    bsr.w       prepare_dma_palette_transfer
+    lea         (hud_top_dragon_face),a0    ; remove dragon head
     move.w      #$8ebf,(a0)+
     move.w      #$86bf,(a0)+
-    lea         (DAT_00ff06ea),a0
+    lea         (hud_bottom_dragon_face),a0
     move.w      #$8ebf,(a0)+
     move.w      #$86bf,(a0)+
-    move.w      #$16,(DAT_00ff001a)
-    move.b      #$4,(DAT_00ff0019)
-    bsr.w       L00004b9c
-    bsr.w       wait_for_00ff013_clear
+    move.w      #$0016,(DAT_00ff001a)
+    move.b      #$04,(DAT_00ff0019)
+    bsr.w       L00004b9c                   ; play sound or sprite pos?
+    bsr.w       wait_for_palette_flags_clear
     move.w      #$4000,d1
     move.l      #(L0006b176),d2
     move.w      #$8610,d3
     bsr.w       add_item_to_dma_data_array
-    move.b      #$4,(DAT_00ff0020)
-    move.b      #$4,(DAT_00ff0019)
+    move.b      #$04,(monster_selection_index)
+    move.b      #$04,(DAT_00ff0019)
     bsr.w       L00004b9c
     lea         (default_palette),a0
     moveq       #$1,d0
     bsr.w       fill_bottom_palette
     bsr.w       fill_top_palette
-    move.w      #$17,(DAT_00ff001a)
-    move.b      #$4,(DAT_00ff0019)
+    move.w      #$0017,(DAT_00ff001a)
+    move.b      #$04,(DAT_00ff0019)
     bsr.w       L00004b9c
     bsr.w       clear_palettes_4_to_7
     lea         (default_palette),a0
@@ -5242,8 +5025,8 @@ L000045c8:
     bsr.w       fill_bottom_palette
     bsr.w       fill_top_palette
     moveq       #$1,d2
-    bsr.w       L000036fe
-    bsr.w       wait_for_00ff013_clear
+    bsr.w       prepare_dma_palette_transfer
+    bsr.w       wait_for_palette_flags_clear
     bsr.w       reset_vram_bg1_and_2_tilemaps
     lea         (DAT_00ffb070),a0
     move.w      #$03ff,d7
@@ -5251,32 +5034,32 @@ L000045c8:
         clr.l       (a0)+
         dbf         d7,.L000047f4
     lea         (DAT_00ff01b0),a0
-    move.w      #$3f,d7
+    move.w      #$003f,d7
     .L00004804:
         clr.l       (a0)+
         dbf         d7,.L00004804
     .wait_for_update_flag:
-        move.b      #$4,(DAT_00ff0019)
+        move.b      #$04,(DAT_00ff0019)
         bsr.w       L00004b9c
         tst.b       (process_dma_data_flag)
         bne.b       .wait_for_update_flag
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     bsr.w       clear_palettes_4_to_7
     lea         (default_palette),a0
     moveq       #$1,d0
     bsr.w       fill_bottom_palette
     bsr.w       fill_top_palette
     moveq       #$1,d2
-    bsr.w       L000036fe
-    bsr.w       wait_for_00ff013_clear
-    move.w      #$18,(DAT_00ff001a)
+    bsr.w       prepare_dma_palette_transfer
+    bsr.w       wait_for_palette_flags_clear
+    move.w      #$0018,(DAT_00ff001a)
 .L00004848:                 ;XREF[2]:
-    move.b      #$4,(DAT_00ff0019)
+    move.b      #$04,(DAT_00ff0019)
     bsr.w       L00004b9c
     move.w      (DAT_00ff01aa),d3
     sub.w       (DAT_00ff0004),d3
     neg.w       d3
-    cmpi.w      #$70,d3
+    cmpi.w      #$0070,d3
     bge.b       .L00004872
     addi.w      #$1,(DAT_00ff0004)
     bra.b       .L00004848
@@ -5285,14 +5068,14 @@ L000045c8:
     beq.b       .L00004848
     move.b      (DAT_00ff001c),d0
     beq.w       .L00004918
-    move.b      #$4,(DAT_00ff0019)
+    move.b      #$04,(DAT_00ff0019)
     bsr.w       L00004b9c
     move.w      #$8000,d1
     move.l      #(L0006d9ba),d2
-    move.w      #-$7670,d3
-    jsr         L0000ff2a
-    move.w      #$40,d0
-    move.w      #$12,d1
+    move.w      #$8990,d3
+    jsr         dma_tiles_to_vram
+    move.w      #$0040,d0
+    move.w      #$0012,d1
     bsr.w       L00001aaa
     moveq       #$1,d0      ; bank 1
     moveq       #$c,d1
@@ -5322,15 +5105,15 @@ L000045c8:
         subq.w      #$1,d7  ; dec d7
         bpl.b       .L000048be
 .L00004918:                 ;XREF[1]:
-    move.b      #$1,(DAT_00ff0451)
-    move.w      #$4a8,d7
+    move.b      #$01,(DAT_00ff0451)
+    move.w      #$04a8,d7
     bsr.w       L00000faa
-    move.w      #$384,d7
+    move.w      #$0384,d7
     move.b      (DAT_00ff001c),d0
     beq.b       .L00004938
-    move.w      #$12c,d7
+    move.w      #$012c,d7
     .L00004938:                 ;   repeat and leave early if start is pressedXREF[2]:
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         move.w      d7,-(SP)
         move.b      #$04,(DAT_00ff0019)
         bsr.w       L00004b9c
@@ -5347,12 +5130,13 @@ L00004968:                 ;XREF[2]:
     bsr.w       write_z80_reg6
     bsr.w       clear_palettes_4_to_7
     moveq       #$1,d2
-    bsr.w       L000036fe
-    bra.w       wait_for_00ff013_clear
+    bsr.w       prepare_dma_palette_transfer
+    bra.w       wait_for_palette_flags_clear
+    
 L0000497c:                 ;XREF[1]:
     moveq       #-$1,d0
     bsr.w       write_z80_reg6
-    move.b      #$9,d0
+    move.b      #$09,d0
     bsr.w       write_z80_reg12
     subq.b      #$1,(DAT_00ff001c)
     move.b      #$1,(DAT_00ff0454)
@@ -5373,17 +5157,17 @@ L0000497c:                 ;XREF[1]:
     bne.b       .L000049e4
     move.b      #$ff,(DAT_00ff0453)
 .L000049e4:                 ;XREF[1]:
-    clr.b       (DAT_00ff0439)
-    bsr.w       L000091c2
+    clr.b       (stage_demo_flag)
+    bsr.w       read_player_stats
     bra.w       L00004968
 
 L000049f2:
     movem.w     d7-d6,-(SP)
-    move.w      #$a,d0
-    move.w      #$120,d1
-    move.w      #$c6,d2
-    move.w      #$7,d3
-    move.w      #-$3c00,d4
+    move.w      #$000a,d0
+    move.w      #$0120,d1
+    move.w      #$00c6,d2
+    move.w      #$0007,d3
+    move.w      #$c400,d4
     bsr.w       L0000282e
     movem.w     (SP)+,d6-d7
     rts
@@ -5391,20 +5175,20 @@ L000049f2:
 L00004a14:
     movem.w     d7-d6,-(SP)
     move.w      d7,d0
-    move.w      #$120,d1
-    move.w      #$da,d2
-    move.w      #-$3c00,d4
+    move.w      #$0120,d1
+    move.w      #$00da,d2
+    move.w      #$c400,d4
     bsr.w       L0000282e
     movem.w     (SP)+,d6-d7
     rts
 
 L00004a30:
     movem.w     d7-d6,-(SP)
-    move.w      #$118,d1
-    move.w      #$ee,d2
-    move.w      #-$5eb2,d4
-    move.w      #$500,d5
-    bsr.w       L00002904
+    move.w      #$0118,d1
+    move.w      #$00ee,d2
+    move.w      #$a14e,d4
+    move.w      #$0500,d5
+    bsr.w       update_sprite_in_sprite_table
     movem.w     (SP)+,d6-d7
     rts
 
@@ -5412,42 +5196,41 @@ L00004a4e:
     movem.w     d7-d6,-(SP)
     move.b      (DAT_00ff001c),d4
     ext.w       d4
-    move.w      #$12a,d1
-    move.w      #$f6,d2
+    move.w      #$012a,d1
+    move.w      #$00f6,d2
     addi.w      #$a680,d4
-    move.w      #$0,d5
-    bsr.w       L00002904
+    move.w      #$0000,d5
+    bsr.w       update_sprite_in_sprite_table
     movem.w     (SP)+,d6-d7
     rts
 
 L00004a74:
     movem.w     d7-d6,-(SP)
-    move.w      #$18,(DAT_00ff001a)
-    move.b      #$4,(DAT_00ff0019)
+    move.w      #$0018,(DAT_00ff001a)
+    move.b      #$0004,(DAT_00ff0019)
     bsr.w       L00005e02
     bsr.w       L00007122
     movem.w     (SP)+,d6-d7
     rts
 
 L00004a96:
-    lea         (DAT_00ff17c0+$2),a1
-    move.w      (DAT_00ff04c8),d3
-    cmpi.w      #$7,d3
-    beq.b       L00004ab8
-    subq.w      #$1,d3
-    lsl.w       #$3,d3
-    adda.w      d3,a1
-    clr.b       ($1,a1)
-    clr.w       ($6,a1)
+    lea         (sprite_table_data+$2),a1   ; tile hv size, next
+    move.w      (DAT_00ff04c8),d3           ; load sprite id
+    cmpi.w      #$0007,d3      ; sprite id
+    beq.b       .L00004ab8
+    subq.w      #$1,d3      ; 6 max?
+    lsl.w       #$3,d3      ; x8 to point at sprite objects
+    adda.w      d3,a1       ; add offset
+    clr.b       ($1,a1)     ; clear size
+    clr.w       ($6,a1)     ; clear next vp?
     rts
-
-L00004ab8:
+.L00004ab8:
     moveq       #$1,d1
     moveq       #$0,d2
     moveq       #$0,d4
-    move.w      #$500,d5
-    bsr.w       L00002904
-    lea         (DAT_00ff17c0+$2),a1
+    move.w      #$0500,d5
+    bsr.w       update_sprite_in_sprite_table
+    lea         (sprite_table_data+$2),a1   ; tile hv size, next
     subq.w      #$1,d3
     lsl.w       #$3,d3
     adda.w      d3,a1
@@ -5456,9 +5239,9 @@ L00004ab8:
 L00004ada:
     rts
 
-L00004adc:                 ;XREF[1]:
+L00004adc:
     clr.b       (DAT_00ff001f)
-    move.b      #$1,(DAT_00ff0001)
+    move.b      #$01,(DAT_00ff0001)
     clr.b       (DAT_00ff043e)
     bsr.w       L00009994
     tst.b       (DAT_00ff045a)
@@ -5468,22 +5251,22 @@ L00004adc:                 ;XREF[1]:
 
 L00004b04:                 ;XREF[6]:
     clr.b       (play_demo_flag)
-    move.b      #$1,(DAT_00ff001f)
-    move.b      #$1,(DAT_00ff0001)
-    move.b      (DAT_00ff0020),d0
-    cmpi.b      #$4,d0
+    move.b      #$01,(DAT_00ff001f)
+    move.b      #$01,(DAT_00ff0001)
+    move.b      (monster_selection_index),d0
+    cmpi.b      #$04,d0
     beq.w       .L00004b2e
-    jsr         L0000e262.l
+    jsr         save_monster_stats.l
 .L00004b2e:                 ;XREF[1]:
     moveq       #$a,d0
     bsr.w       write_z80_reg6
     bsr.w       clear_palettes_4_to_7
     moveq       #$1,d2
-    bsr.w       L000036fe
-    move.w      #$7e,d7
+    bsr.w       prepare_dma_palette_transfer
+    move.w      #$007e,d7
     .L00004b42:                 ;XREF[1]:
         move.w      d7,-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L00004b42
@@ -5501,177 +5284,176 @@ L00004b04:                 ;XREF[6]:
     rts
 
 L00004b74:
-    move.b      #$1,(DAT_00ff0430)
+    move.b      #$01,(DAT_00ff0430)
     bsr.w       L00004b9c
     clr.b       (DAT_00ff0430)
     rts
 
 L00004b88:
-    move.b     #$1,(DAT_00ff0430)
+    move.b     #$01,(DAT_00ff0430)
     bsr.w      L00004ba0
     clr.b      (DAT_00ff0430)
     rts
 
-L00004b9c:      ; might be called by demo when simulating movement
+L00004b9c:      ; sprite movement in automatic mode i.e. demo, start and end of level and when dying
     bsr.w       wait_for_vblank
 L00004ba0:      ; automatic movement at the start of a stage
     tst.b       (play_demo_flag) ; might be demo flag?
-    beq.w       L00004bea
+    beq.w       .L00004bea
     move.b      (jp1_result),-(SP)  ; during demo, the only possible key is start
     bsr.w       jp_read
     move.b      (jp1_result),d0
     andi.b      #PAD_START,d0
     bne.b       .start_pressed
     move.b      (SP)+,(jp1_result)  ; restore result otherwise
-    bra.b       L00004bea
+    bra.b       .L00004bea
 .start_pressed
     movea.l     (DAT_00ff050c),SP
     move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     bra.w       L00004b04   ; will return to sega logo when start is pressed
-L00004bea:
+.L00004bea:
     move.w      #$0060,d1
     move.w      #$0080,d2
     moveq       #$0,d3
     move.w      #$8000,d4
-    move.w      #$f00,d5
-    bsr.w       L00002904
+    move.w      #$0f00,d5
+    bsr.w       update_sprite_in_sprite_table
     moveq       #$0,d1
     tst.b       (bg_reset_flag)
-    beq.b       L00004c0c
+    beq.b       .L00004c0c
     addq.w      #$8,d1
-L00004c0c:  ; called as soon as level 1 starts when character can't be moved and when demo ends
-    move.w      #$f00,d5
-    bsr.w       L00002904
-    move.b      #$7,(DAT_00ff17d0+3)
-    move.w      #$7,(DAT_00ff04c8)
-    bsr.w       L00002c3a
-    addq.b      #$1,(DAT_00ff000f)
+.L00004c0c:  ; called as soon as level 1 starts when character can't be moved and when demo ends
+    move.w      #$0f00,d5
+    bsr.w       update_sprite_in_sprite_table
+    move.b      #$07,(sprite_table_data+$13)
+    move.w      #$07,(DAT_00ff04c8)
+    bsr.w       update_hv_counter
+    addq.b      #$1,(vblank_counter)
     move.b      (jp1_result),-(SP)
-    tst.b       (DAT_00ff0439)
-    bne.b       L00004ca8
+    tst.b       (stage_demo_flag)
+    bne.b       .L00004ca8
     bsr.w       jp_read
     move.b      (jp1_result),d0
-    andi.b      #$7f,d0 ; mask START
-    beq.b       L00004ca8
+    andi.b      #$7f,d0 ; mask START at the start of the stage - this is when DEMO appears on the screen
+    beq.b       .L00004ca8
     move.w      (DAT_00ff04c8),d3
-    move.w      #$188,d1
-    move.w      #$138,d2
+    move.w      #$0188,d1
+    move.w      #$0138,d2
     move.w      #$868d,d4
-    move.w      #$0,d5
-    bsr.w       L00002904
-    move.w      #$190,d1
-    move.w      #$138,d2
+    move.w      #$0000,d5
+    bsr.w       update_sprite_in_sprite_table
+    move.w      #$0190,d1
+    move.w      #$0138,d2
     move.w      #$868e,d4
-    move.w      #$0,d5
-    bsr.w       L00002904
-    move.w      #$198,d1
-    move.w      #$138,d2
+    move.w      #$0000,d5
+    bsr.w       update_sprite_in_sprite_table
+    move.w      #$0198,d1
+    move.w      #$0138,d2
     move.w      #$8696,d4
-    move.w      #$0,d5
-    bsr.w       L00002904
-    move.w      #$1a0,d1
-    move.w      #$138,d2
+    move.w      #$0000,d5
+    bsr.w       update_sprite_in_sprite_table
+    move.w      #$01a0,d1
+    move.w      #$0138,d2
     move.w      #$8698,d4
-    move.w      #$0,d5
-    bsr.w       L00002904
+    move.w      #$0000,d5
+    bsr.w       update_sprite_in_sprite_table
     move.w      d3,(DAT_00ff04c8)
-L00004ca8:
+.L00004ca8:
     move.b      (SP)+,(jp1_result)
-    tst.b       (DAT_00ff0439)
-    bne.b       L00004cda
+    tst.b       (stage_demo_flag)
+    bne.b       .L00004cda
     bsr.w       L00008454
     bsr.w       L000083b4
     tst.b       (DAT_00ff00c9)
-    beq.b       L00004cd2
+    beq.b       .L00004cd2
     tst.b       (DAT_00ff001f)
-    bne.b       L00004cd2
+    bne.b       .L00004cd2
     bsr.w       L0000791c
-L00004cd2:
-    move.b      #$7,(DAT_00ff00c2)
-L00004cda:
-    move.l      (DAT_00ff0006),-(SP)
+.L00004cd2:
+    move.b      #$07,(new_alisia_power)
+.L00004cda:
+    move.l      (new_alisia_life_bar_level),-(SP)
     bsr.w       L00000ffc
-    move.l      (SP)+,(DAT_00ff0006)
+    move.l      (SP)+,(new_alisia_life_bar_level)
     btst.b      #$1,(DAT_00ff0430)
-    beq.b       L00004d00
+    beq.b       .L00004d00
     move.w      (DAT_00ff0478),-(SP)
     move.w      (DAT_00ff047a),-(SP)
-L00004d00:
+.L00004d00:
     btst.b      #$2,(DAT_00ff0430)
-    beq.b       L00004d16
+    beq.b       .L00004d16
     move.w      (DAT_00ff047c),-(SP)
     move.w      (bg2_vscroll_change),-(SP)
-L00004d16:
+.L00004d16:
     btst.b      #$0,(DAT_00ff0430)
-    beq.b       L00004d2c
+    beq.b       .L00004d2c
     move.b      (DAT_00ff042b),-(SP)
     move.b      (DAT_00ff042c),-(SP)
-L00004d2c:
+.L00004d2c:
     move.w      #$2,(DAT_00ff0478)
     bsr.w       L00005e02
     btst.b      #$0,(DAT_00ff0430)
-    beq.b       L00004d4e
+    beq.b       .L00004d4e
     move.b      (SP)+,(DAT_00ff042c)
     move.b      (SP)+,(DAT_00ff042b)
-L00004d4e:
+.L00004d4e:
     btst.b      #$2,(DAT_00ff0430)
-    beq.b       L00004d64
+    beq.b       .L00004d64
     move.w      (SP)+,(bg2_vscroll_change)
     move.w      (SP)+,(DAT_00ff047c)
-L00004d64:
+.L00004d64:
     btst.b      #$1,(DAT_00ff0430)
-    beq.b       L00004d7a
+    beq.b       .L00004d7a
     move.w      (SP)+,(DAT_00ff047a)
     move.w      (SP)+,(DAT_00ff0478)
-L00004d7a:
-    tst.b       (DAT_00ff0439)
-    bne.b       L00004d88
-    jsr         L0000d092.l
-
-L00004d88:
+.L00004d7a:
+    tst.b       (stage_demo_flag)
+    bne.b       .L00004d88
+    jsr         L0000d092
+.L00004d88:  ; used at the start of stage when character is not controllable and when demo ends and fades out
     tst.b       (DAT_00ff00c9)
-    beq.b       L00004d94
+    beq.b       .L00004d94
     bsr.w       L00007ef4
-L00004d94:
-    tst.b       (DAT_00ff0439)
-    beq.b       L00004da0
+.L00004d94:
+    tst.b       (stage_demo_flag)
+    beq.b       .L00004da0
     bsr.w       L00007122
-L00004da0:
+.L00004da0:
     bsr.w       L00001bec
-    tst.b       (DAT_00ff0439)
-    bne.b       L00004db0
+    tst.b       (stage_demo_flag)
+    bne.b       .L00004db0
     bsr.w       L00007122
-L00004db0:
+.L00004db0:
     move.w      (DAT_00ff04fa),d7
-    bmi.b       L00004dc2
-    movea.l     (DAT_00ff05b4),a6
+    bmi.b       .L00004dc2
+    movea.l     (unused_saved_address),a6
     bsr.w       L00003d44
-L00004dc2:
-    jsr         L0000e1a4.l
+.L00004dc2:
+    jsr         L0000e1a4
     bsr.w       L00001c14
-    jsr         L0000fc50
-    bsr.w       L000032de
+    jsr         copy_or_decompress_n_tiles
+    bsr.w       process_dma_item
     move.b      (DAT_00ff001f),d0
-    beq.b       L00004dec
-    cmpi.b      #$2,d0
-    beq.w       L00004e18
+    beq.b       .L00004dec
+    cmpi.b      #$02,d0
+    beq.w       .L00004e18
     addq.b      #$1,(DAT_00ff001f)
-L00004dec:
-    tst.b       (DAT_00ff0439)
-    bne.b       L00004e14
-    bsr.w       L00002ee2
-    bsr.w       L00002f0a
-    bsr.w       L00002f8e
-    bsr.w       L00002fc6
-    bsr.w       L0000305e
-    bsr.w       L0000315c
-    bsr.w       L0000322a
-    bsr.w       L000032a8
-L00004e14:
+.L00004dec:
+    tst.b       (stage_demo_flag)
+    bne.b       .L00004e14
+    bsr.w       update_alisia_life_bar_length
+    bsr.w       update_alisia_life_bar_level
+    bsr.w       update_dragon_life_bar_length
+    bsr.w       update_dragon_life_bar_level
+    bsr.w       update_dragon_level
+    bsr.w       update_alisia_level
+    bsr.w       update_alisia_power_bar
+    bsr.w       update_dragon_power_bar
+.L00004e14:
     bra.w       L00004a96
-L00004e18;
+.L00004e18;
     tst.b       (DAT_00ff0459)
     bne.w       L00004a96
     bsr.w       clear_palettes_4_to_7
@@ -5683,144 +5465,144 @@ L00004e2a:
     moveq       #-$1,d0
     lea         (Z80_RAM+$10),a0
     bsr.w       write_z80_reg
-    move.b      #-$64,d0
+    move.b      #$9c,d0
     bsr.w       write_z80_reg12
-    move.w      #$67,d7
-    move.w      #$1b9,d6
-    move.w      #$e0,d2
+    move.w      #$0067,d7
+    move.w      #$01b9,d6
+    move.w      #$00e0,d2
     moveq       #$11,d0
-L00004e56:
+.L00004e56:
     moveq       #$2,d3
     move.w      d7,d1
     move.w      #$86f0,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
+    move.w      #$0d00,d5
+    bsr.w       update_sprite_in_sprite_table
     move.w      d6,d1
     move.w      #$86f8,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
+    move.w      #$0d00,d5
+    bsr.w       update_sprite_in_sprite_table
     move.w      d7,d1
     sub.w       d0,d1
     move.w      d0,d4
-    andi.w      #$1,d4
-    beq.b       L00004e84
+    andi.w      #$0001,d4
+    beq.b       .L00004e84
     sub.w       d0,d1
     subq.w      #$1,d1
-L00004e84:
+.L00004e84:
     move.w      #$86f0,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
+    move.w      #$0d00,d5
+    bsr.w       update_sprite_in_sprite_table
     move.w      d6,d1
     add.w       d0,d1
     move.w      d0,d4
     andi.w      #$1,d4
-    beq.b       L00004ea0
+    beq.b       .L00004ea0
     add.w       d0,d1
     addq.w      #$1,d1
-L00004ea0:
+.L00004ea0:
     move.w      #$86f8,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
-    move.b      #$7,(DAT_00ff17eb)
+    move.w      #$0d00,d5
+    bsr.w       update_sprite_in_sprite_table
+    move.b      #$7,(sprite_table_data+$2b)
     bsr.w       wait_for_vblank
     add.w       d0,d7
     sub.w       d0,d6
     subq.w      #$1,d0
-    bpl.b       L00004e56
-L00004ec0:
-    bsr.w       wait_for_vblank
-    bsr.w       jp_read
-    move.b      (jp1_result),d0
-    andi.b      #PAD_START,d0
-    bne.b       L00004ec0
-L00004ed4:
-    bsr.w       wait_for_vblank
-    bsr.w       jp_read
-    move.b      (jp1_result),d0
-    andi.b      #PAD_START,d0
-    beq.b       L00004ed4
-.L0
-    bsr.w       wait_for_vblank
-    bsr.w       jp_read
-    move.b      (jp1_result),d0
-    andi.b      #PAD_START,d0
-    bne.b       .L0
+    bpl.b       .L00004e56
+    .L00004ec0:
+        bsr.w       wait_for_vblank
+        bsr.w       jp_read
+        move.b      (jp1_result),d0
+        andi.b      #PAD_START,d0
+        bne.b       .L00004ec0
+    .L00004ed4:
+        bsr.w       wait_for_vblank
+        bsr.w       jp_read
+        move.b      (jp1_result),d0
+        andi.b      #PAD_START,d0
+        beq.b       .L00004ed4
+    .L0:
+        bsr.w       wait_for_vblank
+        bsr.w       jp_read
+        move.b      (jp1_result),d0
+        andi.b      #PAD_START,d0
+        bne.b       .L0
     move.b      #$9c,d0
     bsr.w       write_z80_reg12
     moveq       #$0,d0
     lea         (Z80_RAM+$10),a0
     bsr.w       write_z80_reg
-    move.w      #$100,d7
-    move.w      #$120,d6
-    move.w      #$e0,d2
+    move.w      #$0100,d7
+    move.w      #$0120,d6
+    move.w      #$00e0,d2
     moveq       #$0,d0
-L00004f1e:
-    moveq       #$2,d3
-    move.w      d7,d1
-    move.w      #$86f0,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
-    move.w      d6,d1
-    move.w      #$86f8,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
-    move.w      d7,d1
-    move.w      #$86f0,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
-    move.w      d6,d1
-    move.w      #$86f8,d4
-    move.w      #$d00,d5
-    bsr.w       L00002904
-    move.b      #$7,(DAT_00ff17eb)
-    bsr.w       wait_for_vblank
-    sub.w       d0,d2
-    addq.w      #$1,d0
-    cmpi.w      #$f,d0
-    bne.b       L00004f1e
+    .L00004f1e:
+        moveq       #$2,d3
+        move.w      d7,d1
+        move.w      #$86f0,d4
+        move.w      #$0d00,d5
+        bsr.w       update_sprite_in_sprite_table
+        move.w      d6,d1
+        move.w      #$86f8,d4
+        move.w      #$0d00,d5
+        bsr.w       update_sprite_in_sprite_table
+        move.w      d7,d1
+        move.w      #$86f0,d4
+        move.w      #$0d00,d5
+        bsr.w       update_sprite_in_sprite_table
+        move.w      d6,d1
+        move.w      #$86f8,d4
+        move.w      #$0d00,d5
+        bsr.w       update_sprite_in_sprite_table
+        move.b      #$07,(sprite_table_data+$2b)
+        bsr.w       wait_for_vblank
+        sub.w       d0,d2
+        addq.w      #$1,d0
+        cmpi.w      #$000f,d0
+        bne.b       .L00004f1e
     bra.w       L00004566
 
 L00004f72:
     tst.b       (DAT_00ff043f)
     bne.w       L00004566
     move.b      (DAT_00ffd90a),d0
-    cmpi.b      #$2,d0
+    cmpi.b      #$02,d0
     beq.w       L00004566
     bsr.b       L00004f90
     bra.w       L00004566
 
 L00004f90:
-    move.b      (DAT_00ff0020),d0
-    cmpi.b      #$4,d0
-    beq.b       L00004fc4
-    jsr         L0000e262.l
+    move.b      (monster_selection_index),d0
+    cmpi.b      #$04,d0
+    beq.b       .L00004fc4
+    jsr         save_monster_stats
     lea         (palettes_1+$2),a1
     lea         (palettes_4+$22),a0
-    move.l      (a1)+,(a0)+
-    move.l      (a1)+,(a0)+
-    REPT 5
+    move.l      (a1)+,(a0)+ ; copy 2 colours
+    move.l      (a1)+,(a0)+ ; copy 2 colours
+    REPT 5  ; clear other colours in palette
         clr.l       (a0)+
     ENDR
     clr.w       (a0)+
     moveq       #$1,d2
-    bsr.w       L000036fe
-L00004fc4:                 ;XREF[1]:
+    bsr.w       prepare_dma_palette_transfer
+.L00004fc4:                 ;XREF[1]:
     move.b      #$8b,d0
     bsr.w       write_z80_reg12 ; play select sound
-    move.w      #$0067,d7
-    move.w      #$01b9,d6
-    move.w      #$00e0,d2
-    moveq       #$11,d0
+    move.w      #$0067,d7   ; hpos
+    move.w      #$01b9,d6   ; hpos
+    move.w      #$00e0,d2   ; vpos
+    moveq       #$11,d0     ; value to substract
     .L00004fda:                 ;XREF[1]:
         moveq       #$2,d3
         move.w      d7,d1
         move.w      #$83f0,d4
         move.w      #$0d00,d5
-        bsr.w       L00002904
+        bsr.w       update_sprite_in_sprite_table   ; sprite #2
         move.w      d6,d1
         move.w      #$83f8,d4
-        move.w      #$d00,d5
-        bsr.w       L00002904
+        move.w      #$0d00,d5
+        bsr.w       update_sprite_in_sprite_table   ; sprite #2 again?
         move.w      d7,d1
         sub.w       d0,d1
         move.w      d0,d4
@@ -5830,8 +5612,8 @@ L00004fc4:                 ;XREF[1]:
         subq.w      #$1,d1
     .L00005008:                 ;XREF[1]:
         move.w      #$83f0,d4
-        move.w      #$d00,d5
-        bsr.w       L00002904
+        move.w      #$0d00,d5
+        bsr.w       update_sprite_in_sprite_table
         move.w      d6,d1
         add.w       d0,d1
         move.w      d0,d4
@@ -5840,21 +5622,21 @@ L00004fc4:                 ;XREF[1]:
         add.w       d0,d1
         addq.w      #$1,d1
     .L00005024:                 ;XREF[1]:
-        move.w      #$83f8,d4   ; length?
-        move.w      #$0d00,d5   ; addr?
-        bsr.w       L00002904
-        move.b      #$7,(DAT_00ff17eb)
+        move.w      #$83f8,d4   ; tile+attributes
+        move.w      #$0d00,d5   ; size
+        bsr.w       update_sprite_in_sprite_table
+        move.b      #$7,(sprite_table_data+$2b)
         bsr.w       wait_for_vblank
         add.w       d0,d7
         sub.w       d0,d6
         subq.w      #$1,d0
         bpl.b       .L00004fda
-    bsr.w       wait_for_00ff013_clear
-    move.b      (DAT_00ff0020),d0
+    bsr.w       wait_for_palette_flags_clear
+    move.b      (monster_selection_index),d0
     cmpi.b      #$4,d0
     beq.b       .L000050a2
-    lea         (DAT_00ffd90a),a6
-    move.w      #$5,d7
+    lea         (DAT_00ffd90a),a6   ; struct pointer
+    move.w      #$5,d7  ; will test 6 structures
     .L0000505e:                 ;XREF[1]:
         move.b      (a6),d0
         cmpi.b      #$1,d0
@@ -5864,195 +5646,195 @@ L00004fc4:                 ;XREF[1]:
         cmpi.b      #$4,d0
         beq.b       .value_1_3_4_5
         cmpi.b      #$5,d0
-        bne.b       .L0000509a
+        bne.b       .next
     .value_1_3_4_5:
-        move.b      ($3b,a6),d6
-        beq.b       .L0000509a
+        move.b      ($3b,a6),d6 ; number of sprites
+        beq.b       .next
         ext.w       d6
-        subq.w      #$1,d6
-        move.b      ($3a,a6),d3
+        subq.w      #$1,d6      ; for dbf
+        move.b      ($3a,a6),d3 ; sprite index
         ext.w       d3
-        lea         (DAT_00ff17c0),a1
-        lsl.w       #$3,d3
+        lea         (sprite_table_data),a1
+        lsl.w       #$3,d3  ; point at sprites
         adda.w      d3,a1
-        .L0:                 ;XREF[1]
+        .clear_vp:                 ;XREF[1]
             clr.w       (a1)
             addq.w      #$8,a1
-            dbf         d6,.L0
-    .L0000509a:                 ;XREF[2]
+            dbf         d6,.clear_vp
+    .next:                 ;XREF[2]
         adda.w      #$40,a6
         dbf         d7,.L0000505e
 .L000050a2:                 ;XREF[1]
-    movea.l     (DAT_00ff0598),a1
-    bsr.w       copy_16_words_to_00ff066a
-    bsr.w       copy_16_words_to_00ff06ea
+    movea.l     (monster_selection_pointer),a1
+    bsr.w       change_hud_dragon_top_tiles
+    bsr.w       change_hud_dragon_bottom_tiles
     .wait_for_pad_c:                 ;XREF[1] SCABRLDU in mode 1
         read_monster_selection_keys d0
         andi.b      #PAD_C,d0
         bne.b       .wait_for_pad_c
-    wait_for_monster_select_key:                 ; monster select - UP, DOWN, C (A in mode 2)
-        read_monster_selection_keys d0
-        andi.b      #PAD_UP,d0
-        bne.w       monster_select_up_key
-        move.b      (jp1_result),d0
-        andi.b      #PAD_DOWN,d0
-        bne.w       monster_select_down_key
-        move.b      (jp1_result),d0
-        andi.b      #PAD_C,d0       ; this ia actually pad A in pad mode 1!
-        beq.b       wait_for_monster_select_key
-        .wait_for_pad_c:                 ;XREF[1]
+        .wait_for_monster_select_key:                 ; monster select - UP, DOWN, C (A in mode 2)
             read_monster_selection_keys d0
-            andi.b      #PAD_C,d0
-            bne.b       .wait_for_pad_c
-        bsr.w       L00005366
-        move.w      #$100,d7
-        move.w      #$120,d6
-        move.w      #$e0,d2
-        moveq       #$0,d0
-        .L00005126:                 ;XREF[1]
-            moveq       #$2,d3
-            move.w      d7,d1
-            move.w      #-$7c10,d4
-            move.w      #$d00,d5
-            bsr.w       L00002904
-            move.w      d6,d1
-            move.w      #-$7c08,d4
-            move.w      #$d00,d5
-            bsr.w       L00002904
-            move.w      d7,d1
-            move.w      #-$7c10,d4
-            move.w      #$d00,d5
-            bsr.w       L00002904
-            move.w      d6,d1
-            move.w      #-$7c08,d4
-            move.w      #$d00,d5
-            bsr.w       L00002904
-            move.b      #$7,(DAT_00ff17eb)
-            bsr.w       wait_for_vblank
-            sub.w       d0,d2
-            addq.w      #$1,d0
-            cmpi.w      #$f,d0
-            bne.b       .L00005126
-        move.b      (DAT_00ff0022),d0
-        bmi.w       L00004ada   ; rts
-        move.b      #$8a,d0
-        bra.w       write_z80_reg12         ; play selected monster sound upon leaving
-    monster_select_up_key:                 ;XREF[1]
-        move.b      #$9d,d0
-        bsr.w       write_z80_reg12         ; play selection up down sound
-        subi.l      #$40,(DAT_00ff0598)
-        move.b      (DAT_00ff0020),d0
-        subq.b      #$1,d0
-        bpl.b       .L000051b2
-        lea         (DAT_00ffdaba+$100),a0
-        move.l      a0,(DAT_00ff0598)       ; save address
-        moveq       #$4,d0
-    .L000051b2:                 ;XREF[1]
-        move.b      d0,(DAT_00ff0020)
-        lea         (DAT_00ff066a),a1
-        lea         (DAT_00ff06ea),a0
-        moveq       #$f,d7
-        .L000051c6:
-            move.w      (a1)+,(a0)+
-            dbf         d7,.L000051c6
-        movea.l     (DAT_00ff0598),a1
-        adda.w      #$20,a1
-        bsr.w       copy_16_words_to_00ff066a
-        moveq       #$8,d0
-        bsr.w       wait_for_n_vblanks
-        movea.l     (DAT_00ff0598),a1
-        bsr.w       copy_16_words_to_00ff066a
-        bsr.w       copy_16_words_to_00ff06ea
-    .wait_pad_up_released:                 ;XREF[1]
-        read_monster_selection_keys d0
-        andi.b      #PAD_UP,d0
-        bne.b       .wait_pad_up_released
-        bra.w       wait_for_monster_select_key
-    monster_select_down_key:                 ;XREF[1]
-        move.b      #$9d,d0
-        bsr.w       write_z80_reg12         ; play selection up down sound
-        addi.l      #$40,(DAT_00ff0598)
-        move.b      (DAT_00ff0020),d0
-        addq.b      #$1,d0
-        cmpi.b      #$5,d0
-        bne.b       .L00005238
-        lea         (DAT_00ffdaba),a0
-        move.l      a0,(DAT_00ff0598)
-        moveq       #$0,d0
-    .L00005238:                 ;XREF[1]
-        move.b      d0,(DAT_00ff0020)
-        lea         (DAT_00ff066a),a1
-        lea         (DAT_00ff06ea),a0
-        moveq       #$f,d7
-        .L0000524c:
-            move.w      (a0)+,(a1)+
-            dbf         d7,.L0000524c
-        movea.l     (DAT_00ff0598),a1
-        bsr.w       copy_16_words_to_00ff06ea
-        moveq       #$8,d0
-        bsr.w       wait_for_n_vblanks
-        movea.l     (DAT_00ff0598),a1
-        bsr.w       copy_16_words_to_00ff066a
-        bsr.w       copy_16_words_to_00ff06ea
-        .L00005270:                 ;XREF[1]
-            read_monster_selection_keys d0
+            andi.b      #PAD_UP,d0
+            bne.w       .monster_select_up_key
+            move.b      (jp1_result),d0
             andi.b      #PAD_DOWN,d0
-            bne.b       .L00005270
-        bra.w       wait_for_monster_select_key
+            bne.w       .monster_select_down_key
+            move.b      (jp1_result),d0
+            andi.b      #PAD_C,d0       ; this ia actually pad A in pad mode 1!
+            beq.b       .wait_for_monster_select_key
+            .wait_for_pad_c_release:                 ;XREF[1]
+                read_monster_selection_keys d0
+                andi.b      #PAD_C,d0
+                bne.b       .wait_for_pad_c_release
+            bsr.w       L00005366
+            move.w      #$0100,d7
+            move.w      #$0120,d6
+            move.w      #$00e0,d2
+            moveq       #$0,d0  ; init d0 to repeat over 15 frames
+            .leave_monster_selection:                 ;XREF[1]
+                moveq       #$2,d3
+                move.w      d7,d1
+                move.w      #$83f0,d4
+                move.w      #$0d00,d5
+                bsr.w       update_sprite_in_sprite_table
+                move.w      d6,d1
+                move.w      #$83f8,d4
+                move.w      #$0d00,d5
+                bsr.w       update_sprite_in_sprite_table
+                move.w      d7,d1
+                move.w      #$83f0,d4
+                move.w      #$0d00,d5
+                bsr.w       update_sprite_in_sprite_table
+                move.w      d6,d1
+                move.w      #$83f8,d4
+                move.w      #$0d00,d5
+                bsr.w       update_sprite_in_sprite_table
+                move.b      #$7,(sprite_table_data+$2b)
+                bsr.w       wait_for_vblank
+                sub.w       d0,d2
+                addq.w      #$1,d0
+                cmpi.w      #$f,d0
+                bne.b       .leave_monster_selection  ; branh when d0=$f
+            move.b      (update_dragon_hud_flag),d0
+            bmi.w       L00004ada   ; rts
+            move.b      #$8a,d0
+            bra.w       write_z80_reg12         ; play selected monster sound upon leaving
+        .monster_select_up_key:                 ;XREF[1]
+            move.b      #$9d,d0
+            bsr.w       write_z80_reg12         ; play selection up down sound
+            subi.l      #$40,(monster_selection_pointer)
+            move.b      (monster_selection_index),d0
+            subq.b      #$1,d0
+            bpl.b       .L000051b2
+            lea         (monster_data_array+$100),a0
+            move.l      a0,(monster_selection_pointer)       ; save address
+            moveq       #$4,d0
+        .L000051b2:                             ; scroll dragons down
+            move.b      d0,(monster_selection_index)
+            lea         (hud_top_dragon_face),a1
+            lea         (hud_bottom_dragon_face),a0
+            moveq       #$f,d7
+            .L000051c6:
+                move.w      (a1)+,(a0)+
+                dbf         d7,.L000051c6
+            movea.l     (monster_selection_pointer),a1
+            adda.w      #$20,a1
+            bsr.w       change_hud_dragon_top_tiles
+            moveq       #$8,d0
+            bsr.w       wait_for_n_vblanks
+            movea.l     (monster_selection_pointer),a1
+            bsr.w       change_hud_dragon_top_tiles
+            bsr.w       change_hud_dragon_bottom_tiles
+            .wait_pad_up_released:                 ;XREF[1]
+                read_monster_selection_keys d0
+                andi.b      #PAD_UP,d0
+                bne.b       .wait_pad_up_released
+            bra.w       .wait_for_monster_select_key
+        .monster_select_down_key:                 ;XREF[1]
+            move.b      #$9d,d0
+            bsr.w       write_z80_reg12         ; play selection up down sound
+            addi.l      #$40,(monster_selection_pointer)
+            move.b      (monster_selection_index),d0
+            addq.b      #$1,d0
+            cmpi.b      #$5,d0
+            bne.b       .L00005238
+            lea         (monster_data_array),a0
+            move.l      a0,(monster_selection_pointer)
+            moveq       #$0,d0
+        .L00005238:                             ; scroll dragons up
+            move.b      d0,(monster_selection_index)
+            lea         (hud_top_dragon_face),a1
+            lea         (hud_bottom_dragon_face),a0
+            moveq       #$f,d7
+            .L0000524c:
+                move.w      (a0)+,(a1)+
+                dbf         d7,.L0000524c
+            movea.l     (monster_selection_pointer),a1
+            bsr.w       change_hud_dragon_bottom_tiles
+            moveq       #$8,d0
+            bsr.w       wait_for_n_vblanks
+            movea.l     (monster_selection_pointer),a1
+            bsr.w       change_hud_dragon_top_tiles
+            bsr.w       change_hud_dragon_bottom_tiles
+            .L00005270:                 ;XREF[1]
+                read_monster_selection_keys d0
+                andi.b      #PAD_DOWN,d0
+                bne.b       .L00005270
+            bra.w       .wait_for_monster_select_key
 
-L0000528c:                 ; commands during options C will play sounds and B will fade them TODO
+jp2_pad_a_b_pressed:    ; process game cheats - jp2 A&B pressed following by jp1 processed here
     move.b      (jp1_result),d0
     andi.b      #PAD_UP,d0
-    bne.b       L000052d0
+    bne.b       .pad_up_pressed
     move.b      (jp1_result),d0
     andi.b      #PAD_LEFT,d0
-    bne.b       L000052f0
+    bne.b       .pad_left_pressed
     move.b      (jp1_result),d0
     andi.b      #PAD_RIGHT,d0
-    bne.b       L00005310
+    bne.b       .pad_right_pressed
     move.b      (jp1_result),d0
     andi.b      #PAD_C,d0
-    bne.w       L0000533c
+    bne.w       .pad_c_pressed
     move.b      (jp1_result),d0
     andi.b      #PAD_B,d0
-    bne.w       L00005350
+    bne.w       .pad_b_pressed
     bra.w       L000045c8
-L000052d0:                 ;XREF[1]
-    move.l      #$18,(DAT_00ff0006)
-    move.l      #$18,(DAT_00ff002a)
+.pad_up_pressed:                 ; will max out life bar
+    move.l      #$00000018,(new_alisia_life_bar_level)
+    move.l      #$00000018,(new_alisia_life_bar_length)
     move.b      #$90,d0
     bsr.w       write_z80_reg12
     bra.w       L000045c8
-L000052f0:                 ;XREF[1]
-    move.b      (DAT_00ff001d),d0
+.pad_left_pressed:               ; inc alisia level
+    move.b      (new_alisia_level),d0
     cmpi.b      #$7,d0
     beq.w       L000045c8
-    addq.b      #$1,(DAT_00ff001d)
+    addq.b      #$1,(new_alisia_level)
     move.b      #$91,d0
     bsr.w       write_z80_reg12
     bra.w       L000045c8
-L00005310:                 ;XREF[1]
-    move.b      (DAT_00ff0021),d0
+.pad_right_pressed:               ; inc dragon level and life bar
+    move.b      (new_dragon_level),d0
     cmpi.b      #$2,d0
     beq.w       L000045c8
-    addq.b      #$1,(DAT_00ff0021)
-    addq.l      #$4,(DAT_00ff002e)
-    addq.l      #$4,(DAT_00ff0032)
+    addq.b      #$1,(new_dragon_level)
+    addq.l      #$4,(new_dragon_life_bar_level)
+    addq.l      #$4,(new_dragon_life_bar_length)
     move.b      #$8d,d0
     bsr.w       write_z80_reg12
     bra.w       L000045c8
-L0000533c:                 ;XREF[1]
-    move.b      #$1,(DAT_00ff0450)
+.pad_c_pressed:                 ; tbd
+    move.b      #$01,(DAT_00ff0450)
     move.b      #$8f,d0
     bsr.w       write_z80_reg12
     bra.w       L000045c8
-L00005350:                 ;XREF[1]
-    move.b      #$1,(DAT_00ff0056)
-    move.l      #$2710,(DAT_00ff000a)
+.pad_b_pressed:                 ; set level update flag
+    move.b      #$01,(alisia_level_update_flag)
+    move.l      #$00002710,(DAT_00ff000a)
     bra.w       L000045c8
 
 L00005366:
-    move.b      #$ff,(DAT_00ff0022)
+    move.b      #$ff,(update_dragon_hud_flag)
     lea         (DAT_00ffd90a),a6
     move.w      #$005f,d7
     .clear_lw:                 ; clear 96 long wordsXREF[1]
@@ -6067,14 +5849,14 @@ L00005366:
     ENDR
     move.w      #CRAM_WHITE,(a6)+
     moveq       #$1,d2
-    bsr.w       L000036fe
-    lea         (DAT_00ff0676),a0
+    bsr.w       prepare_dma_palette_transfer
+    lea         (hud_dragon_temp_arrow),a0
     move.w      (a0),d0              ;= ??
-    cmpi.w      #$868d,d0
+    cmpi.w      #$868d,d0   ; arrow tile in VRAM?
     beq.w       L00004ada   ; rts
-    move.b      (DAT_00ff0020),d0
+    move.b      (monster_selection_index),d0
     cmpi.b      #$4,d0
-    beq.w       L00004ada   ; rts
+    beq.w       L00004ada   ; rts if monster index is 4 (only 0-3 are valid values)
     ext.w       d0
     mulu.w      #$18,d0
     lea         (L00012d60),a0
@@ -6099,47 +5881,47 @@ L00005366:
     move.w      #$ffff,($1c,a6)
     clr.b       (DAT_00ff0442)
     move.b      #$ff,(DAT_00ff0446)
-    clr.b       (DAT_00ff0447)
-    move.b      (DAT_00ff0020),d0
+    clr.b       (dragon_xp)
+    move.b      (monster_selection_index),d0
     ext.w       d0
     mulu.w      #$a,d0
-    lea         (DAT_00ffdbfa),a0
+    lea         (monster_stats_array),a0
     adda.w      d0,a0
-    move.l      (a0)+,(DAT_00ff002e)
-    move.l      (a0)+,(DAT_00ff0032)
-    move.b      (a0)+,(DAT_00ff0021)
-    move.b      (a0)+,(DAT_00ff0022)
-    move.b      (DAT_00ff0020),d0
+    move.l      (a0)+,(new_dragon_life_bar_level)
+    move.l      (a0)+,(new_dragon_life_bar_length)
+    move.b      (a0)+,(new_dragon_level)        ; gets written during game
+    move.b      (a0)+,(update_dragon_hud_flag)
+    move.b      (monster_selection_index),d0
     ext.w       d0
-    lsl.w       #$3,d0
-    andi.w      #$3ff8,d0
+    lsl.w       #$3,d0  ; x8
+    andi.w      #$3ff8,d0   ; not sure why as there are only 4 monsters
     lea         (L0007acc2),a3
-    adda.w      d0,a3   ; up to $7ecba
+    adda.w      d0,a3
     move.w      ($4,a3),d3
-    beq.b       L000054a6   ; banch if length is 0
+    beq.b       .L000054a6   ; banch if length is 0
     move.w      #$7000,d1
     move.l      (a3),d0
     move.l      #(L00078b22),d2
     add.l       d0,d2
     lsr.w       #$1,d3
     ori.w       #$8000,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
 
-L000054a6:
-    move.b      (DAT_00ff0020),d0
+.L000054a6:
+    move.b      (monster_selection_index),d0
     ext.w       d0
     add.w       d0,d0
-    addi.w      #$a6c0,d0
-    lea         (DAT_00ff066a),a0
+    addi.w      #$a6c0,d0   ; VRAM location for dragon tiles
+    lea         (hud_top_dragon_face),a0
     move.w      d0,(a0)+
     addq.w      #$1,d0
     move.w      d0,(a0)+
-    lea         (DAT_00ff06ea),a0
+    lea         (hud_bottom_dragon_face),a0
     addi.w      #$f,d0
     move.w      d0,(a0)+
     addq.w      #$1,d0
     move.w      d0,(a0)+
-    bra.w       L000043ca
+    bra.w       reset_power_stats
 
 L000054d4:
     tst.b       (jp2_en_flag)
@@ -6153,21 +5935,21 @@ L000054d4:
     bne.w       L00005516
     bsr.w       clear_palettes_4_to_7
     moveq       #$1,d2
-    bsr.w       L000036fe
-    bsr.w       wait_for_00ff013_clear
+    bsr.w       prepare_dma_palette_transfer
+    bsr.w       wait_for_palette_flags_clear
     bsr.w       reset_bgs
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     bsr.w       clear_640_bytes_from_00ff17c0
     clr.b       (vram_to_vram_type)
 
 L00005516:
-    bsr.w       L0000bd4a
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L00039af8),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     lea         (L00039fe2),a0
     lea         (DAT_00ff655c),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     lea         (L000700d0),a0
     moveq       #$1,d1
     move.w      #$8000,d2
@@ -6175,12 +5957,12 @@ L00005516:
     move.w      #$4000,d1
     move.l      #(L0006d9ba),d2
     move.w      #$8990,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     bsr.w       L0000292c
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
+    move.l      #VDP_VRAM_WADDR+$3,d0           ; $c000 VRAM WADDR for BG1 tilemap
     lea         (bg1_tilemap_data),a0
     bsr.w       update_vram_alt_tilemap
-    move.l      #VDP_VRAM_WADDR+$20000003,d0 ; BG2 tilemap VRAM addr $E000
+    move.l      #VDP_VRAM_WADDR+$20000003,d0    ; $e000 VRAM WADDR for BG2 tilemap
     lea         (bg2_tilemap_data),a0
     bsr.w       update_vram_alt_tilemap
     lea         (L00072278),a0
@@ -6197,7 +5979,7 @@ L00005516:
     bsr.w       fill_top_palette
     move.w      #CRAM_WHITE,(palettes_7+$8)
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     move.w      #$668a,d2
     lea         (S_CLEAR_STAGE),a0
     move.l      #S_CLEAR_STAGE_VRAM_ADDR,d0
@@ -6227,25 +6009,25 @@ L00005516:
     move.l      (DAT_00ff00ce),d0
     mulu.w      #$64,d0
     move.l      (DAT_00ff00ca),d1
-    bne.b       L0000565c
+    bne.b       .L0000565c
     moveq       #$1,d1
-L0000565c:
+.L0000565c:
     divu.w      d1,d0
     cmpi.w      #$64,d0
-    bls.b       L00005668
+    bls.b       .L00005668
     move.w      #$64,d0
-L00005668:
+.L00005668:
     move.w      d0,(DAT_00ff04f8)
     move.w      (DAT_00ff04fc),d7
     mulu.w      #$a,d7
     move.w      (DAT_00ff04f8),d0
     lsr.w       #$1,d0
     subi.w      #$a,d0
-    bpl.b       L00005688
+    bpl.b       .L00005688
     moveq       #$0,d0
-L00005688:
+.L00005688:
     add.w       d0,d7
-    lea         (DAT_00ffdbfa),a0
+    lea         (monster_stats_array),a0
     moveq       #$3,d6
     .L00005692:
         move.b      ($8,a0),d0
@@ -6254,75 +6036,75 @@ L00005688:
         add.w       d0,d7
         adda.w      #$a,a0
         dbf         d6,.L00005692
-    move.b      (DAT_00ff001d),d0
+    move.b      (new_alisia_level),d0
     ext.w       d0
     add.w       d0,d7
     move.l      (DAT_00ff05b0),d0
     divu.w      #$a,d0
     add.w       d0,d0
     sub.w       d0,d7
-    bpl.b       L000056c0
+    bpl.b       .L000056c0
     moveq       #$0,d7
-L000056c0:
+.L000056c0:
     move.b      (DAT_00ff0453),d0
     andi.w      #$ff,d0
     sub.w       d0,d7
-    bpl.b       L000056d0
+    bpl.b       .L000056d0
     moveq       #$0,d7
-L000056d0:
+.L000056d0:
     sub.w       (DAT_00ff04bc),d7
-    bpl.b       L000056da
+    bpl.b       .L000056da
     moveq       #$0,d7
-L000056da:
+.L000056da:
     moveq       #$4,d6
     cmpi.w      #$64,d7
-    bcc.w       L0000571c
+    bcc.w       .L0000571c
     moveq       #$5,d6
     cmpi.w      #$5a,d7
-    bcc.w       L0000575e
+    bcc.w       .L0000575e
     moveq       #$6,d6
     cmpi.w      #$50,d7
-    bcc.w       L0000575e
+    bcc.w       .L0000575e
     moveq       #$7,d6
     cmpi.w      #$3c,d7
-    bcc.w       L0000575e
+    bcc.w       .L0000575e
     moveq       #$8,d6
     cmpi.w      #$28,d7
-    bcc.w       L0000575e
+    bcc.w       .L0000575e
     moveq       #$9,d6
     cmpi.w      #$14,d7
-    bcc.w       L0000575e
+    bcc.w       .L0000575e
     moveq       #$a,d6
-    bra.w       L0000575e
-L0000571c:
+    bra.w       .L0000575e
+.L0000571c:
     tst.b       (DAT_00ff045a)
-    beq.w       L0000575e
+    beq.w       .L0000575e
     moveq       #$3,d6
     tst.b       (DAT_00ff0453)
-    bne.w       L0000575e
+    bne.w       .L0000575e
     tst.w       (DAT_00ff04bc)
-    bne.w       L0000575e
+    bne.w       .L0000575e
     move.l      (DAT_00ff05ac),d0
     cmpi.l      #$3d860,d0
-    bhi.w       L0000575e
+    bhi.w       .L0000575e
     moveq       #$2,d6
     move.b      (normal_hard_plus1),d0
     cmpi.b      #$2,d0
-    bne.w       L0000575e
+    bne.w       .L0000575e
     moveq       #$1,d6
-L0000575e:
+.L0000575e:
     tst.w       (DAT_00ff04f6)
-    bne.b       L0000576c
+    bne.b       .L0000576c
     addq.w      #$1,(DAT_00ff04f6)
-L0000576c:
+.L0000576c:
     lea         (L000059d6),a0
     move.w      (DAT_00ff04ba),d0
     andi.l      #$0000ffff,d0
     divu.w      (DAT_00ff04f6),d0
     cmpi.w      #$a,d0
-    bcs.w       L00005792
+    bcs.w       .L00005792
     lea         (L000059fe),a0
-L00005792:
+.L00005792:
     subq.w      #$1,d6
     add.w       d6,d6
     add.w       d6,d6
@@ -6404,7 +6186,7 @@ L0000585a:
     ext.w       d7
     move.w      (a0)+,d5
     move.w      (DAT_00ff04c8),d3
-    bsr.w       L00002904
+    bsr.w       update_sprite_in_sprite_table
     move.w      d3,(DAT_00ff04c8)
 L00005884
     movem.l     (SP)+,d0-d6/a0-a6
@@ -6449,7 +6231,7 @@ L000058ec
 L000058f6:
     move.w      #$110,d1
     move.w      #$e0,d2
-    move.b      (DAT_00ff001d),d0
+    move.b      (new_alisia_level),d0
     addi.w      #$31,d0
     bra.w       L00005834
 L0000590c:
@@ -6489,19 +6271,21 @@ L00005962:
     bsr.w       L00005834
     lea         (L000059ba),a0
     bra.w       L0000580e
+
 L00005984:
     movea.l     (DAT_00ff0036),a0
     bra.w       L0000580e
+
 L0000598e:
-    move.w      #$138,d1
-    move.w      #$118,d2
+    move.w      #$0138,d1
+    move.w      #$0118,d2
     move.w      (DAT_00ff04c8),d3
     move.w      #$6698,d4
-    move.w      #$0,d5
-    bsr.w       L00002904
+    move.w      #$0000,d5
+    bsr.w       update_sprite_in_sprite_table
     addq.w      #$8,d1
     move.w      #$668f,d4
-    bsr.w       L00002904
+    bsr.w       update_sprite_in_sprite_table
     move.w      d3,(DAT_00ff04c8)
     rts
 
@@ -6795,27 +6579,27 @@ VBLANK: ; L00005cac
     movea.l     (SP)+,a0
     move.b      d0,(z80_reg8_value)         ; save z80 reg 8 value
     move.l      (hscroll_dma_data_src_ptr),d0           ; d0=dma config/source
-    move.w      (hscroll_vram_addr),d1           ; d1=dst
+    move.w      (hscroll_vram_addr),d1      ; d1=dst
     move.w      #$01c0,d2                   ; d2.w=length
     moveq       #$1,d3                      ; VRAM DMA
     bsr.w       cpu_to_vram_dma
     move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
     move.w      (bg1_vscroll_value),(VDP_DATA)   ;=
     move.w      (bg2_vscroll_value),(VDP_DATA)   ;=
-    move.l      #(DAT_00ff17c0),d0          ; dma control + data src
+    move.l      #(sprite_table_data),d0          ; dma control + data src
     move.w      #$fc00,d1                   ; VRAM ADDR
     move.w      #$0140,d2                   ; d2.w=length
     moveq       #$1,d3                      ; VRAM DMA
     bsr.w       cpu_to_vram_dma
-    move.l      #(DAT_00ff05c0),d0
+    move.l      #(hud_row0_data),d0
     move.w      #$f000,d1
     move.w      #$100,d2                    ; d2.w=length
     moveq       #$1,d3                      ; VRAM DMA
     bsr.w       cpu_to_vram_dma
-    bsr.w       L00002cbe
+    bsr.w       process_palette_update_data
     move.l      #(palettes_0),d0
     clr.w       d1
-    moveq       #$40,d2                     ; d2.w=length
+    moveq       #$40,d2                     ; d2.w=length for 4 full palettes
     moveq       #$2,d3                      ; CRAM DMA
     bsr.w       cpu_to_vram_dma
     btst.b      #$0,(vram_to_vram_type)
@@ -6873,10 +6657,10 @@ L00005e02:
     move.w      (DAT_00ff001a),d1
     add.w       d1,d1
     add.w       d1,d1
-    jsr         (L00005e4a,PC,d1)
+    jsr         (.jsr_table,PC,d1)
     bra.w       L00007898
 
-L00005e4a:
+.jsr_table:
     bra.w       L00005f0a
     bra.w       L00006038
     bra.w       L000060a4
@@ -6908,9 +6692,9 @@ L00005e4a:
 
 L00005eba:
     btst.b      #$3,(DAT_00ff0000)
-    beq.w       L0000717a
+    beq.w       L0000717a   ; rts
     subq.b      #$1,(DAT_00ff0018)
-    bne.w       L0000717a
+    bne.w       L0000717a   ; rts
     bclr.b      #$3,(DAT_00ff0000)
     rts
 
@@ -7021,9 +6805,9 @@ L00006038:
     beq.w       L00007092
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006098
+    bne.b       .L00006098
     move.b      #$1,(DAT_00ff0431)
-L00006098:
+.L00006098:
     move.w      #$2,(DAT_00ff001a)
     bra.w       L00007092
 
@@ -7097,14 +6881,14 @@ L000061a0:
     bne.w       L000070d6
     move.b      (jp1_result),d1
     tst.b       (DAT_00ff0431)
-    beq.b       L000061e8
+    beq.b       .L000061e8
     btst.l      #$6,d1          ; PAD_A
     bne.w       L00006280
-L000061e8:
+.L000061e8:
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L000061f6
+    bne.b       .L000061f6
     move.b      #$1,(DAT_00ff0431)
-L000061f6:
+.L000061f6:
     btst.l      #$1,d1          ; PAD_DOWN
     bne.b       L00006226
     btst.l      #$2,d1          ; PAD_LEFT
@@ -7149,10 +6933,10 @@ L00006280:
     bsr.w       L00007058
     move.b      (jp1_result),d1
     btst.l      #$2,d1          ; PAD_LEFT
-    bne.b       L000062b0
+    bne.b       .L000062b0
     move.w      #$b,(DAT_00ff001a)
     bra.w       L0000670e
-L000062b0:
+.L000062b0:
     move.w      #$11,(DAT_00ff001a)
     bra.w       L00006b90
 L000062bc:
@@ -7178,9 +6962,9 @@ L000062ce:
     beq.w       L00007092
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L0000632e
+    bne.b       .L0000632e
     move.b      #$1,(DAT_00ff0431)
-L0000632e:
+.L0000632e:
     move.w      #$6,(DAT_00ff001a)
     bra.w       L00007092
 
@@ -7198,16 +6982,16 @@ L0000633a:
     bset.b      #$7,(DAT_00ff0000)
     move.b      (jp1_result),d1
     tst.b       (DAT_00ff0431)
-    beq.b       L0000638a
+    beq.b       .L0000638a
     btst.l      #$6,d1          ; PAD_A
     bne.w       L00006280
-L0000638a:
+.L0000638a:
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006398
+    bne.b       .L00006398
     move.b      #$1,(DAT_00ff0431)
-L00006398:
+.L00006398:
     btst.l      #$3,d1          ; PAD_RIGHT
-    bne.b       L000063be
+    bne.b       .L000063be
     btst.l      #$1,d1          ; PAD_DOWN
     beq.w       L00006208
     move.w      #$4,(DAT_00ff04ae)
@@ -7216,7 +7000,7 @@ L00006398:
     bne.w       L000070cc
     moveq       #$2c,d0
     bra.w       L000070cc
-L000063be:
+.L000063be:
     move.w      #$1a,(DAT_00ff001a)
     bset.b      #$0,(DAT_00ff0000)
     bset.b      #$2,(DAT_00ff0000)
@@ -7246,14 +7030,14 @@ L00006436:
     bne.w       L000070d6
     move.b      (jp1_result),d1
     tst.b       (DAT_00ff0431)
-    beq.b       L00006458
+    beq.b       .L00006458
     btst.l      #$6,d1          ; PAD_A
     bne.w       L00005fea
-L00006458:
+.L00006458:
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006466
+    bne.b       .L00006466
     move.b      #$1,(DAT_00ff0431)
-L00006466:
+.L00006466:
     btst.l      #$1,d1          ; PAD_DOWN
     bne.w       L00005f90
     btst.l      #$3,d1          ; PAD_RIGHT
@@ -7272,6 +7056,7 @@ L00006466:
     beq.w       L00007092
     move.w      #$6,(DAT_00ff04b4)
     bra.w       L00007092
+
 L000064bc:
     move.w      (DAT_00ff01a8),d0
     lsr.w       #$4,d0
@@ -7286,16 +7071,15 @@ L000064bc:
     subi.w      #$8,d1
     bsr.w       L000076f8
     tst.w       d0
-    beq.b       L00006518
+    beq.b       .L00006518
     bmi.w       L00005f72
     clr.b       (DAT_00ff042b)
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$6,(DAT_00ff04b4)
-L00006514:
     bra.w       L00007092
-L00006518:
+.L00006518:
     clr.b       (DAT_00ff042b)
     move.w      #$13,(DAT_00ff001a)
     clr.b       (DAT_00ff0435)
@@ -7308,14 +7092,14 @@ L00006536:
     bne.w       L000070d6
     move.b      (jp1_result),d1
     tst.b       (DAT_00ff0431)
-    beq.b       L00006558
+    beq.b       .L00006558
     btst.l      #$6,d1          ; PAD_A
     bne.w       L00006280
-L00006558:
+.L00006558:
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006566
+    bne.b       .L00006566
     move.b      #$1,(DAT_00ff0431)
-L00006566:
+.L00006566:
     btst.l      #$1,d1          ; PAD_DOWN
     bne.w       L00006226
     btst.l      #$2,d1          ; PAD_LEFT
@@ -7344,12 +7128,11 @@ L000065bc:
     bsr.w       L0000717c
     tst.b       d0
     bmi.w       L00006208
-L000065e2:
     move.w      (DAT_00ff0002),d1
     subi.w      #$c,d1
     bsr.w       L000076f8
     tst.w       d0
-    beq.b       L0000661a
+    beq.b       .L0000661a
     bmi.w       L00006208
     move.b      #$1,(DAT_00ff042b)
     move.b      (jp1_result),d1
@@ -7357,120 +7140,123 @@ L000065e2:
     beq.w       L00007092
     move.w      #$6,(DAT_00ff04b4)
     bra.w       L00007092
-L0000661a:
+.L0000661a:
     move.b      #$1,(DAT_00ff042b)
     move.w      #$15,(DAT_00ff001a)
     clr.b       (DAT_00ff0435)
     moveq       #$c,d0
     bsr.w       L00007058
     bra.w       L00006e58
+
 L0000663a:
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L0000666e
+    bne.b       .L0000666e
     clr.b       (DAT_00ff0435)
     move.b      (DAT_00ff0434),d0
     cmpi.b      #$36,d0
-    bcc.b       L00006660
+    bcc.b       .L00006660
     move.b      #$37,(DAT_00ff0434) ; max value
-L00006660:
+.L00006660:
     move.w      (DAT_00ff047c),d0
     cmpi.w      #$1,d0
-    beq.w       L000066ec
-L0000666e:
+    beq.w       .L000066ec
+.L0000666e:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007648
     tst.b       d0
-    bmi.w       L000066ec
+    bmi.w       .L000066ec
     bsr.w       L00007750
     tst.w       d0
-    bmi.w       L000066ec
+    bmi.w       .L000066ec
     move.b      (jp1_result),d1
     btst.l      #$2,d1          ; PAD_LEFT
-    bne.b       L000066b2
+    bne.b       .L000066b2
     btst.l      #$3,d1          ; PAD_RIGHT
-    bne.b       L000066d0
+    bne.b       .L000066d0
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L000066b2:
+.L000066b2:
     move.w      #$e,(DAT_00ff001a)
     bclr.b      #$0,(DAT_00ff0000)
     bset.b      #$2,(DAT_00ff0000)
     moveq       #$6,d0
     bra.w       L00007090
-L000066d0:
+.L000066d0:
     move.w      #$f,(DAT_00ff001a)
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L000066ec:
+.L000066ec:
     move.w      #$c,(DAT_00ff001a)
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
+
 L0000670e:
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006742
+    bne.b       .L00006742
     clr.b       (DAT_00ff0435)
     move.b      (DAT_00ff0434),d0
     cmpi.b      #$36,d0
-    bcc.b       L00006734
+    bcc.b       .L00006734
     move.b      #$37,(DAT_00ff0434)
-L00006734:
+.L00006734:
     move.w      (DAT_00ff047c),d0
     cmpi.w      #$1,d0
-    beq.w       L000067c0
-L00006742:
+    beq.w       .L000067c0
+.L00006742:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007648
     tst.b       d0
-    bmi.w       L000067c0
+    bmi.w       .L000067c0
     bsr.w       L00007750
     tst.w       d0
-    bmi.w       L000067c0
+    bmi.w       .L000067c0
     move.b      (jp1_result),d1
     btst.l      #$2,d1          ; PAD_LEFT
-    bne.b       L00006786
+    bne.b       .L00006786
     btst.l      #$3,d1          ; PAD_RIGHT
-    bne.b       L000067a2
+    bne.b       .L000067a2
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L00006786:
+.L00006786:
     move.w      #$11,(DAT_00ff001a)
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L000067a2:
+.L000067a2:
     move.w      #$10,(DAT_00ff001a)
     bset.b      #$0,(DAT_00ff0000)
     bset.b      #$2,(DAT_00ff0000)
     moveq       #$e,d0
     bra.w       L00007090
-L000067c0:
+.L000067c0:
     move.w      #$d,(DAT_00ff001a)
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
+
 L000067e2:
     move.b      (jp1_result),d1
     btst.l      #$2,d1          ; PAD_LEFT
-    bne.w       L0000686c
+    bne.w       .L0000686c
     btst.l      #$3,d1          ; PAD_RIGHT
-    bne.w       L0000688e
-L000067f8:
+    bne.w       .L0000688e
+.L000067f8:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007792
@@ -7478,45 +7264,46 @@ L000067f8:
     bmi.w       L000068a6
     move.w      d0,-(SP)
     tst.w       d3
-    bmi.b       L00006826
+    bmi.b       .L00006826
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007810
     tst.w       d0
     bmi.w       L000068a4
-L00006826:
+.L00006826:
     move.w      (SP)+,d0
     cmpi.b      #$2,d0
-    bls.b       L00006856
+    bls.b       .L00006856
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
-    beq.b       L00006842
+    beq.b       .L00006842
     move.w      #$2,(DAT_00ff04b4)
-L00006842:
+.L00006842:
     move.w      (DAT_00ff0024),d0
     cmpi.w      #$4,d0
     beq.w       L00007092
     moveq       #$4,d0
     bra.w       L00007090
-L00006856:
+.L00006856:
     move.b      (jp1_result),d1
     moveq       #$1b,d0
     btst.l      #$4,d1          ; PAD_B
     beq.w       L000070cc
     moveq       #$1c,d0
     bra.w       L000070cc
-L0000686c:
+.L0000686c:
     move.w      #$12,(DAT_00ff001a)
     bclr.b      #$0,(DAT_00ff0000)
     bset.b      #$2,(DAT_00ff0000)
     moveq       #$7,d0
     bsr.w       L00007058
     bra.w       L00006c42
-L0000688e:
+.L0000688e:
     tst.b       (DAT_00ff043b)
-    bne.w       L000067f8
+    bne.w       .L000067f8
     move.w      #$13,(DAT_00ff001a)
     bra.w       L00006cd0
+
 L000068a4:
     move.w      (SP)+,d0
 L000068a6:
@@ -7529,10 +7316,10 @@ L000068a6:
 L000068c8:
     move.b      (jp1_result),d1
     btst.l      #$2,d1          ; PAD_LEFT
-    bne.w       L00006952
+    bne.w       .L00006952
     btst.l      #$3,d1          ; PAD_RIGHT
-    bne.w       L00006966
-L000068de:
+    bne.w       .L00006966
+.L000068de:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007792
@@ -7540,40 +7327,39 @@ L000068de:
     bmi.w       L0000698a
     move.w      d0,-(SP)
     tst.w       d3
-L000068f6:
-    bmi.b       L0000690c
+    bmi.b       .L0000690c
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007810
     tst.w       d0
     bmi.w       L00006988
-L0000690c:
+.L0000690c:
     move.w      (SP)+,d0
     cmpi.b      #$2,d0
-    bls.b       L0000693c
+    bls.b       .L0000693c
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
-    beq.b       L00006928
+    beq.b       .L00006928
     move.w      #$2,(DAT_00ff04b4)
-L00006928:
+.L00006928:
     move.w      (DAT_00ff0024),d0
     cmpi.w      #$c,d0
     beq.w       L00007092
     moveq       #$c,d0
     bra.w       L00007090
-L0000693c:
+.L0000693c:
     move.b      (jp1_result),d1
     moveq       #$38,d0
     btst.l      #$4,d1          ; PAD_B
     beq.w       L000070cc
     moveq       #$39,d0
     bra.w       L000070cc
-L00006952:
+.L00006952:
     tst.b       (DAT_00ff043c)
-    bne.b       L000068de
+    bne.b       .L000068de
     move.w      #$15,(DAT_00ff001a)
     bra.w       L00006e58
-L00006966:
+.L00006966:
     move.w      #$14,(DAT_00ff001a)
     bset.b      #$0,(DAT_00ff0000)
     bset.b      #$2,(DAT_00ff0000)
@@ -7593,32 +7379,32 @@ L0000698a:
 L000069ac:
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L000069e0
+    bne.b       .L000069e0
     clr.b       (DAT_00ff0435)
     move.b      (DAT_00ff0434),d0
     cmpi.b      #$36,d0
-    bcc.b       L000069d2
+    bcc.b       .L000069d2
     move.b      #$37,(DAT_00ff0434)
-L000069d2:
+.L000069d2:
     move.w      (DAT_00ff047c),d0
     cmpi.w      #$1,d0
-    beq.w       L00006a22
-L000069e0:
+    beq.w       .L00006a22
+.L000069e0:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007648
     tst.b       d0
-    bmi.w       L00006a22
+    bmi.w       .L00006a22
     bsr.w       L00007750
     tst.w       d0
-    bmi.w       L00006a22
+    bmi.w       .L00006a22
     btst.b      #$1,(DAT_00ff0000)
     beq.w       L00007092
     bsr.w       L00005eda
     move.w      #$b,(DAT_00ff001a)
     bclr.b      #$2,(DAT_00ff0000)
     bra.w       L00007092
-L00006a22:
+.L00006a22:
     move.w      #$12,(DAT_00ff001a)
     bra.w       L00006c42
 
@@ -7633,17 +7419,17 @@ L00006a3a:
 L00006a46:
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006a7a
+    bne.b       .L00006a7a
     clr.b       (DAT_00ff0435)
     move.b      (DAT_00ff0434),d0
     cmpi.b      #$36,d0
-    bcc.b       L00006a6c
+    bcc.b       .L00006a6c
     move.b      #$37,(DAT_00ff0434)
-L00006a6c:
+.L00006a6c:
     move.w      (DAT_00ff047c),d0
     cmpi.w      #$1,d0
-    beq.w       L00006aea
-L00006a7a:
+    beq.w       .L00006aea
+.L00006a7a:
     move.w      (DAT_00ff0002),d1
     subi.w      #$8,d1
     bsr.w       L00007648
@@ -7651,11 +7437,11 @@ L00006a7a:
     bmi.b       L00006a3a
     bsr.w       L00007750
     tst.w       d0
-    bmi.w       L00006aea
+    bmi.w       .L00006aea
     move.w      (DAT_00ff01a8),d0
     lsr.w       #$4,d0
     cmp.w       (DAT_00ff005e),d0
-    bge.b       L00006ad0
+    bge.b       .L00006ad0
     move.w      (DAT_00ff0002),d1
     addi.w      #$c,d1
     move.w      (DAT_00ff0004),-(SP)
@@ -7663,47 +7449,47 @@ L00006a7a:
     bsr.w       L00007230
     move.w      (SP)+,(DAT_00ff0004)
     tst.b       d0
-    bmi.b       L00006ad0
+    bmi.b       .L00006ad0
     clr.b       (DAT_00ff042b)
-L00006ad0:
+.L00006ad0:
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L00006aea:
+.L00006aea:
     move.w      #$13,(DAT_00ff001a)
     bra.w       L00006cd0
 
 L00006af6:
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006b2a
+    bne.b       .L00006b2a
     clr.b       (DAT_00ff0435)
     move.b      (DAT_00ff0434),d0
     cmpi.b      #$36,d0
-    bcc.b       L00006b1c
+    bcc.b       .L00006b1c
     move.b      #$37,(DAT_00ff0434)
-L00006b1c:
+.L00006b1c:
     move.w      (DAT_00ff047c),d0
     cmpi.w      #$1,d0
-    beq.w       L00006b6c
-L00006b2a:
+    beq.w       .L00006b6c
+.L00006b2a:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007648
     tst.b       d0
-    bmi.w       L00006b6c
+    bmi.w       .L00006b6c
     bsr.w       L00007750
     tst.w       d0
-    bmi.w       L00006b6c
+    bmi.w       .L00006b6c
     btst.b      #$1,(DAT_00ff0000)
     beq.w       L00007092
     bsr.w       L00005ef6
     move.w      #$a,(DAT_00ff001a)
     bclr.b      #$2,(DAT_00ff0000)
     bra.w       L00007092
-L00006b6c:
+.L00006b6c:
     move.w      #$14,(DAT_00ff001a)
     bra.w       L00006dcc
 
@@ -7717,17 +7503,17 @@ L00006b84:
 L00006b90:
     move.b      (jp1_result),d1
     btst.l      #$6,d1          ; PAD_A
-    bne.b       L00006bc4
+    bne.b       .L00006bc4
     clr.b       (DAT_00ff0435)
     move.b      (DAT_00ff0434),d0
     cmpi.b      #$36,d0
-    bcc.b       L00006bb6
+    bcc.b       .L00006bb6
     move.b      #$37,(DAT_00ff0434)
-L00006bb6:
+.L00006bb6:
     move.w      (DAT_00ff047c),d0
     cmpi.w      #$1,d0
-    beq.w       L00006c36
-L00006bc4:
+    beq.w       .L00006c36
+.L00006bc4:
     move.w      (DAT_00ff0002),d1
     subi.w      #$c,d1
     bsr.w       L00007648
@@ -7735,11 +7521,11 @@ L00006bc4:
     bmi.b       L00006b84
     bsr.w       L00007750
     tst.w       d0
-    bmi.w       L00006c36
+    bmi.w       .L00006c36
     move.w      (DAT_00ff01a8),d0
     lsr.w       #$4,d0
     cmp.w       (DAT_00ff005c),d0
-    ble.b       L00006c1c
+    ble.b       .L00006c1c
     move.w      (DAT_00ff0002),d1
     subi.w      #$c,d1
     move.w      (DAT_00ff0004),-(SP)
@@ -7747,15 +7533,15 @@ L00006bc4:
     bsr.w       L000072bc
     move.w      (SP)+,(DAT_00ff0004)
     tst.b       d0
-    bmi.b       L00006c1c
+    bmi.b       .L00006c1c
     move.b      #$1,(DAT_00ff042b)
-L00006c1c:
+.L00006c1c:
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L00006c36:
+.L00006c36:
     move.w      #$15,(DAT_00ff001a)
     bra.w       L00006e58
 L00006c42:
@@ -7763,15 +7549,15 @@ L00006c42:
     subi.w      #$a,d1
     bsr.w       L00007792
     tst.w       d0
-    bmi.w       L00006ca8
+    bmi.w       .L00006ca8
     tst.w       d3
-    bmi.b       L00006c6e
+    bmi.b       .L00006c6e
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007810
     tst.w       d0
-    bmi.w       L00006ca8
-L00006c6e:
+    bmi.w       .L00006ca8
+.L00006c6e:
     btst.b      #$1,(DAT_00ff0000)
     beq.w       L00007092
     bsr.w       L00005eda
@@ -7782,7 +7568,7 @@ L00006c6e:
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L00006ca8:
+.L00006ca8:
     bsr.w       L00005eda
     bclr.b      #$2,(DAT_00ff0000)
     bra.w       L0000698a
@@ -7797,51 +7583,51 @@ L00006cd0:
     move.w      (DAT_00ff01a8),d0
     lsr.w       #$4,d0
     cmp.w       (DAT_00ff005e),d0
-    bge.w       L00006d7e
+    bge.w       .L00006d7e
     move.w      (DAT_00ff0002),d1
     addi.w      #$c,d1
     move.w      (DAT_00ff0004),-(SP)
     move.b      (DAT_00ff0435),d7
     cmpi.b      #$40,d7
-    bcc.b       L00006d00
+    bcc.b       .L00006d00
     addq.b      #$1,d7
-L00006d00:
+.L00006d00:
     lsr.b       #$2,d7
     ext.w       d7
     add.w       d7,(DAT_00ff0004)
     bsr.w       L00007230
     move.w      (SP)+,(DAT_00ff0004)
     tst.b       d0
-    bmi.b       L00006d7e
+    bmi.b       .L00006d7e
     move.w      (DAT_00ff0002),d1
     subi.w      #$8,d1
     bsr.w       L00007792
     tst.w       d0
     bmi.w       L000068a6
     tst.w       d3
-    bmi.b       L00006d44
+    bmi.b       .L00006d44
     move.w      (DAT_00ff0002),d1
     subi.w      #$6,d1
     bsr.w       L00007810
     tst.w       d0
     bmi.w       L000068a6
-L00006d44:
+.L00006d44:
     clr.b       (DAT_00ff042b)
     move.w      (DAT_00ff047c),d0
     cmpi.b      #$2,d0
-    bls.b       L00006db6
-L00006d56:
+    bls.b       .L00006db6
+.L00006d56:
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
-    beq.b       L00006d6a
+    beq.b       .L00006d6a
     move.w      #$2,(DAT_00ff04b4)
-L00006d6a:
+.L00006d6a:
     move.w      (DAT_00ff0024),d0
     cmpi.w      #$4,d0
     beq.w       L00007092
     moveq       #$4,d0
     bra.w       L00007090
-L00006d7e:
+.L00006d7e:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007792
@@ -7849,18 +7635,18 @@ L00006d7e:
     bmi.w       L000068a6
     move.w      d0,-(SP)
     tst.w       d3
-    bmi.b       L00006dac
+    bmi.b       .L00006dac
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007810
     tst.w       d0
     bmi.w       L000068a4
-L00006dac:
+.L00006dac:
     move.w      (SP)+,d0
     cmpi.b      #$2,d0
-    bls.b       L00006db6
-    bra.b       L00006d56
-L00006db6:
+    bls.b       .L00006db6
+    bra.b       .L00006d56
+.L00006db6:
     move.b      (jp1_result),d1
     moveq       #$1b,d0
     btst.l      #$4,d1          ; PAD_B
@@ -7872,15 +7658,15 @@ L00006dcc:
     subi.w      #$a,d1
     bsr.w       L00007792
     tst.w       d0
-    bmi.b       L00006e30
+    bmi.b       .L00006e30
     tst.w       d3
-    bmi.b       L00006df6
+    bmi.b       .L00006df6
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007810
     tst.w       d0
-    bmi.w       L00006e30
-L00006df6:
+    bmi.w       .L00006e30
+.L00006df6:
     btst.b      #$1,(DAT_00ff0000)
     beq.w       L00007092
     bsr.w       L00005ef6
@@ -7891,7 +7677,7 @@ L00006df6:
     beq.w       L00007092
     move.w      #$2,(DAT_00ff04b4)
     bra.w       L00007092
-L00006e30:
+.L00006e30:
     bsr.w       L00005ef6
     bclr.b      #$2,(DAT_00ff0000)
     bra.w       L000068a6
@@ -7906,51 +7692,51 @@ L00006e58:
     move.w      (DAT_00ff01a8),d0
     lsr.w       #$4,d0
     cmp.w       (DAT_00ff005c),d0
-    ble.w       L00006f08
+    ble.w       .L00006f08
     move.w      (DAT_00ff0002),d1
     subi.w      #$c,d1
     move.w      (DAT_00ff0004),-(SP)
     move.b      (DAT_00ff0435),d7
     cmpi.b      #$40,d7
-    bcc.b       L00006e88
+    bcc.b       .L00006e88
     addq.b      #$1,d7
-L00006e88:
+.L00006e88:
     lsr.b       #$2,d7
     ext.w       d7
     add.w       d7,(DAT_00ff0004)
     bsr.w       L000072bc
     move.w      (SP)+,(DAT_00ff0004)
     tst.b       d0
-    bmi.b       L00006f08
+    bmi.b       .L00006f08
     move.w      (DAT_00ff0002),d1
     subi.w      #$c,d1
     bsr.w       L00007792
     tst.w       d0
     bmi.w       L0000698a
     tst.w       d3
-    bmi.b       L00006ecc
+    bmi.b       .L00006ecc
     move.w      (DAT_00ff0002),d1
     subi.w      #$e,d1
     bsr.w       L00007810
     tst.w       d0
     bmi.w       L0000698a
-L00006ecc:
+.L00006ecc:
     move.b      #$1,(DAT_00ff042b)
     move.w      (DAT_00ff047c),d0
     cmpi.b      #$2,d0
-    bls.b       L00006f40
-L00006ee0:
+    bls.b       .L00006f40
+.L00006ee0:
     move.b      (jp1_result),d1
     btst.l      #$4,d1          ; PAD_B
-    beq.b       L00006ef4
+    beq.b       .L00006ef4
     move.w      #$2,(DAT_00ff04b4)
-L00006ef4:
+.L00006ef4:
     move.w      (DAT_00ff0024),d0
     cmpi.w      #$c,d0
     beq.w       L00007092
     moveq       #$c,d0
     bra.w       L00007090
-L00006f08:
+.L00006f08:
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007792
@@ -7958,18 +7744,18 @@ L00006f08:
     bmi.w       L0000698a
     move.w      d0,-(SP)
     tst.w       d3
-    bmi.b       L00006f36
+    bmi.b       .L00006f36
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L00007810
     tst.w       d0
     bmi.w       L00006988
-L00006f36:
+.L00006f36:
     move.w      (SP)+,d0
     cmpi.b      #$2,d0
-    bls.b       L00006f40
-    bra.b       L00006ee0
-L00006f40:
+    bls.b       .L00006f40
+    bra.b       .L00006ee0
+.L00006f40:
     move.b      (jp1_result),d1
     moveq       #$38,d0
     btst.l      #$4,d1          ; PAD_B
@@ -7979,10 +7765,10 @@ L00006f40:
 
 L00006f56:
     btst.b      #$0,(DAT_00ff0000)
-    beq.b       L00006f66
+    beq.b       .L00006f66
     moveq       #$11,d0
     bra.w       L000070f2
-L00006f66:
+.L00006f66:
     moveq       #$2e,d0
     bra.w       L000070f2
 
@@ -8002,7 +7788,6 @@ L00006f82:
     move.w      (DAT_00ff0024),d0
     cmpi.w      #$10,d0
     beq.w       L00007092
-L00006f9a:
     moveq       #$10,d0
     bra.w       L00007090
 
@@ -8071,33 +7856,35 @@ L00007092:
     move.w      (a0)+,(DAT_00ff04a2)
     move.w      (a0)+,d0
     move.w      (a0),d1
-    bne.b       L000070c6
+    bne.b       .L000070c6
     bset.b      #$1,(DAT_00ff0000)
     move.w      ($2,a0),d1
     movea.l     (DAT_00ff055c),a0
     adda.w      d1,a0
-L000070c6:
+.L000070c6:
     move.l      a0,(DAT_00ff0560)
 L000070cc:
     btst.b      #$3,(DAT_00ff0000)
     beq.b       L000070f2
+
 L000070d6:
     moveq       #$2e,d0
     btst.b      #$0,(DAT_00ff0000)
-    beq.b       L000070e4
+    beq.b       .L000070e4
     moveq       #$11,d0
-L000070e4:
+.L000070e4:
     move.w      d0,(DAT_00ff04a0)
     move.w      d0,(DAT_00ff0026)
     rts
+
 L000070f2:
     move.b      (DAT_00ff0019),d1
-    beq.b       L0000710e
+    beq.b       .L0000710e
     subq.b      #$1,(DAT_00ff0019)
     andi.b      #$3,d1
-    beq.b       L0000710e
+    beq.b       .L0000710e
     move.b      #$1,(DAT_00ff043f)
-L0000710e:
+.L0000710e:
     move.w      d0,(DAT_00ff04a0)
     add.w       (DAT_00ff04b4),d0
     move.w      d0,(DAT_00ff0026)
@@ -8105,7 +7892,7 @@ L0000710e:
 
 L00007122:
     tst.b       (DAT_00ff043f)
-    bne.b       L0000717a
+    bne.b       L0000717a   ; rts
     move.l      #(L0006e4e8),(DAT_00ff0510)
     move.l      #(L0006e5b2),(DAT_00ff0514)
     move.w      (DAT_00ff0026),d0
@@ -8126,13 +7913,13 @@ L0000717c:
     move.w      (DAT_00ff0004),d2
     subi.w      #$15,d2
     tst.b       (DAT_00ff042c)
-    bmi.b       L0000719e
-    beq.b       L00007198
+    bmi.b       .L0000719e
+    beq.b       .L00007198
     sub.w       (DAT_00ff047c),d2
-    bra.b       L0000719e
-L00007198:
+    bra.b       .L0000719e
+.L00007198:
     add.w       (DAT_00ff047c),d2
-L0000719e:
+.L0000719e:
     moveq       #$2c,d7
     movem.w     d7/d2,-(SP)
 L000071a4:
@@ -8207,10 +7994,10 @@ L00007230:
 L00007240:
     bsr.w       L00007350
     btst.l      #$f,d5
-    beq.b       L00007250
+    beq.b       .L00007250
     btst.l      #$e,d5
-    beq.b       L00007282
-L00007250:
+    beq.b       .L00007282
+.L00007250:
     move.w      d2,-(SP)
     bsr.w       L00003688
     move.w      (SP)+,d2
@@ -8219,7 +8006,7 @@ L00007250:
     tst.w       d3
     bmi.b       L00007228
     tst.b       d0
-    bmi.b       L00007282
+    bmi.b       .L00007282
     cmp.w       d3,d7
     bcs.w       L000071e2
     move.w      d2,-(SP)
@@ -8231,7 +8018,7 @@ L00007250:
     beq.b       L00007228
     btst.l      #$e,d5
     bne.b       L00007228
-L00007282:
+.L00007282:
     addi.w      #$10,d2
     subi.w      #$10,d7
     bhi.b       L00007240
@@ -8239,10 +8026,10 @@ L00007282:
     add.w       d7,d2
     bsr.w       L00007350
     btst.l      #$f,d5
-    beq.b       L000072a4
+    beq.b       .L000072a4
     btst.l      #$e,d5
     beq.w       L00007220
-L000072a4:
+.L000072a4:
     move.w      d2,-(SP)
     bsr.w       L00003688
     move.w      (SP)+,d2
@@ -8260,10 +8047,10 @@ L000072bc:
 L000072cc:
     bsr.w       L00007350
     btst.l      #$f,d5
-    beq.b       L000072dc
+    beq.b       .L000072dc
     btst.l      #$d,d5
-    beq.b       L00007316
-L000072dc:
+    beq.b       .L00007316
+.L000072dc:
     move.w      d2,-(SP)
     bsr.w       L00003688
     move.w      (SP)+,d2
@@ -8272,7 +8059,7 @@ L000072dc:
     tst.w       d3
     bmi.w       L00007228
     tst.b       d0
-    bmi.b       L00007316
+    bmi.b       .L00007316
     cmp.w       d3,d7
     bcs.w       L000071e2
     move.w      d2,-(SP)
@@ -8284,7 +8071,7 @@ L000072dc:
     beq.w       L00007228
     btst.l      #$d,d5
     bne.w       L00007228
-L00007316:
+.L00007316:
     addi.w      #$10,d2
     subi.w      #$10,d7
     bhi.b       L000072cc
@@ -8292,10 +8079,10 @@ L00007316:
     add.w       d7,d2
     bsr.w       L00007350
     btst.l      #$f,d5
-    beq.b       L00007338
+    beq.b       .L00007338
     btst.l      #$d,d5
     beq.w       L00007220
-L00007338:
+.L00007338:
     move.w      d2,-(SP)
     bsr.w       L00003688
     move.w      (SP)+,d2
@@ -8326,27 +8113,27 @@ L0000737c:
     bmi.w       L0000748a
     moveq       #$4,d7
     move.w      d1,-(SP)
-    jsr         L00003662.l
+    jsr         L00003662
     move.b      ($2,a0),d3
     addi.w      #$10,d1
     add.w       d7,d1
-    jsr         L00003662.l
+    jsr         L00003662
     move.b      ($1,a0),d4
     cmp.b       d4,d3
-    bls.b       L000073a6
+    bls.b       .L000073a6
     move.b      d4,d3
-L000073a6:
+.L000073a6:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L000073c2
+    bcc.b       .L000073c2
     sub.w       d7,d1
-    jsr         L00003662.l
+    jsr         L00003662
     move.b      ($3,a0),d4
     cmp.b       d4,d3
-    bls.b       L000073c2
+    bls.b       .L000073c2
     move.b      d4,d3
-L000073c2:
+.L000073c2:
     move.w      (SP)+,d1
     ext.w       d3
     bmi.b       L0000743a
@@ -8801,7 +8588,7 @@ L00007842:
 
 L00007848:
     move.b      (DAT_00ff044c),d4
-    bmi.w       L0000717a
+    bmi.w       L0000717a   ; rts
     ext.w       d4
     lsl.w       #$7,d4
     lea         (DAT_00ffb070),a0
@@ -8816,7 +8603,7 @@ L00007848:
     neg.w       d1
 L00007872:
     cmpi.w      #$10,d1
-    bhi.w       L0000717a
+    bhi.w       L0000717a   ; rts
     tst.b       d0
     bmi.b       L0000788a
     move.w      d3,d2
@@ -8824,7 +8611,7 @@ L00007872:
     neg.w       d2
 L00007884:
     cmp.w       d2,d1
-    bhi.w       L0000717a
+    bhi.w       L0000717a   ; rst
 L0000788a:
     moveq       #$0,d0
     move.w      d4,d3
@@ -8833,18 +8620,18 @@ L0000788a:
 
 L00007898:
     move.w      (DAT_00ff04b8),d0
-    beq.w       L0000717a
+    beq.w       L0000717a   ; rts
     move.b      (DAT_00ff042b),d1
-    bmi.b       L000078f8
-    beq.b       L000078d2
-    tst.w       d0
+    bmi.b       L000078f8   ; (DAT_00ff042b)=-1
+    beq.b       L000078d2   ; (DAT_00ff042b)=0
+    tst.w       d0          ; else (DAT_00ff042b)=1
     bpl.b       L000078ba
     neg.w       d0
     add.w       d0,(DAT_00ff0478)
     rts
 L000078ba:
     sub.w       d0,(DAT_00ff0478)
-    bpl.w       L0000717a
+    bpl.w       L0000717a   ; rts
     clr.b       (DAT_00ff042b)
     neg.w       (DAT_00ff0478)
     rts
@@ -8855,7 +8642,7 @@ L000078d2:
     rts
 L000078de:
     add.w       d0,(DAT_00ff0478)
-    bpl.w       L0000717a
+    bpl.w       L0000717a   ; rts
     move.b      #$1,(DAT_00ff042b)
     neg.w       (DAT_00ff0478)
     rts
@@ -8874,26 +8661,26 @@ L0000790a:
 L0000791c:
     clr.w       (DAT_00ffc472)
     btst.b      #$2,(DAT_00ff0000)
-    bne.w       L00007d3c
+    bne.w       .L00007d3c    ; rts
     btst.b      #$3,(DAT_00ff0000)
-    bne.w       L00007d3c
+    bne.w       .L00007d3c    ; rts
     clr.b       (DAT_00ff0433)
     tst.b       (DAT_00ff043e)
-    bne.w       L000079c8
+    bne.w       .L000079c8
     move.b      (jp1_result),d1
     tst.b       (DAT_00ff0432)
-    beq.w       L000079fa
+    beq.w       .L000079fa
     btst.l      #$4,d1          ; PAD_B
-    beq.w       L00007a0a
+    beq.w       .L00007a0a
     moveq       #$1,d0
     move.b      d0,(DAT_00ff0433)
-    tst.b       (DAT_00ff00c2)
-    beq.w       L00007a70
+    tst.b       (new_alisia_power)
+    beq.w       .L00007a70
     bsr.w       write_z80_reg12
-    move.b      (DAT_00ff00c2),d0
-    cmpi.b      #$a,d0
-    bne.w       L00007b26
-    move.b      #$7,(DAT_00ff00c2)
+    move.b      (new_alisia_power),d0
+    cmpi.b      #$a,d0                  ; max power
+    bne.w       .L00007b26
+    move.b      #$7,(new_alisia_power)
     move.b      #$1,(DAT_00ff043e)
     addq.w      #$1,(DAT_00ff04ba)
     move.l      (DAT_00ff000a),d0
@@ -8902,11 +8689,11 @@ L0000791c:
     move.l      d0,(DAT_00ff000a)
     lea         (L000145dc),a0
     btst.b      #$0,(DAT_00ff0000)
-    beq.b       L000079c2
+    beq.b       .L000079c2
     lea         (L000145fe),a0
-L000079c2:
+.L000079c2:
     move.l      a0,(DAT_00ff0574)
-L000079c8:
+.L000079c8:
     move.b      (jp1_result),d1
     bset.l      #$4,d1  ; force B button
     move.b      d1,(jp1_result)
@@ -8914,61 +8701,58 @@ L000079c8:
     move.b      (a0)+,d0
     move.l      a0,(DAT_00ff0574)
     tst.b       d0
-    bpl.w       L00007a4e
+    bpl.w       .L00007a4e
     clr.b       (DAT_00ff043e)
-    move.b      #$ff,(DAT_00ff0437)
-L000079fa:
+    move.b      #$ff,(current_alisia_level)
+.L000079fa:
     btst.l      #$4,d1          ; PAD_B
-    bne.w       L00007b26
+    bne.w       .L00007b26
     move.b      #$1,(DAT_00ff0432)
-L00007a0a:
-    move.b      (DAT_00ff00c2),d0
+.L00007a0a:
+    move.b      (new_alisia_power),d0
     cmpi.b      #$a,d0
-    beq.w       L00007d3c
+    beq.w       .L00007d3c    ; rts
     cmpi.b      #$7,d0
-    bcc.b       L00007a34
-    move.b      (DAT_00ff000f),d0
+    bcc.b       .L00007a34
+    move.b      (vblank_counter),d0
     andi.b      #$7,d0
-    bne.w       L00007d3c
-    addq.b      #$1,(DAT_00ff00c2)
+    bne.w       .L00007d3c    ; rts
+    addq.b      #$1,(new_alisia_power)
     rts
-
-L00007a34:
+.L00007a34:
     subq.w      #$1,(DAT_00ff04b6)
-    bne.w       L00007d3c
+    bne.w       .L00007d3c    ; rts
     move.w      #$3c,(DAT_00ff04b6)
-    addq.b      #$1,(DAT_00ff00c2)
+    addq.b      #$1,(new_alisia_power)
     rts
-
-L00007a4e:
+.L00007a4e:
     ext.w       d0
     move.w      d0,-(SP)
     move.l      #(L00077bfc),(DAT_00ff0510)
     move.l      #(L00077c08),(DAT_00ff0514)
     bsr.w       L00007d3e
     move.w      (SP)+,d0
-    bra.w       L00007b80
-
-L00007a70:
+    bra.w       .L00007b80
+.L00007a70:
     move.l      #(L0006ff38),(DAT_00ff0510)
     move.l      #(L0006ff58),(DAT_00ff0514)
     move.w      (DAT_00ff04ac),d0
     subq.w      #$1,(DAT_00ff04aa)
-    bne.w       L00007aca
+    bne.w       .L00007aca
     movea.l     (DAT_00ff0568),a0
     move.w      (a0)+,(DAT_00ff04aa)
     move.w      (a0)+,d0
     move.w      (a0),d1
-    bne.b       L00007abe
+    bne.b       .update_ptr
     lea         (L0006ffdc),a0
-    btst.b      #$0,(DAT_00ff0000)
-    bne.b       L00007abe
-    move.w      (L0006ffda),d1
-    adda.w      d1,a0
-L00007abe:
+    btst.b      #$0,(DAT_00ff0000)      ; will define update rate
+    bne.b       .update_ptr
+    move.w      (L0006ffda),d1          ; $0038
+    adda.w      d1,a0                   ; added to L0006ffdc
+.update_ptr:
     move.l      a0,(DAT_00ff0568)
     move.w      d0,(DAT_00ff04ac)
-L00007aca:
+.L00007aca:
     move.w      (DAT_00ff0002),d1
     move.w      (DAT_00ff0004),d2
     sub.w       (DAT_00ff01a8),d1
@@ -8979,24 +8763,24 @@ L00007aca:
     move.w      #$7f9,d4
     add.w       (DAT_00ff0010),d4
     btst.b      #$0,(DAT_00ff0000)
-    bne.b       L00007b16
+    bne.b       .L00007b16
     addi.w      #$6c,d1
     bsr.w       L0000282e
     move.w      d3,(DAT_00ff04c8)
     rts
-L00007b16:
+.L00007b16:
     addi.w      #$94,d1
     bsr.w       L0000282e
     move.w      d3,(DAT_00ff04c8)
     rts
-L00007b26:
-    tst.b       (DAT_00ff00c2)
-    beq.w       L00007a70
-    move.b      (DAT_00ff000f),d0
+.L00007b26:
+    tst.b       (new_alisia_power)
+    beq.w       .L00007a70
+    move.b      (vblank_counter),d0
     andi.b      #$1f,d0
-    bne.b       L00007b42
-    subq.b      #$1,(DAT_00ff00c2)
-L00007b42:
+    bne.b       .L00007b42
+    subq.b      #$1,(new_alisia_power)
+.L00007b42:
     clr.b       (DAT_00ff0432)
     move.l      #(L00077bfc),(DAT_00ff0510)
     move.l      #(L00077c08),(DAT_00ff0514)
@@ -9004,37 +8788,37 @@ L00007b42:
     move.w      (DAT_00ff04b0),d5
     bsr.w       L00007dce
     cmp.b       (DAT_00ff0436),d0
-    bne.b       L00007b80
+    bne.b       .L00007b80
     eori.w      #$1,d5
     move.b      #$1,(DAT_00ff043d)
-    bra.b       L00007b8a
-L00007b80:
+    bra.b       .L00007b8a
+.L00007b80:
     move.w      #$1,d5
     clr.b       (DAT_00ff043d)
-L00007b8a:
+.L00007b8a:
     move.w      d5,(DAT_00ff04b0)
     addq.w      #$1,d5
-    move.b      d0,(DAT_00ff0436)
+    move.b      d0,(DAT_00ff0436)   ; save vblank count & $1f
     move.w      d0,d1
     move.w      d0,d2
-    lsl.w       #$5,d0
-    lsl.w       #$4,d1
-    add.w       d1,d0
+    lsl.w       #$5,d0              ; x32
+    lsl.w       #$4,d1              ; x16
+    add.w       d1,d0               ; add together - $5d0 max
     lea         (L00012dc0),a2
-    adda.w      d0,a2
+    adda.w      d0,a2               ; add d0
     move.b      (hv_counter_values),d0
-    andi.w      #$8,d0
-    move.w      d0,d1
-    add.w       d0,d0
-    add.w       d1,d0
-    adda.w      d0,a2
+    andi.w      #$0008,d0
+    move.w      d0,d1   ; $0000 or $0008
+    add.w       d0,d0   ; $0000 or $0010
+    add.w       d1,d0   ; $0000 or $0018
+    adda.w      d0,a2   ; add $0000 or $0018 = $5e8 max added to a2
     add.w       d2,d2
     add.w       d2,d2
-    add.w       d2,d2
-    lsr.w       #$1,d1
+    add.w       d2,d2   ; d2 = (vblank count & $1f) x 8
+    lsr.w       #$1,d1  ; d1 = (vblank count & $1f) / 2
     add.w       d1,d2
-    lea         (L000133c0),a3
-    adda.w      d2,a3
+    lea         (L000133c0),a3  ; 256 bytes array
+    adda.w      d2,a3   ; + $fc max
     move.w      (DAT_00ff0002),d1
     move.w      (DAT_00ff0004),d2
     addi.w      #$10,d1
@@ -9042,9 +8826,9 @@ L00007b8a:
     add.w       (a3)+,d1
     add.w       (a3),d2
     btst.b      #$0,(DAT_00ff0000)
-    bne.b       L00007bf6
+    bne.b       .L00007bf6
     subi.w      #$20,d1
-L00007bf6:
+.L00007bf6:
     clr.b       (DAT_00ff043a)
     lea         (DAT_00ffc472),a5
     movea.l     a2,a3
@@ -9056,141 +8840,61 @@ L00007bf6:
     movem.w     (SP)+,d1-d2
     bsr.w       L000081b4
     tst.w       d0
-    bmi.w       L00007d30
+    bmi.w       .L00007d30
     move.w      d5,(a5)+
     move.w      d1,(a5)+
     move.w      d2,(a5)+
     move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2),d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    movea.l     a3,a2
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2),d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    movea.l     a3,a2
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.w      (a2)+,d4
-    add.w       (a2)+,d1
-    add.w       (a2)+,d2
-    bsr.w       L000081b4
-    tst.w       d0
-    bmi.w       L00007d30
-    move.w      d5,(a5)+
-    move.w      d1,(a5)+
-    move.w      d2,(a5)+
-    move.w      d4,(a5)+
-    move.b      (DAT_00ff000f),d0
+LOOP SET 0
+    REPT 10
+    IF (LOOP=3)|(LOOP=7)
+        movea.l     a3,a2
+    ENDIF
+        move.w      (a2)+,d4
+        add.w       (a2)+,d1
+    IF (LOOP=2)|(LOOP=6)
+        add.w       (a2),d2
+    ELSE
+        add.w       (a2)+,d2
+    ENDIF
+        bsr.w       L000081b4
+        tst.w       d0
+        bmi.w       .L00007d30
+        move.w      d5,(a5)+
+        move.w      d1,(a5)+
+        move.w      d2,(a5)+
+        move.w      d4,(a5)+
+LOOP SET LOOP+1
+    ENDR
+    move.b      (vblank_counter),d0
     andi.b      #$7,d0
-    bne.w       L00007d3c
+    bne.w       .L00007d3c    ; rts
     moveq       #$1,d0
     bra.w       write_z80_reg12
-L00007d30:
+.L00007d30:
     move.w      #$3,d5
     move.w      d5,(a5)+
     move.w      d1,(a5)+
     move.w      d2,(a5)+
     move.w      d4,(a5)+
+.L00007d3c:
 L00007d3c:
     rts
 
 L00007d3e:
     move.w      (DAT_00ff04a8),d0
     subq.w      #$1,(DAT_00ff04a6)
-    bne.w       L00007d72
+    bne.w       .L00007d72
     movea.l     (DAT_00ff0564),a0
     move.w      (a0)+,(DAT_00ff04a6)
     move.w      (a0)+,d0
     move.w      (a0),d1
-    bne.b       L00007d66
+    bne.b       .L00007d66
     lea         (L00077c38),a0
-L00007d66:
+.L00007d66:
     move.l      a0,(DAT_00ff0564)
     move.w      d0,(DAT_00ff04a8)
-L00007d72:
+.L00007d72:
     move.w      (DAT_00ff0002),d1
     move.w      (DAT_00ff0004),d2
     sub.w       (DAT_00ff01a8),d1
@@ -9201,18 +8905,18 @@ L00007d72:
     move.w      #$790,d4
     add.w       (DAT_00ff0010),d4
     btst.b      #$0,(DAT_00ff0000)
-    bne.b       L00007dbe
+    bne.b       .L00007dbe
     addi.w      #$70,d1
     bsr.w       L0000282e
     move.w      d3,(DAT_00ff04c8)
     rts
-L00007dbe:
+.L00007dbe:
     addi.w      #$90,d1
     bsr.w       L0000282e
     move.w      d3,(DAT_00ff04c8)
     rts
 
-L00007dce:  ; TODO see ig macro is possible
+L00007dce:
     btst.b      #$0,(DAT_00ff0000)
     bne.w       .L00007e58
     moveq       #$1f,d7
@@ -9246,7 +8950,7 @@ L00007dce:  ; TODO see ig macro is possible
         bgt.b       .L00007e44
         addi.w      #$d0,d0
         cmp.w       d4,d0
-        bgt.w       L00007ed4
+        bgt.w       .L00007ed4
     .L00007e44:
         addq.w      #$1,d6
         cmpi.w      #$20,d6
@@ -9288,7 +8992,7 @@ L00007dce:  ; TODO see ig macro is possible
         bgt.b       .L00007ec0
         addi.w      #$d0,d0
         cmp.w       d4,d0
-        bgt.b       L00007ed4
+        bgt.b       .L00007ed4
     .L00007ec0:
         addq.w      #$1,d6
         cmpi.w      #$20,d6
@@ -9298,195 +9002,57 @@ L00007dce:  ; TODO see ig macro is possible
         dbf         d7,.L00007e6a
     move.w      #$8,d0
     rts
-
-L00007ed4:
+.L00007ed4:
     addq.w      #$1,d6
     cmpi.w      #$20,d6
-    bne.b       L00007ede
+    bne.b       .L00007ede
     clr.w       d6
-L00007ede:
+.L00007ede:
     move.w      d6,(DAT_00ff04a4)
     move.w      (DAT_00ff0004),d2
     add.w       (DAT_00ff04ae),d2
     bra.w       L00003424
+
 L00007ef4:
     move.l      #(L00077874),(DAT_00ff0510)
     move.l      #(L00077904),(DAT_00ff0514)
     move.w      (DAT_00ff04c8),d3
     lea         (DAT_00ffc472),a5
     move.w      (a5)+,d0
-    beq.w       L00007d3c
+    beq.w       L00007d3c    ; rts
     moveq       #$3,d5
     cmpi.w      #$1,d0
-    beq.w       L000080d2
+    beq.w       .L000080d2
     move.w      (DAT_00ff0010),d4
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.w       L00008128
-    move.w      (a5)+,d1
-    move.w      (a5)+,d2
-    move.w      (a5)+,d0
-    sub.w       (DAT_00ff01a8),d1
-    addi.w      #$80,d1
-    sub.w       (DAT_00ff01aa),d2
-    addi.w      #$a0,d2
-    bsr.w       L0000282e
+LOOP SET 0
+    REPT 11
+        IF LOOP>0
+            move.w      (a5)+,d0
+        ENDIF
+        cmp.w       d5,d0
+        beq.w       .L00008128
+        move.w      (a5)+,d1
+        move.w      (a5)+,d2
+        move.w      (a5)+,d0
+        sub.w       (DAT_00ff01a8),d1
+        addi.w      #$80,d1
+        sub.w       (DAT_00ff01aa),d2
+        addi.w      #$a0,d2
+        bsr.w       L0000282e
+LOOP SET LOOP+1
+    ENDR
     move.w      d3,(DAT_00ff04c8)
     rts
-
-L000080d2:
+.L000080d2:
     cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    beq.b       L00008128
-    addq.w      #$6,a5
-    move.w      (a5)+,d0
-    cmp.w       d5,d0
-    bne.w       L00007d3c
-L00008128:
+    REPT 10
+        beq.b       .L00008128
+        addq.w      #$6,a5
+        move.w      (a5)+,d0
+        cmp.w       d5,d0
+    ENDR
+    bne.w       L00007d3c    ; rts
+.L00008128:
     move.w      d3,(DAT_00ff04c8)
     move.w      (a5)+,d1
     move.w      (a5)+,d2
@@ -9501,38 +9067,38 @@ L00008128:
     add.w       d3,d2
     move.b      (DAT_00ff0436),d0
     andi.b      #$7,d0
-    beq.b       L00008190
+    beq.b       .L00008190
     tst.b       (DAT_00ff043d)
-    beq.b       L00008178
-    move.b      (DAT_00ff000f),d0
+    beq.b       .L00008178
+    move.b      (vblank_counter),d0
     andi.b      #$3,d0
-    bne.w       L00007d3c
+    bne.w       L00007d3c    ; rts
     bsr.w       L0000825a
     moveq       #$17,d0
     bra.w       write_z80_reg12
-L00008178:
+.L00008178:
     bsr.w       L0000825a
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$3,d0
-    bne.w       L00007d3c
+    bne.w       L00007d3c    ; rts
     moveq       #$17,d0
     bra.w       write_z80_reg12
-L00008190:
-    move.b      (DAT_00ff000f),d0
+.L00008190:
+    move.b      (vblank_counter),d0
     andi.b      #$7,d0
-    bne.b       L000081a0
+    bne.b       .L000081a0
     bsr.w       L0000825a
-L000081a0:
-    move.b      (DAT_00ff000f),d0
+.L000081a0:
+    move.b      (vblank_counter),d0
     andi.b      #$3,d0
-    bne.w       L00007d3c
+    bne.w       L00007d3c    ; rts
     moveq       #$17,d0
     bra.w       write_z80_reg12
 
 L000081b4:
     movem.w     d2-d1,-(SP)
     tst.b       (DAT_00ff043a)
-    bne.b       L0000822c
+    bne.b       .L0000822c
     lsr.w       #$4,d1
     lsr.w       #$4,d2
     lea         (bg1_tilemap_data),a0
@@ -9544,37 +9110,35 @@ L000081b4:
     adda.w      d1,a0
     move.w      (a0),d0
     andi.w      #$f800,d0
-    beq.b       L00008224
-    cmpi.w      #-$4800,d0
-    beq.b       L00008224
+    beq.b       .L00008224
+    cmpi.w      #$b800,d0
+    beq.b       .L00008224
     cmpi.w      #$c000,d0
-    beq.b       L0000821c
+    beq.b       .L0000821c
     cmpi.w      #$3800,d0
-    beq.b       L0000821c
+    beq.b       .L0000821c
     cmpi.w      #$f000,d0
-    beq.b       L00008224
+    beq.b       .L00008224
     cmpi.w      #$f800,d0
-    beq.b       L00008214
+    beq.b       .L00008214
     adda.w      d3,a0
     move.w      (a0),d0
     andi.w      #$f800,d0
     cmpi.w      #$c000,d0
-    beq.b       L00008224
+    beq.b       .L00008224
     cmpi.w      #$3800,d0
-    beq.b       L00008224
-L00008214:
+    beq.b       .L00008224
+.L00008214:
     moveq       #-$1,d0
     movem.w     (SP)+,d1-d2
     rts
-
-L0000821c:
+.L0000821c:
     move.b      #$1,(DAT_00ff043a)
-L00008224:
+.L00008224:
     moveq       #$0,d0
     movem.w     (SP)+,d1-d2
     rts
-
-L0000822c:
+.L0000822c:
     lsr.w       #$4,d1
     lsr.w       #$4,d2
     lea         (bg1_tilemap_data),a0
@@ -9584,67 +9148,25 @@ L0000822c:
     adda.w      d1,a0
     move.w      (a0),d0
     andi.w      #$f800,d0
-    beq.b       L00008252
+    beq.b       .L00008252
     cmpi.w      #$f800,d0
-    bne.b       L00008224
-    bra.b       L00008214
-
-L00008252:
+    bne.b       .L00008224
+    bra.b       .L00008214
+.L00008252:
     clr.b       (DAT_00ff043a)
-    bra.b       L00008224
+    bra.b       .L00008224
 
 L0000825a:
     lea         (DAT_00ffc272),a3
     tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L000082de
+    REPT 15
+        beq.b       .L000082de
+        adda.w      #$10,a3
+        tst.w       (a3)
+    ENDR
+    beq.b       .L000082de
     rts
-
-L000082de:
+.L000082de:
     addq.w      #$1,(a3)
     move.w      #$1,($4,a3)
     clr.b       ($6,a3)
@@ -9656,54 +9178,14 @@ L000082de:
 L000082fc:
     lea         (DAT_00ffc372),a3
     tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
-    adda.w      #$10,a3
-    tst.w       (a3)
-    beq.b       L00008380
+    beq.b       .L00008380
+    REPT 15
+        adda.w      #$10,a3
+        tst.w       (a3)
+        beq.b       .L00008380
+    ENDR
     rts
-L00008380:
+.L00008380:
     addq.w      #$1,(a3)
     move.w      #$8000,($2,a3)
     move.w      d3,($4,a3)
@@ -10003,7 +9485,7 @@ process_demo_monster_selection_keys:    ; used in macro only
 .exit:
     rts
 
-play_level1_intro:  ; occur during intr text
+play_level1_intro:  ; occurs during intro text
     tst.b       (DAT_00ff0453)
     bne.w       L0000966a       ; rts
     tst.b       (play_demo_flag)
@@ -10016,27 +9498,27 @@ play_level1_intro:  ; occur during intr text
     moveq       #$41,d7
     .L000087c4:
         move.w      d7,-(SP)
-        bsr.w       L0000c5a6
+        bsr.w       scroll_right_bg2
         move.w      (SP)+,d7
         dbf         d7,.L000087c4
     bsr.w       reset_window_registers
     move.w      #$4000,d1
     move.l      #(L00072616),d2
     move.w      #$9000,d3
-    bsr.w       L0000ff2a
+    bsr.w       dma_tiles_to_vram
     move.w      #$6000,d1
     move.l      #(L00073d80),d2
     move.w      #$9000,d3
-    bsr.w       L0000ff2a
+    bsr.w       dma_tiles_to_vram
     move.w      (bg1_hscroll_value),-(SP)
     move.w      (bg2_hscroll_value),-(SP)
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       update_bg1_bg2_hscroll
+    bsr.w       update_bg1_bg2_hscroll  ; no h scrolling
     move.w      (SP)+,(bg2_hscroll_value)
     move.w      (SP)+,(bg1_hscroll_value)
     moveq       #$20,d0
-    move.l      d0,(bg1_vscroll_value)  ; set bg1 scroll to $20
+    move.l      d0,(bg1_vscroll_value)  ; set bg1 vscroll to $20
     move.w      #$1,(DAT_00ff047c)
     move.w      #$1,(DAT_00ff047a)
     bsr.w       jp_read
@@ -10047,12 +9529,12 @@ play_level1_intro:  ; occur during intr text
     moveq       #$7,d1
     bsr.w       write_z80_reg4_reg5     ; play level intro text music
     moveq       #$a,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     move.w      #$563,d7
     .L0000885a:
         move.w      d7,-(SP)
         bsr.w       wait_for_vblank
-        bsr.w       .L000088d6
+        bsr.w       L000088d6
         move.w      (SP)+,d7
         move.b      (jp1_result),d0
         andi.b      #PAD_START,d0
@@ -10063,18 +9545,18 @@ play_level1_intro:  ; occur during intr text
     moveq       #$6,d0
     bsr.w       write_z80_reg6
     moveq       #$a,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     .wait_for_palette_update:
         bsr.w       wait_for_vblank
-        move.b      (DAT_00ff0013),-(SP)
-        bsr.w       .L000088d6
-        move.b      (SP)+,(DAT_00ff0013)
+        move.b      (palette_update_flags),-(SP)
+        bsr.w       L000088d6
+        move.b      (SP)+,(palette_update_flags)
         bne.b       .wait_for_palette_update
         bsr.w       clear_palettes_4_to_7
         bsr.w       reset_vram_bg1_and_2_tilemaps
         moveq       #$1,d2
-        bsr.w       L000036fe
-        bsr.w       wait_for_00ff013_clear
+        bsr.w       prepare_dma_palette_transfer
+        bsr.w       wait_for_palette_flags_clear
         moveq       #-$1,d0
         bra.w       write_z80_reg6
     
@@ -10087,18 +9569,18 @@ play_level1_intro:  ; occur during intr text
         moveq       #$a,d0
         bsr.w       write_z80_reg6
         moveq       #$1,d2
-        bsr.w       L000036fe
+        bsr.w       prepare_dma_palette_transfer
         bra.b       .wait_for_palette_update
 
-.L000088d6:
+L000088d6:
     bsr.w       jp_read
-    addq.b      #$1,(DAT_00ff000f)
+    addq.b      #$1,(vblank_counter)
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$1,d0
     bne.b       .not_zero
-    bsr.w       L0000c5a6
+    bsr.w       scroll_right_bg2
     move.w      (DAT_00ff01aa),d2
     move.w      #$1,(DAT_00ff047c)
     bsr.w       L0000c3e0
@@ -10139,14 +9621,14 @@ L0000894c:
     move.w      d0,d2
     andi.w      #$fff0,d0
     lsl.w       #$1,d0
-    andi.w      #$f,d2
+    andi.w      #$000f,d2
     add.w       d2,d0
     add.w       d4,d0
     move        #$2700,SR
     move.l      d1,(a1)
     move.w      d0,(a2)
     addi.w      #$10,d0
-    addi.l      #$00800000,d1   ; next line in VRAM?                
+    addi.l      #$800000,d1   ; next line in VRAM?
     move.l      d1,(a1)
     move.w      d0,(a2)
     move        #$2300,SR
@@ -10160,9 +9642,9 @@ L00008982:
     subi.b      #$30,d0
     ext.w       d0
     move.w      d0,d2
-    andi.w      #-$8,d0
+    andi.w      #$fff8,d0
     lsl.w       #$2,d0
-    andi.w      #$7,d2
+    andi.w      #$0007,d2
     add.w       d2,d2
     add.w       d2,d0
     add.w       d4,d0
@@ -10172,7 +9654,7 @@ L00008982:
     addq.w      #$1,d0
     move.w      d0,(a2)
     addi.w      #$f,d0
-    addi.l      #$00800000,d1                
+    addi.l      #$800000,d1
     move.l      d1,(a1)
     move.w      d0,(a2)
     addq.w      #$1,d0
@@ -10188,35 +9670,35 @@ L000089ca:  ; called when starting game - level_id contains offset to jump table
     andi.w      #$00ff,d0
     add.w       d0,d0
     add.w       d0,d0
-    jsr         (.level_table,PC,d0*$1)
+    jsr         (.level_table,PC,d0.w)
     bsr.w       L000096d6
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     rts
 
 .level_table:  ; table wil play the correct track
-    bra.w       L00008a2a       ; level 1
-    bra.w       L00008a8e       ; level 2
-    bra.w       L00008aae       ; etc
-    bra.w       L00008b18
-    bra.w       L00008b86
-    bra.w       L00008cde
-    bra.w       L00008dbe
-    bra.w       L00008df2
-    bra.w       L00008e24
-    bra.w       L00008e4e
-    bra.w       L00008e62
-    bra.w       L00008e8c
+    bra.w       .L00008a2a       ; level 1
+    bra.w       .L00008a8e       ; level 2
+    bra.w       .L00008aae       ; etc
+    bra.w       .L00008b18
+    bra.w       .L00008b86
+    bra.w       .L00008cde
+    bra.w       .L00008dbe
+    bra.w       .L00008df2
+    bra.w       .L00008e24
+    bra.w       .L00008e4e
+    bra.w       .L00008e62
+    bra.w       .L00008e8c
 
-L00008a2a:  ; level 1
+.L00008a2a:  ; level 1
     bsr.w       play_level1_intro   ; intro text
     moveq       #$1,d0
     bsr.w       L00009202
     moveq       #$0,d0  ; bank 0
     moveq       #$2,d1  ; index 2 = 1st level song
     bsr.w       write_z80_reg4_reg5 ; level 1 music
-    clr.b       (DAT_00ff0020)      ; clear
+    clr.b       (monster_selection_index)      ; clear
     bsr.w       L00008ff2
     subi.w      #$8c,(DAT_00ff0002)
     bsr.w       L00005366
@@ -10224,19 +9706,19 @@ L00008a2a:  ; level 1
     moveq       #$3c,d7
     .L00008a58:
         move.w      d7,-(SP)
-        move.b      #$0,(DAT_00ff0013)
-        move.b      #$0,(jp1_result)
+        move.b      #$0,(palette_update_flags)
+        move.b      #PAD_NO_KEY,(jp1_result)
         move.b      #$1,(DAT_00ff0019)
         bsr.w       L00004ba0
         move.w      (SP)+,d7
         dbf         d7,.L00008a58
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     bsr.w       L00009094
     move.w      #$141,d7
     bra.w       L000090d4
 
-L00008a8e:
+.L00008a8e:
     moveq       #$0,d0
     moveq       #$4,d1
     bsr.w       write_z80_reg4_reg5
@@ -10246,7 +9728,7 @@ L00008a8e:
     bsr.w       L00009038
     bra.w       L00009094
 
-L00008aae:
+.L00008aae:
     moveq       #$0,d0
     moveq       #$3,d1
     bsr.w       write_z80_reg4_reg5
@@ -10262,17 +9744,17 @@ L00008aae:
     moveq       #$a,d7
     .L00008ae2:
         move.w      d7,-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L00008ae2
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     move.b      (DAT_00ff0444),d0
     bra.w       L0000a842
 
-L00008b18:
+.L00008b18:
     moveq       #$2,d0
     bsr.w       L00009202
     moveq       #$0,d0
@@ -10293,12 +9775,12 @@ L00008b18:
         move.w      (DAT_00ff001a),d0
         cmpi.w      #$2,d0
         bne.b       .L00008b54
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     rts
 
-L00008b86:
+.L00008b86:
     moveq       #$3,d0
     bsr.w       L00009202
     moveq       #$0,d0
@@ -10316,7 +9798,7 @@ L00008b86:
         move.w      d7,-(SP)
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c1ae
+        bsr.w       scroll_right_bg1
         bsr.w       update_bg1_bg2_hscroll
         move.w      (SP)+,d7
         dbf         d7,.L00008bc2
@@ -10326,40 +9808,40 @@ L00008b86:
     .L00008bf0:
         move.w      d7,-(SP)
         bsr.w       L0000c29c
-        bsr.w       L0000c69e
+        bsr.w       scroll_down_bg2
         move.w      (SP)+,d7
         dbf         d7,.L00008bf0
     move.w      (SP)+,(DAT_00ff0004)
     move.w      (SP)+,(DAT_00ff0002)
     move.w      #$af,d7
-    jsr         L00000faa.l
-    move.w      #$2,(DAT_00ff0478)
-    move.w      #$1,(DAT_00ff047c)
+    jsr         L00000faa
+    move.w      #$0002,(DAT_00ff0478)
+    move.w      #$0001,(DAT_00ff047c)
     bsr.w       L0000c29c
-    move.w      #$ef,d7
+    move.w      #$00ef,d7
     .L00008c2e:
         move.w      d7,-(SP)
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
-        move.b      #$1,(DAT_00ff042b)
+        move.b      #PAD_NO_KEY,(jp1_result)
+        move.b      #$01,(DAT_00ff042b)
         clr.b       (DAT_00ff042c)
-        move.b      #$1,(DAT_00ff0019)
+        move.b      #$01,(DAT_00ff0019)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
         move.w      (SP)+,(DAT_00ff0002)
         move.w      (SP)+,d7
         dbf         d7,.L00008c2e
     move.w      #$101f,d7
-    jsr         L00000faa.l
-    move.b      #$0,(DAT_00ff0019)
-    move.w      #$ef,d7
+    jsr         L00000faa
+    move.b      #$00,(DAT_00ff0019)
+    move.w      #$00ef,d7
     .L00008c86:
         move.w      d7,-(SP)
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
-        move.b      #$1,(DAT_00ff042b)
+        move.b      #PAD_NO_KEY,(jp1_result)
+        move.b      #$01,(DAT_00ff042b)
         clr.b       (DAT_00ff042c)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
@@ -10368,11 +9850,11 @@ L00008b86:
         dbf         d7,.L00008c86
     addq.w      #$1,(DAT_00ff0004)
     subq.w      #$2,(DAT_00ff0002)
-    move.w      #$2,(DAT_00ff0478)
-    move.w      #$2,(DAT_00ff047c)
+    move.w      #$0002,(DAT_00ff0478)
+    move.w      #$0002,(DAT_00ff047c)
     rts
 
-L00008cde:
+.L00008cde:
     moveq       #$4,d0
     bsr.w       L00009202
     moveq       #$0,d0
@@ -10381,45 +9863,45 @@ L00008cde:
     bsr.w       L00008ff2
     subi.w      #$8c,(DAT_00ff0002)
     bsr.w       L00009038
-    move.w      #$40,d7
+    move.w      #$0040,d7
     .L00008d00:
         move.w      d7,-(SP)
         addq.w      #$2,(DAT_00ff0002)
-        move.b      #$8,(jp1_result)
-        move.b      #-$1,(DAT_00ff042b)
+        move.b      #PAD_RIGHT,(jp1_result)
+        move.b      #$ff,(DAT_00ff042b)
         bsr.w       L00004b74
         move.w      (SP)+,d7
         dbf         d7,.L00008d00
     move.w      #$8000,(DAT_00ff0010)
-    move.w      #$4,(DAT_00ff0478)
-    move.w      #$4,d7
+    move.w      #$0004,(DAT_00ff0478)
+    move.w      #$0004,d7
     .L00008d36:
         move.w      d7,-(SP)
         addq.w      #$2,(DAT_00ff0002)
         move.b      #$48,(jp1_result)
-        move.b      #-$1,(DAT_00ff042b)
-        move.b      #$3,(DAT_00ff0430)
+        move.b      #$ff,(DAT_00ff042b)
+        move.b      #$03,(DAT_00ff0430)
         bsr.w       L00004b9c
         clr.b       (DAT_00ff0430)
         move.w      (SP)+,d7
         dbf         d7,.L00008d36
-    move.w      #$70,(DAT_00ff0014)
+    move.w      #$0070,(DAT_00ff0014)
     .L00008d6e:
         move.b      #$48,(jp1_result)
-        move.b      #$2,(DAT_00ff0430)
+        move.b      #$02,(DAT_00ff0430)
         bsr.w       L00004b9c
         clr.b       (DAT_00ff0430)
         move.w      (DAT_00ff001a),d0
-        cmpi.w      #$2,d0
+        cmpi.w      #$0002,d0
         bne.b       .L00008d6e
-    move.w      #$0,(DAT_00ff0010)
-    move.w      #$2,(DAT_00ff0478)
-    move.b      #$0,(jp1_result)
-    move.b      #-$1,(DAT_00ff042b)
-    move.b      #-$1,(DAT_00ff042c)
+    move.w      #$0000,(DAT_00ff0010)
+    move.w      #$0002,(DAT_00ff0478)
+    move.b      #PAD_NO_KEY,(jp1_result)
+    move.b      #$ff,(DAT_00ff042b)
+    move.b      #$ff,(DAT_00ff042c)
     rts
 
-L00008dbe:
+.L00008dbe:
     moveq       #$5,d0
     bsr.w       L00009202
     moveq       #$0,d0
@@ -10431,10 +9913,10 @@ L00008dbe:
     subi.w      #$8c,(DAT_00ff0002)
     bsr.w       L00009038
     bsr.w       L00009094
-    move.w      #$30,d7
+    move.w      #$0030,d7
     bra.w       L000090d4
 
-L00008df2:
+.L00008df2:
     moveq       #$0,d0
     moveq       #$a,d1
     bsr.w       write_z80_reg4_reg5
@@ -10445,10 +9927,10 @@ L00008df2:
     bsr.w       L00005366
     bsr.w       L00009038
     bsr.w       L00009094
-    move.w      #$30,d7
+    move.w      #$0030,d7
     bra.w       L000090d4
 
-L00008e24:
+.L00008e24:
     moveq       #$6,d0
     bsr.w       L00009202
     moveq       #$0,d0
@@ -10458,10 +9940,10 @@ L00008e24:
     subi.w      #$8c,(DAT_00ff0002)
     bsr.w       L00009038
     bsr.w       L00009094
-    move.w      #$20,d7
+    move.w      #$0020,d7
     bra.w       L000090d4
 
-L00008e4e:
+.L00008e4e:
     moveq       #$1,d0
     moveq       #$2,d1
     bsr.w       write_z80_reg4_reg5
@@ -10469,7 +9951,7 @@ L00008e4e:
     bsr.w       L00005366
     bra.w       L00009038
 
-L00008e62:
+.L00008e62:
     moveq       #$7,d0
     bsr.w       L00009202
     moveq       #$1,d0
@@ -10478,12 +9960,12 @@ L00008e62:
     bsr.w       L00008ff2
     subi.w      #$8c,(DAT_00ff0002)
     bsr.w       L00009038
-L00008e80:
+.L00008e80:
     bsr.w       L00009094
-    move.w      #$20,d7
+    move.w      #$0020,d7
     bra.w       L000090d4
 
-L00008e8c:
+.L00008e8c:
     moveq       #$8,d0
     bsr.w       L00009202
     moveq       #$0,d0
@@ -10494,29 +9976,27 @@ L00008e8c:
     move.w      #$7000,d1
     move.l      #(L00074c1a),d2
     move.w      #$8800,d3
-    bsr.w       L0000ff2a
-
-L00008eb8:
-    move.l      #(L00014d52),(DAT_00ff0038)
+    bsr.w       dma_tiles_to_vram
+    move.l      #(dialogue_strings_2),(dialogue_strings_ptr)
     subi.w      #$8c,(DAT_00ff0002)
     bsr.w       L00009038
     bsr.w       L00009094
     move.w      #$1037,d7
-    jsr         L00000faa.l
-    move.w      #$a,(DAT_00ff0016)
-    move.w      #$1,(DAT_00ff0dc2)
-    move.w      #$7,(DAT_00ff0dc4)
-    move.w      #$78,(DAT_00ff0014)
-    move.b      #-$1,(DAT_00ff0012)
-    move.w      #$100,d7
+    jsr         L00000faa
+    move.w      #$000a,(DAT_00ff0016)
+    move.w      #$0001,(DAT_00ff0dc0+$2)
+    move.w      #$0007,(DAT_00ff0dc0+$4)
+    move.w      #$0078,(DAT_00ff0014)
+    move.b      #$ff,(DAT_00ff0012)
+    move.w      #$0100,d7
     bsr.w       L000090d4
-    move.b      #$0,(DAT_00ff0019)
-    move.w      #$38,d7
+    move.b      #$00,(DAT_00ff0019)
+    move.w      #$0038,d7
     .L00008f18:
         move.w      d7,-(SP)
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         clr.b       (DAT_00ff042b)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
@@ -10528,19 +10008,19 @@ L00008eb8:
     bsr.w       L00009766
     lea         (L00038b98),a0
     lea         (DAT_00ff655c),a1
-    jsr         L0000ff36.l
-    move.b      #$1,(DAT_00ff042f)
+    jsr         L0000ff36
+    move.b      #$01,(DAT_00ff042f)
     bsr.w       L0000c004
-    move.w      #$98,(DAT_00ff0014)
-    move.b      #$1,(DAT_00ff0012)
-    move.b      #$0,(DAT_00ff0019)
-    move.w      #$38,d7
+    move.w      #$0098,(DAT_00ff0014)
+    move.b      #$01,(DAT_00ff0012)
+    move.b      #$00,(DAT_00ff0019)
+    move.w      #$0038,d7
     .L00008f92:
         move.w      d7,-(SP)
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
-        move.b      #$1,(DAT_00ff042b)
+        move.b      #PAD_NO_KEY,(jp1_result)
+        move.b      #$01,(DAT_00ff042b)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
         move.w      (SP)+,(DAT_00ff0002)
@@ -10548,7 +10028,7 @@ L00008eb8:
         dbf         d7,.L00008f92
     bsr.w       wait_for_vblank
     subq.w      #$2,(DAT_00ff0002)
-    move.w      #$13,(DAT_00ff0016)
+    move.w      #$0013,(DAT_00ff0016)
     clr.w       (DAT_00ff00b8)
     clr.w       (DAT_00ff00ba)
     clr.w       (DAT_00ff00bc)
@@ -10556,28 +10036,28 @@ L00008eb8:
     rts
 
 L00008ff2:
-    move.w      (DAT_00ff04ee),d0
+    move.w      (playable_level_id),d0
     cmpi.w      #$1,d0
-    beq.b       .L0000900e
-    move.b      #$4,(DAT_00ff0020)
-    move.b      #$ff,(DAT_00ff0022)
-.L0000900e:
+    beq.b       .L0  ; franch for level 1 only
+    move.b      #$04,(monster_selection_index)
+    move.b      #$ff,(update_dragon_hud_flag)
+.L0:
     bsr.w       L0000b8b4
-    move.l      (DAT_00ff002a),(DAT_00ff0006)
+    move.l      (new_alisia_life_bar_length),(new_alisia_life_bar_level)
     bsr.w       L00009116
     bsr.w       L00009102
-    bsr.w       L00009160
-    bra.w       L00009182
+    bsr.w       change_hud_dragon_tiles
+    bra.w       write_player_stats
 
 L0000902c:
     bsr.w       L0000b8b4
     bsr.w       L00009102
-    bra.w       L00009160
+    bra.w       change_hud_dragon_tiles
 
 L00009038:
 .L00009038:
-    move.b      #$0,(DAT_00ff0013)
-    move.b      #$0,(jp1_result)
+    move.b      #$0,(palette_update_flags)
+    move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$1,(DAT_00ff0019)
     bsr.w       L00004ba0
     move.w      (DAT_00ff001a),d0
@@ -10585,14 +10065,14 @@ L00009038:
     cmpi.w      #$4,d0
     bne.b       .L00009038
 .L00009062:
-    move.b      #$0,(DAT_00ff0013)
-    move.b      #$0,(jp1_result)
+    move.b      #$0,(palette_update_flags)
+    move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$1,(DAT_00ff0019)
     bsr.w       L00004ba0
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     moveq       #$1,d2
-    bra.w       L000036fe
+    bra.w       prepare_dma_palette_transfer
 
 L00009094:
     move.w      #$45,d7
@@ -10622,15 +10102,15 @@ L000090d4:
     rts
 
 L00009102:
-    bsr.w       L000043ca
-    bsr.w       L00002ee2
-    bsr.w       L00002f0a
-    bsr.w       L0000315c
-    bra.w       L0000322a
+    bsr.w       reset_power_stats
+    bsr.w       update_alisia_life_bar_length
+    bsr.w       update_alisia_life_bar_level
+    bsr.w       update_alisia_level
+    bra.w       update_alisia_power_bar
 
 L00009116:
-    lea         (DAT_00ffdaba+$a),a0
-    lea         (DAT_00ffdbfa),a2
+    lea         (monster_data_array+$a),a0
+    lea         (monster_stats_array),a2
     moveq       #$3,d7
     .L00009124:
         movem.l     A2-A0/d7,-(SP)
@@ -10639,10 +10119,10 @@ L00009116:
         beq.b       .L0000914e
         move.l      ($4,a2),d0
         move.l      d0,(a2)
-        move.l      d0,(DAT_00ff002e)
-        move.l      d0,(DAT_00ff057c)
+        move.l      d0,(new_dragon_life_bar_level)
+        move.l      d0,(dragon_life_bar_length)
         move.b      #$10,($9,a2)
-        bsr.w       L00002fec
+        bsr.w       update_dragon_life_bar
     .L0000914e:
         movem.l     (SP)+,d7/A0-A2
         adda.w      #$40,a0
@@ -10650,54 +10130,54 @@ L00009116:
         dbf         d7,.L00009124
     rts
 
-L00009160:
-    move.b      (DAT_00ff0020),d0
+change_hud_dragon_tiles:
+    move.b      (monster_selection_index),d0
     ext.w       d0
-    mulu.w      #$40,d0
-    lea         (DAT_00ffdaba),a1
+    mulu.w      #$40,d0 ; offset for monster array
+    lea         (monster_data_array),a1
     adda.w      d0,a1
-    move.l      a1,(DAT_00ff0598)
-    bsr.w       copy_16_words_to_00ff066a   ; palette?
-    bra.w       copy_16_words_to_00ff06ea   ; palette?
+    move.l      a1,(monster_selection_pointer)
+    bsr.w       change_hud_dragon_top_tiles     ;
+    bra.w       change_hud_dragon_bottom_tiles  ;
 
-L00009182:  ; write level data
-    lea         (DAT_00ffdc22),a0
-    lea         (DAT_00ffdaba),a1
+write_player_stats:  ; write level data
+    lea         (player_stats),a0
+    lea         (monster_data_array),a1
     move.w      #$13f,d7            ; 340 bytes
     .L00009192:
         move.b      (a1)+,(a0)+
         dbf         d7,.L00009192
-    lea         (DAT_00ffdbfa),a1
+    lea         (monster_stats_array),a1
     move.w      #$27,d7             ; 40 bytes
     .L000091a2:
         move.b      (a1)+,(a0)+
         dbf         d7,.L000091a2
-    move.l      (DAT_00ff0006),(a0)+
-    move.l      (DAT_00ff002a),(a0)+
-    move.b      (DAT_00ff001d),(a0)+
+    move.l      (new_alisia_life_bar_level),(a0)+
+    move.l      (new_alisia_life_bar_length),(a0)+
+    move.b      (new_alisia_level),(a0)+
     move.b      (level_id),(a0)+
     rts
 
-L000091c2:  ; read level data
-    lea         (DAT_00ffdc22),a0
-    lea         (DAT_00ffdaba),a1
+read_player_stats:  ; read level data
+    lea         (player_stats),a0
+    lea         (monster_data_array),a1
     move.w      #$13f,d7
     .L000091d2:
         move.b      (a0)+,(a1)+
         dbf         d7,.L000091d2
-    lea         (DAT_00ffdbfa),a1
+    lea         (monster_stats_array),a1
     move.w      #$27,d7
     .L000091e2:
         move.b      (a0)+,(a1)+
         dbf         d7,.L000091e2
-    move.l      (a0)+,(DAT_00ff0006)
-    move.l      (a0)+,(DAT_00ff002a)
-    move.b      (a0)+,(DAT_00ff001d)
+    move.l      (a0)+,(new_alisia_life_bar_level)
+    move.l      (a0)+,(new_alisia_life_bar_length)
+    move.b      (a0)+,(new_alisia_level)
     move.b      (a0)+,(level_id)
     rts
 
 L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable levels?
-    move.w      d0,(DAT_00ff04ee)
+    move.w      d0,(playable_level_id)
     tst.b       (play_demo_flag)
     bne.w       .L00009430
     bsr.w       clear_palettes_0_to_3
@@ -10708,12 +10188,12 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     move.w      #$2000,d2
     jsr         vram_fill_dma
     clr.b       (DAT_00ff042e)
-    move.l      #(L0006efac),(DAT_00ff0554)
-    lea         (L00039040),a0
+    move.l      #(L0006efac),(DAT_00ff0554) ; pointer to sprite table
+    lea         (L00039040),a0  ; could be linked to HUD window?
     bsr.w       L0000bd82
-    lea         (L00039578),a0
+    lea         (L00039578),a0  ; could be linked to HUD window?
     bsr.w       L0000be1e
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     bsr.w       clear_640_bytes_from_00ff17c0
     bsr.w       wait_for_vblank
     move.b      #$1,(DAT_00ff042f)
@@ -10725,17 +10205,17 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     move.w      #$4000,d1
     move.l      #(L0006d9ba),d2
     move.w      #-$7670,d3
-    bsr.w       L0000ff2a
+    bsr.w       dma_tiles_to_vram
     lea         (default_palette),a0
     clr.w       d0
     bsr.w       fill_bottom_palette
     bsr.w       fill_top_palette
-    move.w      #$20,d0
-    move.w      #$12,d1
-    jsr         L00001aaa.l
+    move.w      #$0020,d0
+    move.w      #$0012,d1
+    jsr         L00001aaa
     move.w      #$0,(palettes_0)
     move.w      #$0,(palettes_4)
-    move.w      (DAT_00ff04ee),d0
+    move.w      (playable_level_id),d0
     subq.w      #$1,d0
     add.w       d0,d0
     add.w       d0,d0
@@ -10750,9 +10230,9 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     move.w      #-$b00,d1
     move.l      #(L000722f8),d2
     move.w      #-$7e80,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     move.w      #$e,(DAT_00ff0478)
     move.w      #$e,(DAT_00ff047a)
     move.w      (DAT_00ff04d6),(DAT_00ff047c)
@@ -10762,7 +10242,7 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
         move.w      d7,-(SP)
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c1ae
+        bsr.w       scroll_right_bg1
         bsr.w       L0000c29c
         bsr.w       update_bg1_bg2_hscroll
         move.w      (SP)+,d7
@@ -10772,7 +10252,7 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
         move.w      d7,-(SP)
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c4e6
+        bsr.w       scroll_left_bg2
         bsr.w       update_bg1_bg2_hscroll
         move.w      (SP)+,d7
         dbf         d7,.L0000934c
@@ -10787,8 +10267,8 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
         bsr.w       wait_for_vblank
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c0e4
-        bsr.w       L0000c39a
+        bsr.w       scroll_left_bg1
+        bsr.w       scroll_up_bg1
         bsr.w       update_bg1_bg2_hscroll
         bsr.w       L0000966c
         move.w      (SP)+,d7
@@ -10799,14 +10279,14 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
         bsr.w       wait_for_vblank
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c0e4
-        bsr.w       L0000c39a
-        bsr.w       L0000c5a6
+        bsr.w       scroll_left_bg1
+        bsr.w       scroll_up_bg1
+        bsr.w       scroll_right_bg2
         bsr.w       update_bg1_bg2_hscroll
         bsr.w       L0000966c
         move.w      (SP)+,d7
         dbf         d7,.L000093aa
-    move.w      (DAT_00ff04ee),d0
+    move.w      (playable_level_id),d0
     clr.w       d1
     moveq       #$7,d7
     .L000093e0:
@@ -10826,15 +10306,15 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     moveq       #$a,d0
     bsr.w       wait_for_n_vblanks
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     move.w      #$64,d0
     bsr.w       wait_for_n_vblanks
 .L00009430:
     bsr.w       clear_palettes_4_to_7
     moveq       #$1,d2
-    bsr.w       L000036fe
-    bsr.w       wait_for_00ff013_clear
-    bsr.w       L000042e4
+    bsr.w       prepare_dma_palette_transfer
+    bsr.w       wait_for_palette_flags_clear
+    bsr.w       clear_wram_data
     bsr.w       clear_640_bytes_from_00ff17c0
     bsr.w       wait_for_vblank
     lea         (default_palette),a0
@@ -10842,14 +10322,14 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     bsr.w       fill_top_palette
     move.w      #CRAM_WHITE,(palettes_5+$1e)
     moveq       #$1,d2
-    bsr.w       L000036fe
+    bsr.w       prepare_dma_palette_transfer
     moveq       #$0,d1
     move.l      #(L00069290),d2
     move.w      #$9000,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move        #$2700,SR
     move.w      #VDP_REG_WINDOW_H,(VDP_CTRL)
-    move.w      #VDP_REG_WINDOW_V+$4,(VDP_CTRL)
+    move.w      #VDP_REG_WINDOW_V+$4,(VDP_CTRL) ; show HUC
     move.w      #$f880,(hscroll_vram_addr)
     move        #$2300,SR
     clr.w       (vblank_enable_flag)
@@ -10873,7 +10353,7 @@ L000094ac:
     move.w      #$f0,d2
     move.w      #$2200,d4
     bsr.w       L0000282e
-    lea         (DAT_00ff17c0+3),a1
+    lea         (sprite_table_data+3),a1
     subq.w      #$1,d3
     lsl.w       #$3,d3
     adda.w      d3,a1
@@ -10887,7 +10367,7 @@ L00009504:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     movea.l     (DAT_00ff0524),a3
-    move.l      (DAT_00ff053c),d1
+    move.l      (bg1_tilemap_address),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     moveq       #$f,d7
@@ -10904,7 +10384,7 @@ L00009504:
         addi.l      #$01000000,d1
         dbf         d7,.L00009532
     movea.l     (DAT_00ff0530),a3
-    move.l      (DAT_00ff0548),d1
+    move.l      (bg2_tilemap_address),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     moveq       #$f,d7
@@ -10940,7 +10420,7 @@ L00009504:
         movem.w     d5-d4,-(SP)
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c1ae
+        bsr.w       scroll_right_bg1
         bsr.w       update_bg1_bg2_hscroll
         movem.w     (SP)+,d4-d5
         dbf         d4,.L000095f8
@@ -10950,7 +10430,7 @@ L00009504:
     subq.w      #$1,d5
     .L0000961e:
         move.w      d5,-(SP)
-        bsr.w       L0000c39a
+        bsr.w       scroll_up_bg1
         move.w      (SP)+,d5
         dbf         d5,.L0000961e
 .L0000962a:
@@ -10963,7 +10443,7 @@ L00009504:
         movem.w     d5-d4,-(SP)
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c5a6
+        bsr.w       scroll_right_bg2
         bsr.w       update_bg1_bg2_hscroll
         movem.w     (SP)+,d4-d5
         dbf         d4,.L00009638
@@ -10973,7 +10453,7 @@ L00009504:
     subq.w      #$1,d5
     .L0000965e:
         move.w      d5,-(SP)
-        bsr.w       L0000c75e
+        bsr.w       scroll_up_bg2
         move.w      (SP)+,d5
         dbf         d5,.L0000965e
 L0000966a:
@@ -10981,14 +10461,14 @@ L0000966a:
 
 L0000966c:
     clr.w       (DAT_00ff04c8)
-    bsr.w       L00002c3a
-    addq.b      #$1,(DAT_00ff000f)
-    move.b      #$1,(DAT_00ff0001)
-    jsr         L00000ffc.l
+    bsr.w       update_hv_counter
+    addq.b      #$1,(vblank_counter)
+    move.b      #$01,(DAT_00ff0001)
+    jsr         L00000ffc
     clr.b       (DAT_00ff0001)
     bsr.w       L00001bec
     bsr.w       L00001c14
-    lea         (DAT_00ff17c0+$3),a1
+    lea         (sprite_table_data+$3),a1
     move.w      (DAT_00ff04c8),d3
     beq.b       L000096b2
     subq.w      #$1,d3
@@ -11002,8 +10482,8 @@ L000096b2
     moveq       #$0,d2
     moveq       #$0,d4
     move.w      #$0500,d5
-    bsr.w       L00002904
-    lea         (DAT_00ff17c0+$2),a1
+    bsr.w       update_sprite_in_sprite_table
+    lea         (sprite_table_data+$2),a1
     subq.w      #$1,d3
     lsl.w       #$3,d3
     adda.w      d3,a1
@@ -11036,12 +10516,12 @@ L00009722
     move.b      (SP)+,(jp1_result)
     move.w      #$0005,d0
     move.w      #$0200,d1
-    bsr.w       L00003358
+    bsr.w       add_palette_to_dma_data_array
     move.w      #$34,d0
     move.w      #$300,d1
-    bsr.w       L00003358
-    bsr.w       L00003406
-    bsr.w       L000042e4
+    bsr.w       add_palette_to_dma_data_array
+    bsr.w       dma_copied_or_decompressed_tiles
+    bsr.w       clear_wram_data
     move.w      #$1,(DAT_00ff0046)
     bsr.w       L000098fe
     moveq       #$1,d0
@@ -11054,7 +10534,7 @@ L00009766:
     move.w      #$1042,d7
     jsr         L00000faa.l
     move.w      #$50,d0
-    lea         (DAT_00ff0a40),a1
+    lea         (bg_hscroll_data+$280),a1
     moveq       #$7,d7
     .L0000977c:
         add.w       d0,(a1)+
@@ -11063,11 +10543,11 @@ L00009766:
         addq.w      #$2,a1
         dbf         d7,.L0000977c
     clr.w       (DAT_00ff003c)
-    move.l      (DAT_00ff053c),d1
+    move.l      (bg1_tilemap_address),d1
     addi.l      #$06000000,d1
     addi.l      #$2c0000,d1
     move.l      d1,(DAT_00ff003e)
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     .L000097ae:
         clr.w       (DAT_00ff0036)
         clr.w       (DAT_00ff0044)
@@ -11076,34 +10556,34 @@ L00009766:
         move.w      (DAT_00ff0036),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L000097e2,PC,d1*$1)
+        jsr         (.jsr_table1,PC,d1.w)
         move.w      (DAT_00ff0044),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L00009802,PC,d1*$1)
+        jsr         (.jsr_table2,PC,d1.w)
         bra.w       .L000097ae
 
-L000097e2:
+.jsr_table1:
     bra.w       L0000966a   ; rts
-    bra.w       L0000980e   ; stack+4
-    bra.w       L00009812
-    bra.w       L0000982e
-    bra.w       L00009868   ; fill palette 9 with black only
-    bra.w       L0000987a   ; rts
-    bra.w       L0000987c   ; rts too
-    bra.w       L0000987e   ; fill palette 2 with black only
+    bra.w       .L0000980e   ; stack+4
+    bra.w       .L00009812
+    bra.w       .L0000982e
+    bra.w       .L00009868   ; fill palette 9 with black only
+    bra.w       .L0000987a   ; rts
+    bra.w       .L0000987c   ; rts too
+    bra.w       .L0000987e   ; fill palette 2 with black only
 
-L00009802:
+.jsr_table2:
     bra.w       L0000966a   ; rts
-    bra.w       L00009890
+    bra.w       .L00009890
     bra.w       L000098fe
 
-L0000980e:
+.L0000980e:
     addq.w      #$4,SP
     rts
 
-L00009812:
-    lea         (DAT_00ff0a40),a1
+.L00009812:
+    lea         (bg_hscroll_data+$280),a1
     move.w      (-$4,a1),d0
     moveq       #$7,d7
     .L0000981e:
@@ -11114,61 +10594,61 @@ L00009812:
         dbf         d7,.L0000981e
     bra.w       L000096d6
 
-L0000982e:
+.L0000982e:
     move.l      (DAT_00ff0540),d1
-    subi.l      #$04000000,d1
+    subi.l      #$4000000,d1
     move.l      #$00040000,d3
-    subi.l      #$00100000,d1
+    subi.l      #$100000,d1
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    movea.l     (DAT_00ff0038),a0
+    movea.l     (dialogue_strings_ptr),a0
     move.w      #$6380,d4
     bsr.w       L00008912
-    move.l      a0,(DAT_00ff0038)
+    move.l      a0,(dialogue_strings_ptr)
     rts
 
-L00009868:
+.L00009868:
     lea         (palette_all_black),a0
     moveq       #$2,d0
     bsr.w       fill_top_palette
     moveq       #$1,d2
-    bra.w       L000036fe
+    bra.w       prepare_dma_palette_transfer
 
-L0000987a:
+.L0000987a:
     rts
-L0000987c:
+.L0000987c:
     rts
 
-L0000987e:
+.L0000987e:
     lea         (palette_all_black),a0
     moveq       #$2,d0
     bsr.w       fill_bottom_palette
     moveq       #$1,d2
-    bra.w       L000036fe
+    bra.w       prepare_dma_palette_transfer
 
-L00009890:
+.L00009890:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     move.w      (DAT_00ff003c),d2
-    andi.w      #$7,d2
+    andi.w      #$0007,d2
     add.w       d2,d2
     add.w       d2,d2
     lea         (L00014c1e),a0
-    move.w      ($0,a0,d2*$1),d0
+    move.w      ($0,a0,d2.w),d0
     beq.w       .L000098c2
     move.l      (DAT_00ff003e),d1
     bsr.w       L00009948
 .L000098c2:
-    move.w      ($2,a0,d2*$1),d0
+    move.w      ($2,a0,d2.w),d0
     move.l      (DAT_00ff003e),d1
-    addi.l      #$00800000,d1
+    addi.l      #$800000,d1 ; next row in VRAM?
     bsr.w       L00009948
     move.w      (DAT_00ff003c),d2
     addq.w      #$1,d2
     move.w      d2,d3
-    andi.w      #$7,d2
+    andi.w      #$0007,d2
     move.w      d2,(DAT_00ff003c)
-    andi.w      #-$8,d3
+    andi.w      #$fff8,d3
     beq.w       L0000966a       ; rts
     subi.l      #$01000000,(DAT_00ff003e)
     rts
@@ -11213,12 +10693,10 @@ L00009948:
     move.w      d0,(a2)
     addq.w      #$1,d0
     move.w      d0,(a2)
-    ori.w       #$800,d0
+    ori.w       #$0800,d0
     move.w      d0,(a2)
     subq.w      #$1,d0
     move.w      d0,(a2)
-
-L00009976:
     subq.w      #$1,d0
     move.w      d0,(a2)
     subq.w      #$1,d0
@@ -11240,9 +10718,9 @@ L00009994:
     andi.w      #$00ff,d0
     add.w       d0,d0
     add.w       d0,d0
-    jsr         (L000099c6,PC,d0*$1)
+    jsr         (L000099c6,PC,d0.w)
 L000099ac:
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     rts
@@ -11263,37 +10741,37 @@ L000099c6:
     bra.w       L0000ad44
 
 L000099fa:
-    move.w      #$1,(DAT_00ff04fc)
-    move.w      #$1,(DAT_00ff04fe)
+    move.w      #$0001,(DAT_00ff04fc)
+    move.w      #$0001,(DAT_00ff04fe)
     bsr.w       L0000a728
     bsr.w       L0000a776
     bra.w       L0000a7ac
 
 L00009a16:
-    move.w      #$1,(DAT_00ff04fc)
-    move.w      #$2,(DAT_00ff04fe)
+    move.w      #$0001,(DAT_00ff04fc)
+    move.w      #$0002,(DAT_00ff04fe)
     clr.b       (DAT_00ff0001)
-    move.b      #$1,(DAT_00ff0459)
+    move.b      #$01,(DAT_00ff0459)
     move.w      #$78,(DAT_00ff0014)
-    move.b      #-$1,(DAT_00ff0012)
-    move.b      (DAT_00ff0020),d0
+    move.b      #$ff,(DAT_00ff0012)
+    move.b      (monster_selection_index),d0
     move.b      d0,(DAT_00ff0444)
     bsr.w       L0000a7e4
-    move.w      #$a000,d1
-    move.l      #$00045806,d2
-    move.w      #$1000,d3
+    move.w      #$a000,d1       ; VRAM addr
+    move.l      #(L00045806),d2
+    move.w      #$1000,d3       ; length
     jsr         add_item_to_dma_data_array
     moveq       #$a,d0
     jsr         write_z80_reg6
-    move.w      #$78,d7
+    move.w      #$0078,d7
     .L00009a74:
         move.w      d7,-(SP)
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L00009a74
     .L00009a88:
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         bsr.w       L0000a8aa
         move.w      (DAT_00ff0002),d0
@@ -11305,7 +10783,7 @@ L00009a16:
         move.w      d7,-(SP)
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         clr.b       (DAT_00ff042b)
         bsr.w       L00004b74
         bsr.w       L0000a8aa
@@ -11336,7 +10814,7 @@ L00009a16:
     move.b      #$1,(DAT_00ff042f)
     bsr.w       L0000c004
     addq.w      #$4,(DAT_00ff0002)
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     bsr.w       L00004ba0
     bsr.w       wait_for_vblank
     move.w      #$8000,(DAT_00ff0010)
@@ -11346,7 +10824,7 @@ L00009a16:
     .L00009b8c:
         move.w      d7,-(SP)
         addq.w      #$2,(DAT_00ff0002)
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         move.b      #$ff,(DAT_00ff042b)
         bsr.w       L00004b74
         bsr.w       L0000a8aa
@@ -11355,7 +10833,7 @@ L00009a16:
     move.w      #$117,d7
     .L00009bb6:
         move.w      d7,-(SP)
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         bsr.w       L0000a8aa
         move.w      (SP)+,d7
@@ -11368,23 +10846,23 @@ L00009a16:
     rts
 
 L00009be8
-    move.w      #$1,(DAT_00ff04fc)
-    move.w      #$3,(DAT_00ff04fe)
+    move.w      #$0001,(DAT_00ff04fc)
+    move.w      #$0003,(DAT_00ff04fe)
     bsr.w       L0000a576
     bsr.w       L0000a776
     bra.w       L0000a7ac
 
-L00009c04
-    move.w      #$2,(DAT_00ff04fc)
-    move.w      #$4,(DAT_00ff04fe)
+L00009c04:  ; copies 2kB of graphics from rom and adds 4 to index if index 0
+    move.w      #$0002,(DAT_00ff04fc)
+    move.w      #$0004,(DAT_00ff04fe)
     bsr.w       L0000a576
     lea         (L0004abb8),a0
     lea         (DAT_00ffdd94),a1
-    move.w      #$7ff,d7
+    move.w      #$07ff,d7
     .L00009c28:
         move.l      (a0)+,(a1)+
         dbf         d7,.L00009c28
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     bsr.w       L00004b9c
     lea         (DAT_00ffdd94),a0
     move.w      #$1fff,d7
@@ -11396,9 +10874,9 @@ L00009c04
         bne.b       .L00009c54
         addi.b      #$40,d2
     .L00009c54:
-        andi.b      #$f,d1
+        andi.b      #$0f,d1
         bne.b       .L00009c5e
-        addi.b      #$4,d2
+        addi.b      #$04,d2
     .L00009c5e:
         move.b      d2,(a0)+
         dbf         d7,.L00009c44
@@ -11406,12 +10884,12 @@ L00009c04
     move.l      #(DAT_00ffdd94),d2
     move.w      #$1000,d3
     jsr         add_item_to_dma_data_array
-    move.w      #$10,d7
+    move.w      #$0010,d7
     jsr         L00000faa.l
     clr.b       (DAT_00ff0012)
     move.w      (DAT_00ff0014),(DAT_00ff00c0)
     .L00009c92:
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         move.w      (DAT_00ff0002),d0
         cmpi.w      #$1570,d0
@@ -11420,7 +10898,7 @@ L00009c04
     moveq       #$2,d0
     jsr         fill_top_palette
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     move.w      #$420,(palettes_2+$8)
     move.w      #$420,(palettes_6+$8)
     move.w      #$16b0,(DAT_00ff0090)
@@ -11430,7 +10908,7 @@ L00009c04
     move.w      #$101e,d7
     jsr         L00000faa.l
     .L00009cf4:
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         move.w      (DAT_00ff0002),d0
         cmpi.w      #$1688,d0
@@ -11439,7 +10917,7 @@ L00009c04
     move.w      #$8000,(DAT_00ff0010)
     move.w      #$6,(DAT_00ff0016)
     .L00009d22:
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         move.w      (DAT_00ff0002),d0
         cmpi.w      #$1800,d0
@@ -11475,7 +10953,7 @@ L00009c04
         move.w      d7,-(SP)
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$2,(jp1_result)
+        move.b      #PAD_DOWN,(jp1_result)
         move.w      #$1b,(DAT_00ff001a)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
@@ -11512,12 +10990,12 @@ L00009e32
     bsr.w       L0000a7e4
     clr.w       (DAT_00ff0036)
 
-L00009e50:
+L00009e50:  ; never used!
     move.w      #$237,d7
-    jsr         L00000faa.l
+    jsr         L00000faa
     bsr.w       L0000a5a4
     .L00009e5e:
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         bsr.w       L00004b9c
         tst.b       (DAT_00ff0012)
         bne.b       .L00009e5e
@@ -11536,11 +11014,11 @@ L00009e50:
     moveq       #$3,d0
     jsr         fill_top_palette
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     .L00009eb8:
-        move.b      #$1,(DAT_00ff001f)
+        move.b      #$01,(DAT_00ff001f)
         bsr.w       L00004b9c
-        tst.b       (DAT_00ff0013)
+        tst.b       (palette_update_flags)
         bne.b       .L00009eb8
     clr.b       (DAT_00ff001f)
     lea         (L000541c4),a0
@@ -11557,16 +11035,16 @@ L00009e50:
     moveq       #$2,d0
     jsr         fill_top_palette
     moveq       #$8,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     move.w      #$0024,(palettes_6+$a)
     move.w      #$0044,(palettes_6+$c)
     move.w      #$0002,(palettes_6+$1e)
-    move.w      #$3c,d7
+    move.w      #$003c,d7
     bsr.w       L0000a894
     clr.b       (DAT_00ff001f)
     move.w      #$5800,d0
     moveq       #-$1,d1
-    move.w      #$200,d2
+    move.w      #$0200,d2
     jsr         vram_fill_dma
     move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
     moveq       #$3f,d5
@@ -11584,7 +11062,7 @@ L00009e50:
             ori.l       #VDP_VRAM_WADDR,d0
             move.l      d0,(VDP_CTRL)
             move.w      d4,(VDP_DATA)
-            addi.l      #$00020000,d0
+            addi.l      #$20000,d0
             dbf         d7,.L00009f6c
         move.l      (SP)+,d0
         addi.l      #$00800000,d0
@@ -11598,11 +11076,11 @@ L00009e50:
     moveq       #$2,d0
     jsr         fill_top_palette
     moveq       #$8,d2
-    jsr         L000036fe.l
-    .wait_DAT_00ff0013_clear:
+    jsr         prepare_dma_palette_transfer
+    .wait_palette_update_flags_clear:
         bsr.w       L0000a0e4
-        tst.b       (DAT_00ff0013)
-        bne.b       .wait_DAT_00ff0013_clear
+        tst.b       (palette_update_flags)
+        bne.b       .wait_palette_update_flags_clear
     clr.b       (DAT_00ff001f)
     lea         (palettes_2),a3
     lea         (palettes_4+$40),a4
@@ -11610,39 +11088,39 @@ L00009e50:
     moveq       #$4,d7
     .L00009ffe:
         move.w      d7,-(SP)
-        bsr.w       L0000a098
-        move.w      #$3c,d7
+        bsr.w       .L0000a098
+        move.w      #$003c,d7
         bsr.w       L0000a0d2
         move.w      (SP)+,d7
         dbf         d7,.L00009ffe
     move.w      #$0200,(palettes_2+$2)
     move.w      #$0200,(palettes_6+$2)
-    bsr.w       L0000a098
-    move.w      #$3c,d7
+    bsr.w       .L0000a098
+    move.w      #$003c,d7
     bsr.w       L0000a0d2
-    move.w      #$400,(palettes_2+$2)
-    move.w      #$400,(palettes_6+$2)
-    bsr.w       L0000a098
-    move.w      #$258,d7
+    move.w      #$0400,(palettes_2+$2)
+    move.w      #$0400,(palettes_6+$2)
+    bsr.w       .L0000a098
+    move.w      #$0258,d7
     bsr.w       L0000a0d2
     moveq       #$a,d0
     jsr         write_z80_reg6
     jsr         clear_palettes_4_to_7
     moveq       #$1,d2
-    jsr         L000036fe.l
-    move.b      #$1,(DAT_00ff001f)
-    move.w      #$7e,d7
+    jsr         prepare_dma_palette_transfer
+    move.b      #$01,(DAT_00ff001f)
+    move.w      #$007e,d7
     bsr.w       L0000a0d2
     movea.l     (DAT_00ff0508),SP
     addq.w      #$4,SP
     clr.b       (play_demo_flag)
-    move.b      #$1,(DAT_00ff0001)
-    move.b      (DAT_00ff0020),d0
-    cmpi.b      #$4,d0
-    beq.w       L0000a7e2
-    bra.w       L0000e262
+    move.b      #$01,(DAT_00ff0001)
+    move.b      (monster_selection_index),d0
+    cmpi.b      #$04,d0
+    beq.w       L0000a7e2    ; rts
+    bra.w       save_monster_stats
 
-L0000a098:
+.L0000a098:
 var SET $e  ; $e, $10 ... $1a
     REPT 7
         move.w      (a5),(var,a3)
@@ -11661,22 +11139,22 @@ L0000a0d2:
 
 L0000a0e4:
     bsr.w       wait_for_vblank
-    move.w      #$60,d1
-    move.w      #$80,d2
+    move.w      #$0060,d1
+    move.w      #$0080,d2
     moveq       #$0,d3
     move.w      #$8000,d4
-    move.w      #$f00,d5
-    bsr.w       L00002904
+    move.w      #$0f00,d5
+    bsr.w       update_sprite_in_sprite_table
     moveq       #$0,d1
-    move.w      #$f00,d5
-    bsr.w       L00002904
+    move.w      #$0f00,d5
+    bsr.w       update_sprite_in_sprite_table
     move.w      d3,(DAT_00ff04c8)
     move.w      #$2,(DAT_00ff0478)
     bsr.w       L00005e02
     bsr.w       L00007122
     bsr.w       L0000d092
-    move.w      #$80,d1
-    move.w      #$a0,d2
+    move.w      #$0080,d1
+    move.w      #$00a0,d2
     move.w      (DAT_00ff04c8),d3
     moveq       #$4,d7
     .L0000a132:
@@ -11684,8 +11162,8 @@ L0000a0e4:
         moveq       #$9,d6
         .L0000a136:
             move.w      #$62c0,d4
-            move.w      #$f00,d5
-            bsr.w       L00002904
+            move.w      #$0f00,d5
+            bsr.w       update_sprite_in_sprite_table
             addi.w      #$20,d1
             dbf         d6,.L0000a136
         move.w      (SP)+,d1
@@ -11715,7 +11193,7 @@ L0000a174:
     move.w      #$11,(DAT_00ff0016)
     move.w      #$4f,(DAT_00ff005e)
     .L0000a1c8:
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         move.b      #$2,(DAT_00ff0019)
         bsr.w       L00004b9c
         move.w      (DAT_00ff01a8),d0
@@ -11724,23 +11202,23 @@ L0000a174:
     moveq       #$3c,d7
     .L0000a1ea:
         move.w      d7,-(SP)
-        move.b      #-$1,(DAT_00ff042b)
-        move.b      #-$1,(DAT_00ff042c)
-        move.b      #$1,(DAT_00ff0439)
-        move.b      #$0,(jp1_result)
-        move.b      #$2,(DAT_00ff0019)
+        move.b      #$ff,(DAT_00ff042b)
+        move.b      #$ff,(DAT_00ff042c)
+        move.b      #$01,(stage_demo_flag)
+        move.b      #PAD_NO_KEY,(jp1_result)
+        move.b      #$02,(DAT_00ff0019)
         move.w      #$1b,(DAT_00ff001a)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L0000a1ea
     jsr         clear_palettes_4_to_7
     moveq       #$1,d2
-    jsr         L000036fe.l
-    jsr         wait_for_00ff013_clear
+    jsr         prepare_dma_palette_transfer
+    jsr         wait_for_palette_flags_clear
     bsr.w       L0000aaa2
-    move.b      #$1,(DAT_00ff0439)
+    move.b      #$01,(stage_demo_flag)
     bsr.w       L0000ab08
-    clr.b       (DAT_00ff0439)
+    clr.b       (stage_demo_flag)
     rts
 
 L0000a252:
@@ -11757,7 +11235,7 @@ L0000a27a:
     btst.b      #$0,(DAT_00ff0000)
     bne.w       L0000a728
 L0000a286:
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     move.w      (DAT_00ff001a),d0
     bne.b       L0000a286
@@ -11767,14 +11245,14 @@ L0000a29e:
     move.w      (DAT_00ff0002),d0
     cmpi.w      #$402,d0
     bcs.b       L0000a2d2
-    move.b      #$4,(jp1_result)
+    move.b      #PAD_LEFT,(jp1_result)
     bsr.w       L00004b9c
     bra.b       L0000a29e
 L0000a2b8:
     move.w      (DAT_00ff0002),d0
     cmpi.w      #$3fc,d0
     bcc.b       L0000a2d2
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     bra.b       L0000a2b8
 
@@ -11782,7 +11260,7 @@ L0000a2d2:
     moveq       #$a,d7
     .L0000a2d4:
         move.w      d7,-(SP)
-        move.b      #$40,(jp1_result)
+        move.b      #PAD_A,(jp1_result)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L0000a2d4
@@ -11801,7 +11279,7 @@ L0000a2fe:
     btst.b      #$0,(DAT_00ff0000)
     bne.b       .L0000a32c
     .L0000a318:
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         move.w      (DAT_00ff001a),d0
         bne.b       .L0000a318
@@ -11810,7 +11288,7 @@ L0000a2fe:
     cmpi.w      #$2a0,d0
     bhi.b       .L0000a350
     .L0000a338:
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         bsr.w       L00004b9c
         move.w      (DAT_00ff01a8),d0
         cmpi.w      #$0200,d0
@@ -11820,7 +11298,7 @@ L0000a2fe:
     .L0000a358:
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         clr.b       (DAT_00ff042b)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
@@ -11845,20 +11323,20 @@ L0000a2fe:
     moveq       #$3,d0
     jsr         fill_top_palette
     moveq       #$2,d2
-    jsr         L000036fe.l
-    jsr         wait_for_00ff013_clear
+    jsr         prepare_dma_palette_transfer
+    jsr         wait_for_palette_flags_clear
     move.w      #$2070,d7
     jsr         L00000faa.l
     move.w      #$003e,d0
     move.w      #$0200,d1
-    bsr.w       L00003358
+    bsr.w       add_palette_to_dma_data_array
     move.w      #$003f,d0
     move.w      #$0300,d1
-    bsr.w       L00003358
-    jsr         L00003406
+    bsr.w       add_palette_to_dma_data_array
+    jsr         dma_copied_or_decompressed_tiles
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    move.l      (DAT_00ff053c),d1
+    move.l      (bg1_tilemap_address),d1
     addi.l      #$0,d1
     addi.l      #$280000,d1
     moveq       #$11,d7
@@ -11894,28 +11372,28 @@ L0000a2fe:
     moveq       #$3,d0
     jsr         fill_top_palette
     moveq       #$2,d2
-    jsr         L000036fe.l
-    .wait_DAT_00ff0013_clear_1:
+    jsr         prepare_dma_palette_transfer
+    .wait_palette_update_flags_clear_1:
         bsr.w       L00004b9c
-        tst.b       (DAT_00ff0013)
-        bne.b       .wait_DAT_00ff0013_clear_1
+        tst.b       (palette_update_flags)
+        bne.b       .wait_palette_update_flags_clear_1
     move.w      #$003e,d0
     move.w      #$0200,d1
-    bsr.w       L00003358
+    bsr.w       add_palette_to_dma_data_array
     move.w      #$03f,d0
     move.w      #$0300,d1
-    bsr.w       L00003358
+    bsr.w       add_palette_to_dma_data_array
     moveq       #$2,d2
-    jsr         L000036fe.l
-    .wait_DAT_00ff0013_clear_2:
+    jsr         prepare_dma_palette_transfer
+    .wait_palette_update_flags_clear_2:
         bsr.w       L00004b9c
-        tst.b       (DAT_00ff0013)
-        bne.b       .wait_DAT_00ff0013_clear_2
+        tst.b       (palette_update_flags)
+        bne.b       .wait_palette_update_flags_clear_2
     move.b      #$0,(DAT_00ff0019)
     .L0000a4e6:
         move.w      (DAT_00ff0002),-(SP)
         move.w      (DAT_00ff0004),-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         move.b      #$1,(DAT_00ff042b)
         bsr.w       L00004b74
         move.w      (SP)+,(DAT_00ff0004)
@@ -11948,7 +11426,7 @@ L0000a576:
     move.w      #$237,d7
     jsr         L00000faa.l
     .L0000a58e:
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         bsr.w       L00004b9c
         tst.w       (DAT_00ff0036)
         beq.b       .L0000a58e
@@ -11999,12 +11477,12 @@ L0000a628:
     rts
 
 L0000a63a:
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     bra.w       L0000a5ba
 
 L0000a64a:
-    move.b      #$4,(jp1_result)
+    move.b      #PAD_LEFT,(jp1_result)
     bsr.w       L00004b9c
     bra.w       L0000a5ba
 
@@ -12012,19 +11490,19 @@ L0000a65a:
     moveq       #$7,d7
     .L0000a65c:
         move.w      d7,-(SP)
-        move.b      #$40,(jp1_result)
+        move.b      #PAD_A,(jp1_result)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L0000a65c
     bra.w       L0000a5ec
 
 L0000a674:
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     bra.w       L0000a5f0
 
 L0000a684:
-    move.b      #$4,(jp1_result)
+    move.b      #PAD_LEFT,(jp1_result)
     bsr.w       L00004b9c
     bra.w       L0000a5f0
 
@@ -12032,11 +11510,11 @@ L0000a694:
     moveq       #$a,d7
     .L0000a696:
         move.w      d7,-(SP)
-        move.b      #$40,(jp1_result)
+        move.b      #PAD_A,(jp1_result)
         move.w      (DAT_00ff0002),d0
         cmpi.w      #$320,d0
         bcc.b       .L0000a6b4
-        ori.b       #$8,(jp1_result)
+        ori.b       #PAD_RIGHT,(jp1_result)
     .L0000a6b4:
         bsr.w       L00004b9c
         move.w      (SP)+,d7
@@ -12047,11 +11525,11 @@ L0000a6c2:
     moveq       #$a,d7
     .L0000a6c4:
         move.w      d7,-(SP)
-        move.b      #$40,(jp1_result)
+        move.b      #PAD_A,(jp1_result)
         move.w      (DAT_00ff0002),d0
         cmpi.w      #$320,d0
         bls.b       .L0000a6e2
-        ori.b       #$4,(jp1_result)
+        ori.b       #PAD_LEFT,(jp1_result)
     .L0000a6e2:
         bsr.w       L00004b9c
         move.w      (SP)+,d7
@@ -12062,7 +11540,7 @@ L0000a6f0:
     move.w      (DAT_00ff0002),d0
     cmpi.w      #$320,d0
     bcc.w       L0000a628
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     bra.b       L0000a6f0
 
@@ -12070,23 +11548,23 @@ L0000a70c:
     move.w      (DAT_00ff0002),d0
     cmpi.w      #$320,d0
     bls.w       L0000a628
-    move.b      #$4,(jp1_result)
+    move.b      #PAD_LEFT,(jp1_result)
     bsr.w       L00004b9c
     bra.b       L0000a70c
 
 L0000a728:
     move.w      (DAT_00ff001a),d0
-    beq.w       L0000a7e2
+    beq.w       L0000a7e2    ; rts
     cmpi.w      #$8,d0
-    beq.w       L0000a7e2
-    move.b      #$0,(jp1_result)
+    beq.w       L0000a7e2    ; rts
+    move.b      #PAD_NO_KEY,(jp1_result)
     bsr.w       L00004b9c
     move.w      (DAT_00ff0002),d1
     subi.w      #$a,d1
     bsr.w       L000076f8
     tst.w       d0
     beq.b       L0000a728
-    move.b      #$0,(jp1_result)
+    move.b      #PAD_NO_KEY,(jp1_result)
     bsr.w       L00004b9c
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
@@ -12095,14 +11573,14 @@ L0000a728:
 L0000a776:
     btst.b      #$0,(DAT_00ff0000)
     beq.b       L0000a796
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     tst.b       (DAT_00ff042b)
     bpl.b       L0000a776
     rts
 
 L0000a796:
-    move.b      #$8,(jp1_result)
+    move.b      #PAD_RIGHT,(jp1_result)
     bsr.w       L00004b9c
     move.w      (DAT_00ff001a),d0
     bne.b       L0000a796
@@ -12114,7 +11592,7 @@ L0000a7ac:
     .L0000a7b8:
         move.w      d7,-(SP)
         addq.w      #$2,(DAT_00ff0002)
-        move.b      #$8,(jp1_result)
+        move.b      #PAD_RIGHT,(jp1_result)
         move.b      #$ff,(DAT_00ff042b)
         move.b      #$ff,(DAT_00ff042c)
         bsr.w       L00004b74
@@ -12124,17 +11602,17 @@ L0000a7e2:
     rts
 
 L0000a7e4:
-    move.b      (DAT_00ff0020),d0
+    move.b      (monster_selection_index),d0
     cmpi.b      #$4,d0
-    beq.b       L0000a7e2
+    beq.b       L0000a7e2    ; rts
     .L0000a7f0:
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         bsr.w       L00004b9c
         move.b      (DAT_00ffd90a),d0
         cmpi.b      #$2,d0
         beq.b       .L0000a7f0
     move.b      #$1,(play_demo_flag)
-    move.b      (DAT_00ff0020),d0
+    move.b      (monster_selection_index),d0
     lea         (demo_lv3_monster_select_keys),a0
     cmpi.b      #$1,d0
     beq.b       L0000a882
@@ -12149,9 +11627,9 @@ L0000a7e4:
 
 L0000a842:
     cmpi.b      #$4,d0
-    beq.b       L0000a7e2
-    cmp.b       (DAT_00ff0020),d0
-    beq.b       L0000a7e2
+    beq.b       L0000a7e2    ; rts
+    cmp.b       (monster_selection_index),d0
+    beq.b       L0000a7e2    ; rts
     move.b      #$1,(play_demo_flag)
     lea         (demo_lv2_monster_select_keys),a0
     cmpi.b      #$1,d0
@@ -12172,7 +11650,7 @@ L0000a882:
 L0000a894:
     .L0000a894:
         move.w      d7,-(SP)
-        move.b      #$0,(jp1_result)
+        move.b      #PAD_NO_KEY,(jp1_result)
         bsr.w       L00004b9c
         move.w      (SP)+,d7
         dbf         d7,.L0000a894
@@ -12196,25 +11674,25 @@ L0000a8ca:
     moveq       #$a,d0
     jsr         write_z80_reg6
     moveq       #$1,d2
-    jsr         L000036fe.l
-    jsr         wait_for_00ff013_clear
-    bsr.w       L0000bd4a
+    jsr         prepare_dma_palette_transfer
+    jsr         wait_for_palette_flags_clear
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     jsr         reset_vram_bg1_and_2_tilemaps
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     jsr         clear_640_bytes_from_00ff17c0
-    move.b      #$0,(jp1_result)
-    clr.b       (DAT_00ff0439)
-    move.b      #$1,(DAT_00ff0056)
-    move.b      #$1,(DAT_00ff0001)
+    move.b      #PAD_NO_KEY,(jp1_result)
+    clr.b       (stage_demo_flag)
+    move.b      #$01,(alisia_level_update_flag)
+    move.b      #$01,(DAT_00ff0001)
     clr.w       (DAT_00ff0004)
     movea.l     (DAT_00ff0508),SP
     bra.w       L000099ac
 
 L0000a936:
     move.w      #$1000,d7
-    jsr         L00000faa.l
+    jsr         L00000faa
     move.w      #$50,d0
-    lea         (DAT_00ff0d40),a1
+    lea         (bg_hscroll_data+$580),a1
     moveq       #$7,d7
     .L0000a94c:
         add.w       d0,(a1)+
@@ -12227,9 +11705,9 @@ L0000a936:
     move.w      #$7000,d1
     move.l      #(L00074c1a),d2
     move.w      #$8800,d3
-    bsr.w       L0000ff2a
-    move.l      #L00014c5e,(DAT_00ff0038)
-    move.b      #$0,(jp1_result)
+    bsr.w       dma_tiles_to_vram
+    move.l      #dialogue_strings_1,(dialogue_strings_ptr)
+    move.b      #PAD_NO_KEY,(jp1_result)
     .L0000a98c:
         clr.w       (DAT_00ff0036)
         bsr.w       L00004b9c
@@ -12237,11 +11715,11 @@ L0000a936:
         move.w      (DAT_00ff0036),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L0000a9ac,PC,d1*$1)
+        jsr         (L0000a9ac,PC,d1.w)
         bra.w       .L0000a98c
 
 L0000a9ac:
-    bra.w       L0000a7e2
+    bra.w       L0000a7e2    ; rts
     bra.w       L0000a9d4
     bra.w       L0000a9d8
     bra.w       L0000a9ee
@@ -12261,7 +11739,7 @@ L0000a9d8
     moveq       #$2,d0
     jsr         fill_bottom_palette
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000a9ee:
     move.l      (DAT_00ff0540),d1
@@ -12270,10 +11748,10 @@ L0000a9ee:
     subi.l      #$00100000,d1
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    movea.l     (DAT_00ff0038),a0
+    movea.l     (dialogue_strings_ptr),a0
     move.w      #$6380,d4
     bsr.w       L00008912
-    move.l      a0,(DAT_00ff0038)
+    move.l      a0,(dialogue_strings_ptr)
     rts
 
 L0000aa28:
@@ -12281,7 +11759,7 @@ L0000aa28:
     moveq       #$2,d0
     jsr         fill_top_palette
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000aa3e:
     rts
@@ -12289,20 +11767,20 @@ L0000aa40:
     rts
 L0000aa42
     move.w      #$a,(DAT_00ff0016)
-    move.w      #$1,(DAT_00ff0dc2)
-    move.w      #$7,(DAT_00ff0dc4)
+    move.w      #$1,(DAT_00ff0dc0+$2)
+    move.w      #$7,(DAT_00ff0dc0+$4)
     rts
 
 L0000aa5c:
     move.w      #$c,(DAT_00ff0016)
-    move.w      #$1,(DAT_00ff0dc4+2)
-    move.w      #$c,(DAT_00ff0dc8)
-    move.w      #$1,(DAT_00ff0dca)
-    move.w      #$7,(DAT_00ff0dcc)
+    move.w      #$1,(DAT_00ff0dc0+$6)
+    move.w      #$c,(DAT_00ff0dc0+$8)
+    move.w      #$1,(DAT_00ff0dc0+$a)
+    move.w      #$7,(DAT_00ff0dc0+$c)
     rts
 
 L0000aa86:
-    lea         (DAT_00ff0d40),a1
+    lea         (bg_hscroll_data+$580),a1
     move.w      (-$4,a1),d0
     moveq       #$7,d7
     .L0000aa92:
@@ -12322,13 +11800,13 @@ L0000aaa2:
     lea         (default_palette),a0
     clr.w       d0
     jsr         fill_top_palette
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
-    move.b      #$c,(level_id)
+    move.b      #$0c,(level_id)
     bsr.w       L0000b8b4
-    move.b      #$1,(DAT_00ff042e)
-    move.w      #$1a0,(DAT_00ff0002)
+    move.b      #$01,(DAT_00ff042e)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     move.b      (SP)+,(level_id)
     rts
@@ -12336,14 +11814,14 @@ L0000aaa2:
 L0000ab08:
     move.w      #$004c,d0
     move.w      #$0200,d1
-    bsr.w       L00003358
+    bsr.w       add_palette_to_dma_data_array
     move.w      #$4d,d0
     move.w      #$300,d1
-    bsr.w       L00003358
+    bsr.w       add_palette_to_dma_data_array
     move.w      #$33,d0
     move.w      #$380,d1
-    bsr.w       L00003358
-    jsr         L00003406
+    bsr.w       add_palette_to_dma_data_array
+    jsr         dma_copied_or_decompressed_tiles
     move.w      #$1033,d7
     jsr         L00000faa.l
     lea         (DAT_00ff0dc0),a0
@@ -12352,54 +11830,54 @@ L0000ab08:
         move.w      #$1,(a0)+
         dbf         d7,.L0000ab44
     move.w      #$10,(DAT_00ff047c)
-    clr.w       (DAT_00ff0038+2)
+    clr.w       (dialogue_strings_ptr+2)
     clr.w       (DAT_00ff003c)
     .L0000ab60:
         move.b      #-$1,(DAT_00ff042b)
         move.b      #-$1,(DAT_00ff042c)
         clr.w       (DAT_00ff0036)
-        clr.w       (DAT_00ff0038)
-        move.b      #$0,(jp1_result)
+        clr.w       (dialogue_strings_ptr)
+        move.b      #PAD_NO_KEY,(jp1_result)
         move.b      #$2,(DAT_00ff0019)
         move.w      #$1b,(DAT_00ff001a)
         move.b      #$7,(DAT_00ff0430)
         bsr.w       L00004b9c
         bsr.w       L0000df12
-        bsr.w       L0000abd2
+        bsr.w       .L0000abd2
         bsr.w       L0000a8aa
         move.w      (DAT_00ff0036),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L0000abbe,PC,d1*$1)
+        jsr         (.jsr_table,PC,d1.w)
         bra.w       .L0000ab60
 
-L0000abbe:
-    bra.w       L0000a7e2
-    bra.w       L0000ac0e
-    bra.w       L0000ac12
-    bra.w       L0000ac72
-    bra.w       L0000accc
+.jsr_table:
+    bra.w       L0000a7e2    ; rts
+    bra.w       .L0000ac0e
+    bra.w       .L0000ac12
+    bra.w       .L0000ac72
+    bra.w       .L0000accc
 
-L0000abd2:
-    move.w      (DAT_00ff0038),d0
-    beq.w       L0000a7e2
+.L0000abd2:
+    move.w      (dialogue_strings_ptr),d0
+    beq.w       L0000a7e2    ; rts
     subq.w      #$1,(DAT_00ff047c)
     move.w      (DAT_00ff047c),d0
     beq.b       .L0000ac04
     cmpi.w      #$c,d0
-    bne.w       L0000a7e2
+    bne.w       L0000a7e2    ; rts
     move.w      #$0200,(palettes_7+$c)
     move.w      #$6,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 .L0000ac04:
     move.w      #$1,(DAT_00ff047c)
     rts
 
-L0000ac0e:
+.L0000ac0e:
     addq.w      #$4,SP
     rts
 
-L0000ac12:
+.L0000ac12:  ; bg2_vscroll_change set to (DAT_00ff047c)>>1
     move.w      (DAT_00ff01aa),d0
     beq.b       .L0000ac5a
     move.w      d0,d1
@@ -12419,7 +11897,7 @@ L0000ac12:
     neg.w       d1
     move.w      d1,(bg2_vscroll_change)
 .L0000ac56:
-    bra.w       L0000c69e
+    bra.w       scroll_down_bg2
 .L0000ac5a:
     clr.w       (DAT_00ff047c)
     bra.b       .L0000ac2c
@@ -12428,7 +11906,7 @@ L0000ac12:
     move.w      #$1,(DAT_00ff003c)
     bra.b       .L0000ac56
     
-L0000ac72:
+.L0000ac72:  ; bg2_vscroll_change set to $10
     move.w      (DAT_00ff01aa),d0
     beq.b       .L0000acb4
     move.w      d0,d1
@@ -12446,7 +11924,7 @@ L0000ac72:
     neg.w       d1
     move.w      d1,(bg2_vscroll_change)
 .L0000acb0;
-    bra.w       L0000c69e
+    bra.w       scroll_down_bg2
 .L0000acb4:
     clr.w       (DAT_00ff047c)
     bra.b       .L0000ac8c
@@ -12455,7 +11933,7 @@ L0000ac72:
     move.w      #$1,(DAT_00ff003c)
     bra.b       .L0000acb0
 
-L0000accc:
+.L0000accc:
     lea         (L000146a2),a0
     moveq       #$0,d0
     jsr         fill_bottom_palette
@@ -12469,35 +11947,35 @@ L0000accc:
     moveq       #$3,d0
     jsr         fill_bottom_palette
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000ad0c:
     lea         (default_palette),a0
     clr.w       d0
-    jsr         fill_top_palette
+    jsr         fill_top_palette    ; palette 4
     clr.w       (palettes_4)
-    lea         (L00077854),a0
+    lea         (default_palette_5),a0
     moveq       #$1,d0
-    jsr         fill_top_palette
-    move.w      #$40,d0
-    move.w      #-$7fee,d1
-    jsr         L00001aaa.l
+    jsr         fill_top_palette    ; palette 5
+    move.w      #$0040,d0
+    move.w      #$8012,d1
+    jsr         L00001aaa
     moveq       #$2,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000ad44:
-    move.w      #$8,(DAT_00ff04fc)
-    move.w      #$c,(DAT_00ff04fe)
-    move.b      #$1,(DAT_00ff0459)
+    move.w      #$0008,(DAT_00ff04fc)
+    move.w      #$000c,(DAT_00ff04fe)
+    move.b      #$01,(DAT_00ff0459)
     moveq       #$a,d0
     jsr         write_z80_reg6
     bsr.w       L0000a576
-    move.w      #$2c,d0
-    move.w      #$360,d1
-    bsr.w       L00003358
-    jsr         L00003406
+    move.w      #$002c,d0
+    move.w      #$0360,d1
+    bsr.w       add_palette_to_dma_data_array
+    jsr         dma_copied_or_decompressed_tiles
     bsr.w       L000096d6
-    move.b      #$1,(level_id)
+    move.b      #$01,(level_id)
     bsr.w       L000043fe
     clr.b       (level_id)
     lea         (L00069090),a0
@@ -12507,40 +11985,40 @@ L0000ad44:
     moveq       #$1,d0
     moveq       #$16,d1
     jsr         write_z80_reg4_reg5
-    move.w      #$e,(DAT_00ff0016)
-    move.w      #$1,(DAT_00ff0dc4+2)
-    move.w      #$c,(DAT_00ff0dc8)
-    move.w      #$1,(DAT_00ff0dca)
-    move.w      #$7,(DAT_00ff0dcc)
+    move.w      #$000e,(DAT_00ff0016)
+    move.w      #$0001,(DAT_00ff0dc0+$6)
+    move.w      #$000c,(DAT_00ff0dc0+$8)
+    move.w      #$0001,(DAT_00ff0dc0+$a)
+    move.w      #$0007,(DAT_00ff0dc0+$c)
     move.w      #$1045,d7
     jsr         L00000faa.l
-    move.w      #$f0,d7
+    move.w      #$00f0,d7
     bsr.w       L0000a894
     lea         (palettes_4),a0
-    move.w      #$1f,d7
+    move.w      #$001f,d7
     .L0000adf2:
         move.l      #(CRAM_WHITE<<16+CRAM_WHITE),(a0)+
         dbf         d7,.L0000adf2
     moveq       #$4,d2
-    jsr         L000036fe.l
-    move.w      #$78,d7
+    jsr         prepare_dma_palette_transfer
+    move.w      #$0078,d7
     bsr.w       L0000a894
-    bsr.w       L000042e4
-    move.w      #$78,d7
+    bsr.w       clear_wram_data
+    move.w      #$0078,d7
     bsr.w       L0000a894
-    move.b      #$1,(DAT_00ff001f)
-    jsr         wait_for_00ff013_clear
-    jsr         reset_bgs.l
+    move.b      #$01,(DAT_00ff001f)
+    jsr         wait_for_palette_flags_clear
+    jsr         reset_bgs
     jsr         clear_640_bytes_from_00ff17c0
     clr.b       (level_id)
     bsr.w       L000043fe
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
-    move.b      #$d,(level_id)
+    move.b      #$0d,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    move.b      #$1,(DAT_00ff042e)
-    move.w      #$1a0,(DAT_00ff0002)
+    move.b      #$01,(DAT_00ff042e)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     moveq       #$0,d0
     move.l      d0,(bg1_vscroll_value)
@@ -12548,58 +12026,58 @@ L0000ad44:
     move.w      #$4000,d1
     move.l      #(L00075a42),d2
     move.w      #$8490,d3
-    jsr         L0000ff2a
-    move.w      #$4c,d0
-    move.w      #$500,d1
-    bsr.w       L00003358
-    jsr         L00003406
+    jsr         dma_tiles_to_vram
+    move.w      #$004c,d0
+    move.w      #$0500,d1
+    bsr.w       add_palette_to_dma_data_array
+    jsr         dma_copied_or_decompressed_tiles
     moveq       #$4,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     move.w      #$1046,d7
     jsr         L00000faa.l
     lea         (DAT_00ff0dc0),a0
     moveq       #$11,d7
-    .L0000aebe:
-        move.w      #$1,(a0)+
-        dbf         d7,.L0000aebe
+    .L0:
+        move.w      #$0001,(a0)+
+        dbf         d7,.L0
     move.l      #L00014ed8,(DAT_00ff05a8)
     move.b      #$1,(DAT_00ff045a)
     .L0000aed8:
-        move.b      #-$1,(DAT_00ff042b)
-        move.b      #-$1,(DAT_00ff042c)
+        move.b      #$ff,(DAT_00ff042b)
+        move.b      #$ff,(DAT_00ff042c)
         clr.w       (DAT_00ff0016)
-        move.b      #$1,(DAT_00ff0439)
+        move.b      #$01,(stage_demo_flag)
         clr.w       (DAT_00ff0036)
-        clr.w       (DAT_00ff0038)
+        clr.w       (dialogue_strings_ptr)
         clr.w       (DAT_00ff003a)
         clr.w       (DAT_00ff003c)
-        move.b      #$0,(jp1_result)
-        move.b      #$2,(DAT_00ff0019)
-        move.w      #$1b,(DAT_00ff001a)
-        move.b      #$7,(DAT_00ff0430)
+        move.b      #PAD_NO_KEY,(jp1_result)
+        move.b      #$02,(DAT_00ff0019)
+        move.w      #$001b,(DAT_00ff001a)
+        move.b      #$07,(DAT_00ff0430)
         bsr.w       L00004b9c
         move.w      (DAT_00ff0036),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L0000af6e,PC,d1*$1)
-        move.w      (DAT_00ff0038),d1
+        jsr         (.braw_table,PC,d1.w)
+        move.w      (dialogue_strings_ptr),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L0000af6e,PC,d1*$1)
+        jsr         (.braw_table,PC,d1.w)
         move.w      (DAT_00ff003a),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L0000af6e,PC,d1*$1)
+        jsr         (.braw_table,PC,d1.w)
         move.w      (DAT_00ff003c),d1
         add.w       d1,d1
         add.w       d1,d1
-        jsr         (L0000af6e,PC,d1*$1)
+        jsr         (.braw_table,PC,d1.w)
         bra.w       .L0000aed8
 
-L0000af6e:
-    bra.w       L0000a7e2
-    bra.w       L0000afba
-    bra.w       L0000b10a
+.braw_table:
+    bra.w       L0000a7e2    ; rts
+    bra.w       .L0000afba
+    bra.w       .L0000b10a
     bra.w       L0000b248
     bra.w       L0000b2e6
     bra.w       L0000b302
@@ -12617,19 +12095,19 @@ L0000af6e:
     bra.w       L0000b7c6
     bra.w       L0000b89e
 
-L0000afba:
+.L0000afba:
     adda.w      #$c,SP
-    jsr         reset_bgs.l
-    bsr.w       L000042e4
+    jsr         reset_bgs
+    bsr.w       clear_wram_data
     jsr         clear_640_bytes_from_00ff17c0
     clr.b       (vram_to_vram_type)
-    bsr.w       L0000bd4a
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L00039af8),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     lea         (L00039fe2),a0
     lea         (DAT_00ff655c),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     lea         (L000700d0),a0
     moveq       #$1,d1
     move.w      #$8000,d2
@@ -12649,21 +12127,21 @@ L0000afba:
     adda.w      #$40,a0
     addq.w      #$2,d0
     jsr         fill_top_palette
-    move.w      #$40,d0
-    move.w      #$12,d1
-    jsr         L00001aaa.l
+    move.w      #$0040,d0
+    move.w      #$0012,d1
+    jsr         L00001aaa
     move.w      #CRAM_WHITE,(palettes_7+$8)
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     move.w      #$12c,d7
     .L0000b07a:
         move.w      d7,-(SP)
         bsr.w       wait_for_vblank
         clr.w       (DAT_00ff04c8)
         move.w      (DAT_00ff04c8),d3
-        bsr.w       L0000b0bc
-        bsr.w       L0000b0d6
-        bsr.w       L0000b0f0
+        bsr.w       .L0000b0bc
+        bsr.w       .L0000b0d6
+        bsr.w       .L0000b0f0
         move.w      d3,(DAT_00ff04c8)
         bsr.w       L00004a96
         move.w      (SP)+,d7
@@ -12673,7 +12151,7 @@ L0000afba:
     move.b      #$1,(DAT_00ff0451)
     rts
 
-L0000b0bc:
+.L0000b0bc:
     move.w      #$29f,d0
     move.w      #$b0,d1
     move.w      #$100,d2
@@ -12681,7 +12159,7 @@ L0000b0bc:
     move.w      #$9fff,d5
     jmp         L00002894.l
 
-L0000b0d6:
+.L0000b0d6:
     move.w      #$2a1,d0
     move.w      #$d0,d1
     move.w      #$100,d2
@@ -12689,7 +12167,7 @@ L0000b0d6:
     move.w      #$9fff,d5
     jmp         L00002894.l
 
-L0000b0f0:
+.L0000b0f0:
     move.w      #$2a2,d0
     move.w      #$f0,d1
     move.w      #$100,d2
@@ -12697,23 +12175,23 @@ L0000b0f0:
     move.w      #$9fff,d5
     jmp         L00002894.l
 
-L0000b10a:  ;
+.L0000b10a:  ;
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
     move.b      #$f,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    move.b      #$1,(DAT_00ff042e)
-    move.w      #$1a0,(DAT_00ff0002)
+    move.b      #$01,(DAT_00ff042e)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     moveq       #$0,d0
     move.l      d0,(bg1_vscroll_value)
     move.w      (DAT_00ff01aa),(DAT_00ff0048)
     move.w      (bg_hscroll_data_index),(DAT_00ff004a)
-    move.w      #$10,(DAT_00ff047c)
-    move.w      #$8,(bg2_vscroll_change)
+    move.w      #$0010,(DAT_00ff047c)
+    move.w      #$0008,(bg2_vscroll_change)
     move.w      #$104b,d7
     jsr         L00000faa.l
     moveq       #$1f,d7
@@ -12725,7 +12203,7 @@ L0000b10a:  ;
     bsr.w       L0000ad0c
     bsr.w       L0000b302
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     lea         (palettes_4),a0
     moveq       #$f,d7
     .L0000b1a6:
@@ -12766,7 +12244,7 @@ L0000b10a:  ;
     move.w      #$4000,d1
     move.l      #(L00075a42),d2
     move.w      #-$7b70,d3
-    jmp         L0000ff2a
+    jmp         dma_tiles_to_vram
 
 L0000b220:
     lsl.w       #$3,d0
@@ -12779,7 +12257,7 @@ L0000b220:
     add.l       d0,d2
     lsr.w       #$1,d3
     ori.w       #$8000,d3
-    jmp         L0000ff2a
+    jmp         dma_tiles_to_vram
 
 L0000b248:
     move.w      (DAT_00ff0048),d2
@@ -12811,7 +12289,7 @@ L0000b248:
     move.w      #$0020,(DAT_00ff004a)
 .L0000b2ce:
     move.w      (bg_hscroll_data_index),d1
-    bsr.w       L0000c75e
+    bsr.w       scroll_up_bg2
     move.w      (bg2_vscroll_change),d0
     add.w       d0,(DAT_00ff004a)
     rts
@@ -12823,7 +12301,7 @@ L0000b2e6:
         move.l      #(CRAM_WHITE<<16+CRAM_WHITE),(a0)+
         dbf         d7,.L0000b2f0
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000b302:
     lea         (palette_all_black),a0
@@ -12839,7 +12317,7 @@ L0000b316:
         move.l      (a0)+,(a1)+
         dbf         d7,.L0000b324
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000b332:
     lea         (palettes_0),a0
@@ -12848,17 +12326,17 @@ L0000b332:
         move.l      #(CRAM_WHITE<<16+CRAM_WHITE),(a0)+
         dbf         d7,.L0000b33c
     moveq       #$4,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000b34e:
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
     move.b      #$10,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    move.w      #$1a0,(DAT_00ff0002)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     move.l      #$000400020,d0
     move.l      d0,(bg1_vscroll_value)
@@ -12871,21 +12349,21 @@ L0000b34e:
     bsr.w       L0000b220
     move.w      #$4000,d1
     move.l      #(L00075a42),d2
-    move.w      #-$7b70,d3
-    jsr         L0000ff2a
+    move.w      #-$7b70,d3  ; TODO change to positive values
+    jsr         dma_tiles_to_vram
     move.w      #$4920,d1
     move.l      #(L0006d9ba),d2
     move.w      #-$7670,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.w      #$7d60,d1
     move.l      #(L000760ee),d2
     move.w      #-$7ec0,d3
-    jmp         L0000ff2a
+    jmp         dma_tiles_to_vram
 
 L0000b3ec:
     jsr         clear_palettes_4_to_7
     moveq       #$2,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000b3fa:
     bra.w       L0000d092
@@ -12903,17 +12381,17 @@ L0000b418:
     rts
 
 L0000b430:
-    movea.l     (DAT_00ff05a8),a0
+    movea.l     (DAT_00ff05a8),a0       ; always intitialised at L00014ed8 in the last level id (might be the ending?)
     move.w      (a0)+,d0
-    bmi.w       L0000a7e2
+    bmi.w       L0000a7e2    ; rts
     move.w      (a0)+,d2
     move.w      (a0)+,d3
     move.w      (a0)+,d4
     move.w      (a0)+,d5
-    move.l      a0,(DAT_00ff05a8)
+    move.l      a0,(DAT_00ff05a8)       ; save new address for next time
     add.w       d0,d0
     add.w       d0,d0
-    jsr         (L0000b464,PC,d0*$1)
+    jsr         (L0000b464,PC,d0.w)
     tst.w       d5
     beq.b       .L0000b45c
     move.w      d5,(DAT_00ff008c)
@@ -12991,41 +12469,41 @@ L0000b530:
     org $b548
 L0000b548:
     jsr         reset_bgs
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L0000bd4a
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003a57a),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
     lea         (bg1_tilemap_data),a0
     jsr         update_vram_tilemap
-    move.w      #$0,d0
+    move.w      #$0000,d0
     moveq       #$0,d1
     move.w      #$0020,d2
     jsr         vram_fill_dma
     bsr.w       L0000ad0c
-    jsr         wait_for_00ff013_clear
-    move.w      #$c8,d0
+    jsr         wait_for_palette_flags_clear
+    move.w      #$00c8,d0
     bsr.w       wait_for_n_vblanks
     bsr.w       L0000b3ec
-    jsr         wait_for_00ff013_clear
+    jsr         wait_for_palette_flags_clear
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
     move.b      #$11,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    move.b      #$1,(DAT_00ff042e)
+    move.b      #$01,(DAT_00ff042e)
     move.w      #$8000,d1
-    move.l      #$0004abb8,d2
+    move.l      #(L0004abb8),d2
     move.w      #$1000,d3
     jsr         add_item_to_dma_data_array
-    jsr         L00003406
-    bsr.w       L0000bd4e
+    jsr         dma_copied_or_decompressed_tiles
+    bsr.w       clear_19218_bytes_from_00ff1a48
     jsr         reset_vram_bg1_tilemap
-    move.w      #$1a0,(DAT_00ff0002)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     lea         (DAT_00ff0dc0),a0
     moveq       #$4,d7
@@ -13039,75 +12517,76 @@ L0000b548:
     bra.w       L0000ad0c
 
 L0000b636:
-    jsr         reset_bgs.l
-    bsr.w       L000042e4
+    jsr         reset_bgs
+    bsr.w       clear_wram_data
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L0000bd4a
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003aa8a),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
     lea         (bg1_tilemap_data),a0
     jsr         update_vram_tilemap
     bsr.w       L0000ad0c
-    jsr         wait_for_00ff013_clear
-    move.w      #$c8,d0
+    jsr         wait_for_palette_flags_clear
+    move.w      #$00c8,d0
     bsr.w       wait_for_n_vblanks
     bsr.w       L0000b3ec
-    jsr         wait_for_00ff013_clear
+    jsr         wait_for_palette_flags_clear
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
     move.b      #$12,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    move.b      #$1,(DAT_00ff042e)
-    move.w      #$1a0,(DAT_00ff0002)
+    move.b      #$01,(DAT_00ff042e)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     move.l      #$00700070,d0
     move.l      d0,(bg1_vscroll_value)
     move.w      #$1069,d7
     jsr         L00000faa.l
     bra.w       L0000ad0c
+
 L0000b6e4:
-    jsr         reset_bgs.l
-    bsr.w       L000042e4
+    jsr         reset_bgs
+    bsr.w       clear_wram_data
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L0000bd4a
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003ae80),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
     lea         (bg1_tilemap_data),a0
     jsr         update_vram_tilemap
     bsr.w       L0000ad0c
-    jsr         wait_for_00ff013_clear
-    move.w      #$c8,d0
+    jsr         wait_for_palette_flags_clear
+    move.w      #$00c8,d0
     bsr.w       wait_for_n_vblanks
     bsr.w       L0000b3ec
-    jsr         wait_for_00ff013_clear
+    jsr         wait_for_palette_flags_clear
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
     move.b      #$13,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    bsr.w       L0000bd4e
+    bsr.w       clear_19218_bytes_from_00ff1a48
     jsr         reset_vram_bg1_tilemap
     lea         (L0003b3e6),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
     lea         (bg1_tilemap_data),a0
     jsr         update_vram_tilemap
-    move.w      #$1a0,(DAT_00ff0002)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     moveq       #$20,d0
     move.l      d0,(bg1_vscroll_value)
     lea         (bg_hscroll_data),a0
-    move.w      #$17f,d7
+    move.w      #$017f,d7
     .clear_bg1_hscroll:  ; clear bg1 hscroll value
         clr.w       (a0)
         addq.w      #$4,a0
@@ -13117,30 +12596,30 @@ L0000b6e4:
     bra.w       L0000ad0c
 
 L0000b7c6:
-    jsr         reset_bgs.l
-    bsr.w       L000042e4
+    jsr         reset_bgs
+    bsr.w       clear_wram_data
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L0000bd4a
+    bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003b964),a0
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
     lea         (bg1_tilemap_data),a0   ; tilemap data  40x28x2= 2240 bytes
     jsr         update_vram_tilemap
     bsr.w       L0000ad0c
-    jsr         wait_for_00ff013_clear
-    move.w      #$64,d0
+    jsr         wait_for_palette_flags_clear
+    move.w      #$0064,d0
     bsr.w       wait_for_n_vblanks
     bsr.w       L0000b3ec
-    jsr         wait_for_00ff013_clear
+    jsr         wait_for_palette_flags_clear
     jsr         clear_640_bytes_from_00ff17c0
-    bsr.w       L000042e4
+    bsr.w       clear_wram_data
     clr.w       (DAT_00ff0016)
     move.w      #$7fff,(DAT_00ff00c0)
     move.b      #$14,(level_id)
     bsr.w       L0000b8b4
     clr.b       (level_id)
-    move.w      #$1a0,(DAT_00ff0002)
+    move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
     moveq       #$0,d0
     move.l      d0,(bg1_vscroll_value)
@@ -13153,18 +12632,18 @@ L0000b7c6:
     move.w      #$4800,d1
     move.l      #(L000762a8),d2
     move.w      #$8e10,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.w      #$6420,d1
     move.l      #(L00075754),d2
     move.w      #$8260,d3
-    jmp         L0000ff2a
+    jmp         dma_tiles_to_vram
     
 L0000b89e:
     lea         (palette_all_black),a0
     moveq       #$1,d0
     jsr         fill_top_palette
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000b8b4:
     clr.b       (DAT_00ff042e)
@@ -13172,181 +12651,181 @@ L0000b8b4:
     andi.w      #$00ff,d0
     add.w       d0,d0
     add.w       d0,d0
-    jmp         (L0000b8cc,PC,d0*$1)
+    jmp         (.jmp_table,PC,d0.w)
 
-L0000b8cc:
-    bra.w       L0000b920
-    bra.w       L0000b93e
-    bra.w       L0000b958
-    bra.w       L0000b95c
-    bra.w       L0000b9fa
-    bra.w       L0000ba36
-    bra.w       L0000ba54
-    bra.w       L0000ba82
-    bra.w       L0000ba9c
-    bra.w       L0000baa0
-    bra.w       L0000baa4
-    bra.w       L0000babe
-    bra.w       L0000bac2
-    bra.w       L0000bac2
-    bra.w       L0000bac2   ; $e for level1 intro
-    bra.w       L0000bac2
-    bra.w       L0000bac2
-    bra.w       L0000bac2
-    bra.w       L0000b95c
-    bra.w       L0000bac2
-    bra.w       L0000b920
+.jmp_table:     ; atumatic controls at the start of the stage?
+    bra.w       .L0000b920  ; level 1
+    bra.w       .L0000b93e  ; etc
+    bra.w       .L0000b958
+    bra.w       .L0000b95c
+    bra.w       .L0000b9fa
+    bra.w       .L0000ba36
+    bra.w       .L0000ba54
+    bra.w       .L0000ba82
+    bra.w       .L0000ba9c
+    bra.w       .L0000baa0
+    bra.w       .L0000baa4
+    bra.w       .L0000babe
+    bra.w       .L0000bac2
+    bra.w       .L0000bac2
+    bra.w       .L0000bac2   ; $e for level1 intro
+    bra.w       .L0000bac2
+    bra.w       .L0000bac2
+    bra.w       .L0000bac2
+    bra.w       .L0000b95c
+    bra.w       .L0000bac2
+    bra.w       .L0000b920
 
-L0000b920:
-    bsr.w       L0000bac2
-    move.w      #$4000,d1
-    move.l      #$0003f428,d2
+.L0000b920: ; called during demo for level 1
+    bsr.w       .L0000bac2
+    move.w      #$4000,d1       ; VRAM address
+    move.l      #(level1_tileset),d2 ; Level1 related assets
     move.w      #$0400,d3
     jsr         add_item_to_dma_data_array
-    jmp         L00003406
+    jmp         dma_copied_or_decompressed_tiles
 
-L0000b93e:
-    bsr.w       L0000bac2
+.L0000b93e:
+    bsr.w       .L0000bac2
     lea         (L0001442a),a0
     move.l      a0,(DAT_00ff0594)
-    move.w      #$6,(DAT_00ff04d2)
+    move.w      #$0006,(DAT_00ff04d2)
     rts
 
-L0000b958:
-    bra.w       L0000bac2
+.L0000b958:
+    bra.w       .L0000bac2
 
-L0000b95c:
-    bsr.w       L0000bac2
+.L0000b95c:
+    bsr.w       .L0000bac2
     lea         (L00014572),a0
     move.l      a0,(DAT_00ff0518)   ; save start address from pointer
     lea         (L00014584),a0
     move.l      a0,(DAT_00ff051c)
     lea         (L00014596),a0
     move.l      a0,(DAT_00ff0520)
-    move.w      #$1,(DAT_00ff0494)
-    move.w      #$1,(DAT_00ff0496)
-    move.w      #$1,(DAT_00ff0498)
-    lea         (DAT_00ff0eb0),a2
+    move.w      #$0001,(DAT_00ff0494)
+    move.w      #$0001,(DAT_00ff0496)
+    move.w      #$0001,(DAT_00ff0498)
+    lea         (DAT_00ff0dc0+$f0),a2
     clr.w       d0
-    move.w      #$27,d7
+    move.w      #$0027,d7
     .L0000b9a8:
         move.w      d0,(a2)+
         addi.w      #$8,d0
         dbf         d7,.L0000b9a8
-    lea         (DAT_00ff0e10),a2
-    move.w      #$2f,d7
+    lea         (DAT_00ff0dc0+$50),a2
+    move.w      #$002f,d7
     .L0000b9bc:
         move.w      d0,(a2)+
         addq.w      #$1,d0
         dbf         d7,.L0000b9bc
-    lea         (DAT_00ff0e74),a2
-    move.w      #$2f,d7
+    lea         (DAT_00ff0dc0+$b4),a2
+    move.w      #$002f,d7
     .L0000b9ce:
         move.w      d0,(a2)+
         addi.w      #$e,d0
         dbf         d7,.L0000b9ce
-    move.w      #$1,(DAT_00ff0e00)
-    move.w      #$1,(DAT_00ff0e02)
-    move.w      #$1,(DAT_00ff0e04)
-    move.w      #$1,(DAT_00ff0e06)
+    move.w      #$0001,(DAT_00ff0dc0+$40)
+    move.w      #$0001,(DAT_00ff0dc0+$42)
+    move.w      #$0001,(DAT_00ff0dc0+$44)
+    move.w      #$0001,(DAT_00ff0dc0+$46)
     rts
 
-L0000b9fa:
-    bsr.w       L0000bac2
+.L0000b9fa:
+    bsr.w       .L0000bac2
     lea         (DAT_00ff0dc0),a0
     moveq       #$1,d0
     REPT 11
         move.w      d0,(a0)+
     ENDR
     move.w      #$8000,d1
-    move.l      #$0004abb8,d2
+    move.l      #(L0004abb8),d2
     move.w      #$1000,d3
     jsr         add_item_to_dma_data_array
-    jmp         L00003406
+    jmp         dma_copied_or_decompressed_tiles
 
-L0000ba36:
-    bsr.w       L0000bac2
+.L0000ba36:
+    bsr.w       .L0000bac2
     move.w      #$a000,d1
-    move.l      #$0004abb8,d2
+    move.l      #(L0004abb8),d2
     move.w      #$1000,d3
     jsr         add_item_to_dma_data_array
-    jmp         L00003406
+    jmp         dma_copied_or_decompressed_tiles
 
-L0000ba54:
-    bsr.w       L0000bac2
+.L0000ba54:
+    bsr.w       .L0000bac2
     lea         (L0001444a),a0
     move.l      a0,(DAT_00ff0594)
-    move.w      #$4,(DAT_00ff04d2)
-L0000ba6c:
+    move.w      #$0004,(DAT_00ff04d2)
+.L0000ba6c:
     lea         (L000145c0),a0
     move.l      a0,(DAT_00ff0518)
-    move.w      #$1,(DAT_00ff0494)
+    move.w      #$0001,(DAT_00ff0494)
     rts
 
-L0000ba82:
-    bsr.w       L0000bac2
+.L0000ba82:
+    bsr.w       .L0000bac2
     lea         (L00014496),a0
     move.l      a0,(DAT_00ff0594)
-    move.w      #$23,(DAT_00ff04d2)
-    bra.b       L0000ba6c
+    move.w      #$0023,(DAT_00ff04d2)
+    bra.b       .L0000ba6c
 
-L0000ba9c:
-    bra.w       L0000bac2
+.L0000ba9c:
+    bra.w       .L0000bac2
 
-L0000baa0:
-    bra.w       L0000bac2
+.L0000baa0:
+    bra.w       .L0000bac2
 
-L0000baa4:
-    bsr.w       L0000bac2
+.L0000baa4:
+    bsr.w       .L0000bac2
     lea         (L000145ca),a0
     move.l      a0,(DAT_00ff0518)
-    move.w      #$1,(DAT_00ff0494)
+    move.w      #$0001,(DAT_00ff0494)
     rts
 
-L0000babe:
-    bra.w       L0000bac2
+.L0000babe:
+    bra.w       .L0000bac2
 
-L0000bac2:
-    bsr.w       L0000bb02
-    movea.l     ($c,a2),a0
-    bsr.w       L0000bd82
-    movea.l     ($10,a2),a0
-    bsr.w       L0000be1e
+.L0000bac2:
+    bsr.w       L0000bb02   ; only called once and reads LEVEL_DATA_CONSTANTS
+    movea.l     ($c,a2),a0  ; bg1 tileset addr?
+    bsr.w       L0000bd82   ; process address
+    movea.l     ($10,a2),a0 ; bg2 tileset addr?
+    bsr.w       L0000be1e   ; process address
     bsr.w       L0000bbda
     bsr.w       L0000bc5e
-    bsr.w       L0000be78
+    bsr.w       L0000be78   ; only called once and reads LEVEL_DATA_CONSTANTS
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
-    move.b      #$1,(DAT_00ff042f)
+    move.b      #$01,(DAT_00ff042f)
     bsr.w       L0000c004
-    bra.w       L0000bb46
+    bra.w       load_level_tilesets_and_palettes   ; only called once and reads LEVEL_DATA_CONSTANTS
 
 L0000bb02:
     clr.l       d0
     bsr.w       fill_bg_hscroll_data
     move.b      (level_id),d0
-    cmpi.b      #$c,d0
+    cmpi.b      #$0c,d0
     beq.b       .L0000bb20
     move.l      #$ffe0ffe0,d0   ; vscroll value all levels but $c
     move.l      d0,(bg1_vscroll_value)
 .L0000bb20:
     move.b      (level_id),d0
     ext.w       d0
-    mulu.w      #$2a,d0
-    lea         (level_config_data),a2  ; contains data stored in 42 bytes structures
+    mulu.w      #LEVEL_DATA_SIZE,d0
+    lea         (LEVEL_DATA_CONSTANTS),a2
     adda.w      d0,a2
-    move.w      ($24,a2),(DAT_00ff0014)
-    move.l      ($1c,a2),(DAT_00ff0554)
+    move.w      ($24,a2),(DAT_00ff0014) ; save number of sprites?
+    move.l      ($1c,a2),(DAT_00ff0554) ; save sprite tiles adddress?
     rts
 
-L0000bb46:
+load_level_tilesets_and_palettes:  ; saves bg1, bg2 and sprites to VRAM,
     move.b      (level_id),d0
     ext.w       d0
-    mulu.w      #$2a,d0
-    lea         (level_config_data),a2
+    mulu.w      #LEVEL_DATA_SIZE,d0
+    lea         (LEVEL_DATA_CONSTANTS),a2
     adda.w      d0,a2
-    move.w      #$2,(DAT_00ff0478)
-    move.w      #$2,(DAT_00ff047c)
+    move.w      #$0002,(DAT_00ff0478)
+    move.w      #$0002,(DAT_00ff047c)
     move.l      (a2),d0
     beq.b       .L0000bb7c
     movea.l     d0,a0
@@ -13383,10 +12862,10 @@ L0000bb46:
     move.w      ($22,a2),(DAT_00ff0016)
     clr.w       (palettes_4)
     moveq       #$1,d2
-    jmp         L000036fe.l
+    jmp         prepare_dma_palette_transfer
 
 L0000bbda:
-    move.w      (DAT_00ff0470),d3
+    move.w      (DAT_00ff0470),d3           ; tile offset
     lea         (bg1_tilemap_data),a0
     adda.w      d3,a0
     lea         (bg2_tilemap_data),a1
@@ -13395,24 +12874,24 @@ L0000bbda:
     move.w      (DAT_00ff0472),d7
     subq.w      #$2,d7
     .L0000bbfa:
-        move.w      (DAT_00ff0470),d6
+        move.w      (DAT_00ff0470),d6           ; tile offset
         lsr.w       #$1,d6
         subq.w      #$1,d6
         .L0000bc04:
             move.w      (a0),d0
-            andi.w      #$f800,d0
-            beq.b       .L0000bc58
+            andi.w      #$f800,d0   ; only look at bg1 tile attributes
+            beq.b       .set_bg2_prioriry_bit
             cmpi.w      #$3800,d0
             beq.b       .L0000bc34
-            cmpi.w      #-$4800,d0
-            beq.b       .L0000bc58
+            cmpi.w      #$b800,d0
+            beq.b       .set_bg2_prioriry_bit
             cmpi.w      #$c000,d0
-            beq.b       .L0000bc58
+            beq.b       .set_bg2_prioriry_bit
             cmpi.w      #$f000,d0
-            beq.b       .L0000bc58
-        .L0000bc24:
-            addq.w      #$2,a0
-            addq.w      #$2,a1
+            beq.b       .set_bg2_prioriry_bit
+        .next_tile:
+            addq.w      #$2,a0  ; next tilemap element
+            addq.w      #$2,a1  ; next tilemap element
             dbf         d6,.L0000bc04
         addq.w      #$1,d2
         dbf         d7,.L0000bbfa
@@ -13425,16 +12904,16 @@ L0000bbda:
         suba.w      d3,a1
         move.w      (a0),d0
         andi.w      #$f800,d0
-        beq.b       .L0000bc54
+        beq.b       .L0000bc54  ; no attributes
         cmpi.w      #$f800,d0
-        beq.b       .L0000bc54
-        ori.w       #$8000,(a1)
+        beq.b       .L0000bc54  ; all atributes set to 1?
+        ori.w       #$8000,(a1) ; set priority to high
         dbf         d2,.L0000bc3a
 .L0000bc54:
     movem.l     (SP)+,d2/a0-a1
-.L0000bc58:
-    ori.w       #$8000,(a1)
-    bra.b       .L0000bc24
+.set_bg2_prioriry_bit:
+    ori.w       #$8000,(a1) ; set priority to high
+    bra.b       .next_tile
 
 L0000bc5e:
     move.w      (DAT_00ff0470),d3
@@ -13452,7 +12931,7 @@ L0000bc5e:
         .L0000bc88:
             move.w      (a0),d0
             andi.w      #$f800,d0
-            cmpi.w      #$800,d0
+            cmpi.w      #$0800,d0
             beq.b       .L0000bd0a
             cmpi.w      #$1800,d0
             beq.b       .L0000bd0a
@@ -13489,70 +12968,70 @@ L0000bc5e:
             cmpi.w      #$e800,d0
             beq.b       .L0000bd16
         .L0000bcfa:
-            addq.w      #$2,a0
-            addq.w      #$2,a1
+            addq.w      #$2,a0  ; next tilemap element
+            addq.w      #$2,a1  ; next tilemap element
             dbf         d6,.L0000bc88
         addq.w      #$1,d2
         dbf         d7,.L0000bc7e
     rts
-.L0000bd0a:
-    ori.w       #$4000,(a1)
-    ori.w       #$4000,($2,a1)
-    bra.b       .L0000bcfa
-.L0000bd16:
-    ori.w       #$2000,(a1)
-    ori.w       #$2000,(-$2,a1)
-    bra.b       .L0000bcfa
+        .L0000bd0a:
+            ori.w       #$4000,(a1)
+            ori.w       #$4000,($2,a1)
+            bra.b       .L0000bcfa
+        .L0000bd16:
+            ori.w       #$2000,(a1)
+            ori.w       #$2000,(-$2,a1)
+            bra.b       .L0000bcfa
 
 fill_bg_hscroll_data:  ; fills 1536 bytes from (bg_hscroll_data) with d0 and clears 1536 bytes from (DAT_00ff0dc0)
 ; called from reset_bgs first, then from display_sega_logo (L000005b2)
     lea         (bg_hscroll_data),a0
     move.l      a0,(hscroll_dma_data_src_ptr)
-    move.w      #$17f,d7
+    move.w      #$017f,d7
     .L0:
         move.l      d0,(a0)+
         dbf         d7,.L0
     lea         (DAT_00ff0dc0),a0
-    move.w      #$17f,d7
+    move.w      #$017f,d7
     .L1:
         clr.l       (a0)+
         dbf         d7,.L1
     rts
 
-L0000bd4a:
-    bsr.w       L0000bd68
-L0000bd4e:
+clear_19218_bytes_from_00ff655c_and_00ff1a48:
+    bsr.w       clear_19218_bytes_from_00ff655c
+clear_19218_bytes_from_00ff1a48:
     movem.l     a0/d7,-(SP)
     lea         (DAT_00ff1a48),a0
     move.w      #$2588,d7
-    .L0000bd5c:
+    .clear_tile_row:
         clr.w       (a0)+
-        dbf         d7,.L0000bd5c
+        dbf         d7,.clear_tile_row
     movem.l     (SP)+,d7/a0
     rts
 
-L0000bd68:
+clear_19218_bytes_from_00ff655c:
     movem.l     a0/d7,-(SP)
     lea         (DAT_00ff655c),a0
     move.w      #$2588,d7
-    .L0000bd76:
+    .clear_tile_row:
         clr.w       (a0)+
-        dbf         d7,.L0000bd76
+        dbf         d7,.clear_tile_row
     movem.l     (SP)+,d7/a0
     rts
 
-L0000bd82:
-    bsr.b       L0000bd4e
+L0000bd82: ; a1=(DAT_00ff1a48)
+    bsr.b       clear_19218_bytes_from_00ff1a48
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.w      (a1)+,d0
     move.w      d0,d1
     andi.w      #$3fff,d1
     andi.w      #$c000,d0
     cmpi.w      #$c000,d0
     beq.b       .L0000bdd6
-    add.w       d1,d1
-    move.w      d1,(DAT_00ff0470)
+    add.w       d1,d1               ; to point at words
+    move.w      d1,(DAT_00ff0470)   ; only function where this gets sets
     lsr.w       #$1,d1
     move.w      (a1)+,d2
     move.w      d2,(DAT_00ff0472)
@@ -13563,7 +13042,6 @@ L0000bd82:
     move.w      d1,(DAT_00ff005e)
     clr.w       (DAT_00ff005c)
     rts
-
 .L0000bdd6:
     move.w      d1,d3
     move.w      (a1)+,d2
@@ -13575,13 +13053,13 @@ L0000bd82:
     subi.w      #$c,d1
     move.w      d1,(DAT_00ff005a)
     clr.w       (DAT_00ff0058)
-    lsr.w       #$8,d3
-    lsr.w       #$8,d4
-    ext.w       d3
-    ext.w       d4
+    lsr.w       #$8,d3              ; word msb only
+    lsr.w       #$8,d4              ; word msb only
+    ext.w       d3                  ; byte to word conversion
+    ext.w       d4                  ; byte to word conversion
     mulu.w      d4,d3
-    add.w       d3,d3
-    move.w      d3,(DAT_00ff0470)
+    add.w       d3,d3               ; to point at words
+    move.w      d3,(DAT_00ff0470)   ; only function where this gets sets
     lsr.w       #$1,d3
     subi.w      #$14,d3
     move.w      d3,(DAT_00ff005e)
@@ -13589,22 +13067,21 @@ L0000bd82:
     rts
 
 L0000be1e:
-    bsr.w       L0000bd68
+    bsr.w       clear_19218_bytes_from_00ff655c
     lea         (DAT_00ff655c),a1
-    jsr         L0000ff36.l
+    jsr         L0000ff36
     move.w      (a1)+,d0
     move.w      d0,d1
     andi.w      #$3fff,d1
     andi.w      #$c000,d0
     cmpi.w      #$c000,d0
-    beq.b       L0000be52
+    beq.b       .L0000be52
     add.w       d1,d1
     move.w      d1,(DAT_00ff0474)
     move.w      (a1)+,d2
     move.w      d2,(DAT_00ff0476)
     rts
-
-L0000be52:
+.L0000be52:
     move.w      d1,d3
     move.w      (a1)+,d2
     move.w      d2,d4
@@ -13621,33 +13098,33 @@ L0000be52:
     move.w      d3,(DAT_00ff0474)
     rts
 
-L0000be78:
+L0000be78:  ; for the initally call with level config data from rom
     move.b      (level_id),d0
     ext.w       d0
-    mulu.w      #$2a,d0
-    lea         (level_config_data),a2
+    mulu.w      #LEVEL_DATA_SIZE,d0
+    lea         (LEVEL_DATA_CONSTANTS),a2
     adda.w      d0,a2
-    move.w      ($26,a2),d4
-    move.w      ($28,a2),d5
-L0000be94:
+    move.w      ($26,a2),d4     ; initial h pos
+    move.w      ($28,a2),d5     ; initial v pos
+L0000be94:  ; one call from here where d4=$10, d5=$14 and (DAT_00ff0014)=$78 during game when (DAT_00ff01f) != 0
     move.w      (DAT_00ff0014),d0
     lsr.w       #$4,d0
     addq.w      #$1,d0
     sub.w       d0,d5
-    bpl.b       .L0000bea4
+    bpl.b       .d5_gte0
     clr.w       d5
-.L0000bea4:
+.d5_gte0:
     movem.w     d5-d4,-(SP)
     bsr.w       L0000bf70
     bsr.w       L0000bfae
     move.b      (level_id),d0
     ext.w       d0
-    mulu.w      #$2a,d0
-    lea         (level_config_data),a2
+    mulu.w      #LEVEL_DATA_SIZE,d0
+    lea         (LEVEL_DATA_CONSTANTS),a2
     adda.w      d0,a2       ; offset is 42 x byte stored at ff01a3 - level?
     move.w      #$0010,(DAT_00ff0478)
     move.w      #$0010,(DAT_00ff047c)
-    move.w      ($0020,a2),(DAT_00ff0480)
+    move.w      ($20,a2),(DAT_00ff0480)
     movem.w     (SP)+,d4-d5
     move.w      #$00a0,(DAT_00ff0002)
     move.w      (DAT_00ff0014),(DAT_00ff0004)
@@ -13659,43 +13136,43 @@ L0000be94:
     tst.w       d4
     beq.b       .L0000bf52
     clr.b       (DAT_00ff042b)
-    subq.w      #$1,d4
+    subq.w      #$1,d4  ; -- for the correct number of repetitions
     .L0000bf1c:
         movem.w     d5-d4,-(SP)
         clr.w       (bg1_hscroll_value)
         clr.w       (bg2_hscroll_value)
-        bsr.w       L0000c0d6
-        move.b      (level_id),d0
+        bsr.w       scroll_bg1_horizontally
+        move.b      (level_id),d0   ; no hscrolling for level $4 and $11
         cmpi.b      #$4,d0
-        beq.b       .L0000bf46
+        beq.b       .no_bg2_hscrolling
         cmpi.b      #$11,d0
-        beq.b       .L0000bf46
-        bsr.w       L0000c4ba
-    .L0000bf46:
+        beq.b       .no_bg2_hscrolling
+        bsr.w       scroll_bg2_horizontally
+    .no_bg2_hscrolling:
         bsr.w       update_bg1_bg2_hscroll
         movem.w     (SP)+,d4-d5
         dbf         d4,.L0000bf1c
 .L0000bf52:
     tst.w       d5
-    beq.b       .L0000bf6e
+    beq.b       .exit
     clr.b       (DAT_00ff042c)
-    subq.w      #$1,d5
+    subq.w      #$1,d5  ; -- for the correct number o repetitions
     .L0000bf5e:
         move.w      d5,-(SP)
-        bsr.w       L0000c28e
-        bsr.w       L0000c672
+        bsr.w       scroll_bg1_vertically
+        bsr.w       scroll_bg2_vertically
         move.w      (SP)+,d5
         dbf         d5,.L0000bf5e
-.L0000bf6e:
+.exit:
     rts
 
 L0000bf70:
-    move.l      #VDP_VRAM_WADDR+$3,(DAT_00ff053c)
-    move.l      #VDP_VRAM_WADDR+$500003,(DAT_00ff0544)
-    move.l      #VDP_VRAM_WADDR+$e000003,(DAT_00ff0540)
-    move.l      #VDP_VRAM_WADDR+$20000003,(DAT_00ff0548)
-    move.l      #VDP_VRAM_WADDR+$20500003,(DAT_00ff0550)
-    move.l      #VDP_VRAM_WADDR+$2e000003,(DAT_00ff054c)
+    move.l      #VDP_VRAM_WADDR+$3,(bg1_tilemap_address)        ; $c000 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$500003,(DAT_00ff0544)          ; $c050 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$e000003,(DAT_00ff0540)         ; $ce00 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$20000003,(bg2_tilemap_address) ; $e000 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$20500003,(DAT_00ff0550)        ; $e050 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$2e000003,(DAT_00ff054c)        ; $ee00 VRAM WADDR
     rts
 
 L0000bfae:
@@ -13723,12 +13200,12 @@ L0000c004:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     movea.l     (DAT_00ff0524),a0
-    move.l      (DAT_00ff053c),d1
+    move.l      (bg1_tilemap_address),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff01a8),d5
     lsr.w       #$4,d5
-    andi.w      #$1f,d5
+    andi.w      #$1f,d5 ; index for jump table
     move.w      (DAT_00ff01aa),d6
     lsr.w       #$4,d6
     andi.w      #$f,d6
@@ -13749,7 +13226,7 @@ L0000c06c:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     movea.l     (DAT_00ff0530),a0
-    move.l      (DAT_00ff0548),d1
+    move.l      (bg2_tilemap_address),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff0468),d5
@@ -13773,11 +13250,11 @@ L0000c06c:
         dbf         d7,.L0000c0aa
     rts
 
-L0000c0d6:
+scroll_bg1_horizontally:
     move.b      (DAT_00ff042b),d0
-    bmi.w       L0000d076
-    beq.w       L0000c1ae
-L0000c0e4:
+    bmi.w       L0000d076           ; rts
+    beq.w       scroll_right_bg1
+scroll_left_bg1:
     move.w      (DAT_00ff01a8),d0
     move.w      d0,d1
     lsr.w       #$4,d1
@@ -13786,7 +13263,7 @@ L0000c0e4:
     andi.b      #$f,d0
     sub.w       (DAT_00ff0478),d0
     andi.b      #$F0,d0
-    beq.w       L0000c194
+    beq.w       .L0000c194
     subq.l      #$2,(DAT_00ff0524)
     subq.l      #$2,(DAT_00ff052c)
     subq.l      #$2,(DAT_00ff0528)
@@ -13794,19 +13271,19 @@ L0000c0e4:
     lsr.w       #$4,d2
     move.l      #$00040000,d3
     move.l      #$00800000,d4
-    sub.l       d3,(DAT_00ff053c)
+    sub.l       d3,(bg1_tilemap_address)
     sub.l       d3,(DAT_00ff0540)
     andi.b      #$1f,d2
-    bne.b       L0000c14e
-    add.l       d4,(DAT_00ff053c)
+    bne.b       .L0000c14e
+    add.l       d4,(bg1_tilemap_address)
     add.l       d4,(DAT_00ff0540)
-L0000c14e:
+.L0000c14e:
     sub.l       d3,(DAT_00ff0544)
     cmpi.b      #$c,d2
-    bne.b       L0000c160
+    bne.b       .L0000c160
     add.l       d4,(DAT_00ff0544)
-L0000c160:
-    move.l      (DAT_00ff053c),d1
+.L0000c160:
+    move.l      (bg1_tilemap_address),d1
     move.w      (DAT_00ff0470),d2
     move.l      #$01000000,d3
     move.w      (DAT_00ff01aa),d5
@@ -13816,14 +13293,14 @@ L0000c160:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000c87c
-L0000c194:
+.L0000c194:
     move.w      (DAT_00ff0478),d0
     sub.w       d0,(DAT_00ff01a8)
     sub.w       d0,(DAT_00ff0002)
     move.w      d0,(bg1_hscroll_value)
     rts
 
-L0000c1ae:
+scroll_right_bg1:
     move.w      (DAT_00ff01a8),d1
     move.w      d1,d2
     lsr.w       #$4,d1
@@ -13832,7 +13309,7 @@ L0000c1ae:
     andi.b      #$f,d2
     add.w       (DAT_00ff0478),d2
     andi.b      #$f0,d2
-    beq.w       L0000c268
+    beq.w       .L0000c268
     addq.l      #$2,(DAT_00ff0524)
     addq.l      #$2,(DAT_00ff052c)
     addq.l      #$2,(DAT_00ff0528)
@@ -13841,18 +13318,18 @@ L0000c1ae:
     andi.b      #$1f,d2
     move.l      #$00040000,d3
     move.l      #$00800000,d4
-    add.l       d3,(DAT_00ff053c)
+    add.l       d3,(bg1_tilemap_address)
     add.l       d3,(DAT_00ff0540)
     cmpi.b      #$1f,d2
-    bne.b       L0000c21c
-    sub.l       d4,(DAT_00ff053c)
+    bne.b       .L0000c21c
+    sub.l       d4,(bg1_tilemap_address)
     sub.l       d4,(DAT_00ff0540)
-L0000c21c:
+.L0000c21c:
     add.l       d3,(DAT_00ff0544)
     cmpi.b      #$b,d2
-    bne.b       L0000c22e
+    bne.b       .L0000c22e
     sub.l       d4,(DAT_00ff0544)
-L0000c22e:
+.L0000c22e:
     move.l      (DAT_00ff0544),d1
     move.w      (DAT_00ff0470),d2
     move.l      #$01000000,d3
@@ -13864,7 +13341,7 @@ L0000c22e:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000c87c
-L0000c268:
+.L0000c268:
     move.w      (DAT_00ff0478),d0
     add.w       d0,(DAT_00ff01a8)
     add.w       d0,(DAT_00ff0002)
@@ -13876,10 +13353,10 @@ L0000c284:
     move.b      #$ff,(DAT_00ff042b)
     rts
 
-L0000c28e:
+scroll_bg1_vertically:
     move.b      (DAT_00ff042c),d0
-    bmi.w       L0000d076
-    beq.w       L0000c39a
+    bmi.w       L0000d076           ; rts
+    beq.w       scroll_up_bg1       ; if d0=0?
 L0000c29c:
     move.w      (DAT_00ff01aa),d0
     move.w      d0,d1
@@ -13892,10 +13369,10 @@ L0000c29c:
     cmp.w       (DAT_00ff0058),d1
     ble.w       L0000c384
 L0000c2c4:
-    andi.b      #$f,d0
+    andi.b      #$0f,d0
     sub.w       (DAT_00ff047c),d0
     andi.b      #$f0,d0
-    beq.w       L0000c368
+    beq.w       .L0000c368
     clr.l       d0
     move.w      (DAT_00ff0470),d0
     sub.l       d0,(DAT_00ff0524)
@@ -13905,19 +13382,19 @@ L0000c2c4:
     lsr.w       #$4,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
-    sub.l       d4,(DAT_00ff053c)
+    sub.l       d4,(bg1_tilemap_address)
     sub.l       d4,(DAT_00ff0544)
     andi.b      #$f,d2
-    bne.b       L0000c322
-    add.l       d3,(DAT_00ff053c)
+    bne.b       .L0000c322
+    add.l       d3,(bg1_tilemap_address)
     add.l       d3,(DAT_00ff0544)
-L0000c322:
+.L0000c322:
     sub.l       d4,(DAT_00ff0540)
     cmpi.b      #$2,d2
-    bne.b       L0000c334
+    bne.b       .L0000c334
     add.l       d3,(DAT_00ff0540)
-L0000c334:
-    move.l      (DAT_00ff053c),d1
+.L0000c334:
+    move.l      (bg1_tilemap_address),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff01a8),d5
@@ -13927,7 +13404,7 @@ L0000c334:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000cb28
-L0000c368:
+.L0000c368:
     lea         (bg1_vscroll_value),a0
     move.w      (DAT_00ff047c),d0
     sub.w       d0,(a0)
@@ -13941,7 +13418,7 @@ L0000c384:
     move.b      #$ff,(DAT_00ff042c)
     rts
 
-L0000c39a:
+scroll_up_bg1:
     move.w      (DAT_00ff01aa),d1
     move.w      d1,d2
     move.w      d1,d3
@@ -13965,7 +13442,7 @@ L0000c3e0:
     andi.b      #$f,d2
     add.w       (DAT_00ff047c),d2
     andi.b      #$f0,d2
-    beq.w       L0000c488
+    beq.w       .L0000c488
     clr.l       d0
     move.w      (DAT_00ff0470),d0
     add.l       d0,(DAT_00ff0524)
@@ -13976,18 +13453,18 @@ L0000c3e0:
     andi.b      #$f,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
-    add.l       d4,(DAT_00ff053c)
+    add.l       d4,(bg1_tilemap_address)
     add.l       d4,(DAT_00ff0544)
     cmpi.b      #$f,d2
-    bne.b       L0000c442
-    sub.l       d3,(DAT_00ff053c)
+    bne.b       .L0000c442
+    sub.l       d3,(bg1_tilemap_address)
     sub.l       d3,(DAT_00ff0544)
-L0000c442:
+.L0000c442:
     add.l       d4,(DAT_00ff0540)
     cmpi.b      #$1,d2
-    bne.b       L0000c454
+    bne.b       .L0000c454
     sub.l       d3,(DAT_00ff0540)
-L0000c454:
+.L0000c454:
     move.l      (DAT_00ff0540),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
@@ -13998,7 +13475,7 @@ L0000c454:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000cb28
-L0000c488:
+.L0000c488:
     lea         (bg1_vscroll_value),a0
     move.w      (DAT_00ff047c),d0
     add.w       d0,(a0)
@@ -14010,44 +13487,45 @@ L0000c4a4:
     add.w       d0,(DAT_00ff0004)
     move.b      #$ff,(DAT_00ff042c)
     rts
-L0000c4ba:
+    
+scroll_bg2_horizontally:
     move.w      (DAT_00ff01a8),d0
     move.w      (DAT_00ff0480),d1
     lsr.w       d1,d0
     sub.w       (DAT_00ff0468),d0
-    beq.w       L0000d076
+    beq.w       L0000d076           ; rts as no change
     bmi.b       .L0000c4de
     move.w      d0,(DAT_00ff047a)
-    bra.w       L0000c5a6
+    bra.w       scroll_right_bg2
 .L0000c4de:
     neg.w       d0
     move.w      d0,(DAT_00ff047a)
-L0000c4e6:
+scroll_left_bg2:
     move.w      (DAT_00ff0468),d0
     andi.b      #$f,d0
     sub.w       (DAT_00ff047a),d0
     andi.b      #$f0,d0
-    beq.w       L0000c588
+    beq.w       .L0000c588
     subq.l      #$2,(DAT_00ff0530)
     subq.l      #$2,(DAT_00ff0538)
     subq.l      #$2,(DAT_00ff0534)
     move.w      (DAT_00ff0468),d2
     lsr.w       #$4,d2
-    move.l      #$00040000,d3
-    move.l      #$00800000,d4
-    sub.l       d3,(DAT_00ff0548)
+    move.l      #$00040000,d3   ;
+    move.l      #$00800000,d4   ; next row in VRAM
+    sub.l       d3,(bg2_tilemap_address)
     sub.l       d3,(DAT_00ff054c)
     andi.b      #$1f,d2
-    bne.b       L0000c542
-    add.l       d4,(DAT_00ff0548)
+    bne.b       .L0000c542
+    add.l       d4,(bg2_tilemap_address)
     add.l       d4,(DAT_00ff054c)
-L0000c542:
+.L0000c542:
     sub.l       d3,(DAT_00ff0550)
     cmpi.b      #$c,d2
-    bne.b       L0000c554
+    bne.b       .L0000c554
     add.l       d4,(DAT_00ff0550)
-L0000c554:
-    move.l      (DAT_00ff0548),d1
+.L0000c554:
+    move.l      (bg2_tilemap_address),d1
     move.w      (DAT_00ff0474),d2
     move.l      #$01000000,d3
     move.w      (bg_hscroll_data_index),d5
@@ -14057,15 +13535,15 @@ L0000c554:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000c87c
-L0000c588:
+.L0000c588:
     move.w      (DAT_00ff047a),d0
     sub.w       d0,(DAT_00ff0468)
     tst.b       (DAT_00ff042e)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     move.w      d0,(bg2_hscroll_value)
     rts
     
-L0000c5a6:
+scroll_right_bg2:
     move.w      (DAT_00ff0468),d2
     andi.b      #$f,d2
     add.w       (DAT_00ff047a),d2
@@ -14079,11 +13557,11 @@ L0000c5a6:
     andi.b      #$1f,d2
     move.l      #$00040000,d3
     move.l      #$00800000,d4
-    add.l       d3,(DAT_00ff0548)
+    add.l       d3,(bg2_tilemap_address)
     add.l       d3,(DAT_00ff054c)
     cmpi.b      #$1f,d2
     bne.b       .L0000c606
-    sub.l       d4,(DAT_00ff0548)
+    sub.l       d4,(bg2_tilemap_address)
     sub.l       d4,(DAT_00ff054c)
 .L0000c606:
     add.l       d3,(DAT_00ff0550)
@@ -14106,24 +13584,24 @@ L0000c5a6:
     move.w      (DAT_00ff047a),d0
     add.w       d0,(DAT_00ff0468)
     tst.b       (DAT_00ff042e)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     neg.w       d0
     move.w      d0,(bg2_hscroll_value)
     rts
     
-L0000c672:
+scroll_bg2_vertically:
     move.w      (DAT_00ff01aa),d0
     move.w      (DAT_00ff0480),d1
     lsr.w       d1,d0
     sub.w       (bg_hscroll_data_index),d0
-    beq.w       L0000d076
-    bmi.b       .L0000c696
-    move.w      d0,(bg2_vscroll_change)
-    bra.w       L0000c75e
-.L0000c696:
+    beq.w       L0000d076           ; rts if d0>>d1 = bg_hscroll_data_index
+    bmi.b       .inverted_vscrolling          ; branch if negative
+    move.w      d0,(bg2_vscroll_change) ; else save d0 to vscroll
+    bra.w       scroll_up_bg2
+.inverted_vscrolling:
     neg.w       d0
-    move.w      d0,(bg2_vscroll_change)
-L0000c69e:
+    move.w      d0,(bg2_vscroll_change) ; save neg d0 to vscroll
+scroll_down_bg2:
     move.w      (bg_hscroll_data_index),d0
     andi.b      #$f,d0
     sub.w       (bg2_vscroll_change),d0
@@ -14139,11 +13617,11 @@ L0000c69e:
     move.l      #$10000000,d3
     move.l      #$01000000,d4
 .L0000c6e4:
-    sub.l       d4,(DAT_00ff0548)
+    sub.l       d4,(bg2_tilemap_address)
     sub.l       d4,(DAT_00ff0550)
     andi.b      #$f,d2
     bne.b       .L0000c702
-    add.l       d3,(DAT_00ff0548)
+    add.l       d3,(bg2_tilemap_address)
     add.l       d3,(DAT_00ff0550)
 .L0000c702:
     sub.l       d4,(DAT_00ff054c)
@@ -14151,7 +13629,7 @@ L0000c69e:
     bne.b       .L0000c714
     add.l       d3,(DAT_00ff054c)
 .L0000c714:
-    move.l      (DAT_00ff0548),d1
+    move.l      (bg2_tilemap_address),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff0468),d5
@@ -14168,7 +13646,7 @@ L0000c69e:
     sub.w       d0,(bg_hscroll_data_index)
     rts
     
-L0000c75e:
+scroll_up_bg2:
     move.w      (bg_hscroll_data_index),d2
     andi.b      #$f,d2
     add.w       (bg2_vscroll_change),d2
@@ -14184,11 +13662,11 @@ L0000c75e:
     andi.b      #$f,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
-    add.l       d4,(DAT_00ff0548)
+    add.l       d4,(bg2_tilemap_address)
     add.l       d4,(DAT_00ff0550)
     cmpi.b      #$f,d2
     bne.b       .L0000c7c6
-    sub.l       d3,(DAT_00ff0548)
+    sub.l       d3,(bg2_tilemap_address)
     sub.l       d3,(DAT_00ff0550)
 .L0000c7c6:
     add.l       d4,(DAT_00ff054c)
@@ -14213,7 +13691,6 @@ L0000c75e:
     add.w       d0,(bg_hscroll_data_index)
     rts
 
-    org $c822
 update_bg1_bg2_hscroll:  ; update 180 lines from bg1 and bg2
     lea         (bg_hscroll_data),a0
     move.w      (bg1_hscroll_value),d0   ; bg1 hscroll value
@@ -14227,35 +13704,35 @@ update_bg1_bg2_hscroll:  ; update 180 lines from bg1 and bg2
         dbf         d7,.L0
     rts
     
-    org $c87c
 L0000c87c:
     tst.b       (DAT_00ff042f)
-    beq.w       L0000d076
-    add.w       d5,d5
-    add.w       d5,d5
-    jmp         (L0000c88e,PC,d5*$1)
+    beq.w       L0000d076           ; rts
+    add.w       d5,d5               ; h scol index
+    add.w       d5,d5               ; point at bra.w insrtructions table
+    jmp         (.braw_table,PC,d5.w)
 
-L0000c88e:
-    bra.w       L0000c8ce
-    bra.w       L0000c8e0
-    bra.w       L0000c8fc
-    bra.w       L0000c922
-    bra.w       L0000c94a
-    bra.w       L0000c972
-    bra.w       L0000c99a
-    bra.w       L0000c9c2
-    bra.w       L0000c9ea
-    bra.w       L0000ca12
-    bra.w       L0000ca3a
-    bra.w       L0000ca62
-    bra.w       L0000ca8a
-    bra.w       L0000cab2
-    bra.w       L0000cada
-    bra.w       L0000cb06
+.braw_table:
+    bra.w       .L10_0
+    bra.w       .Lf_1
+    bra.w       .Le_2
+    bra.w       .Ld_3
+    bra.w       .Lc_4
+    bra.w       .Lb_5
+    bra.w       .La_6
+    bra.w       .L9_7
+    bra.w       .L8_8
+    bra.w       .L7_9
+    bra.w       .L6_a
+    bra.w       .L5_b
+    bra.w       .L4_c
+    bra.w       .L3_d
+    bra.w       .L2_e
+    bra.w       .L1_f
 
 ; TODO add macros
 ; _repeats
-MACRO2 MACRO
+; MACRO3 \1 = _repeats
+MACRO3 MACRO
     inline
     moveq       #(\1-1),d7
     .L0:
@@ -14267,244 +13744,54 @@ MACRO2 MACRO
     einline
     ENDM
 
-L0000c8ce:
-    MACRO2 $10
-    ;moveq       #$f,d7
-    ;.L0000c8d0:
-    ;    move.w      (a0),d0
-    ;    bsr.w       L0000cf9a
-    ;    adda.w      d2,a0
-    ;    add.l       d3,d1
-    ;    dbf         d7,.L0000c8d0
-    rts
-
-L0000c8e0:
-    moveq       #$e,d7
-    .L0000c8e2:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c8e2
+; MACRO4 \1 = _repeats 1, \2 = _repeats 2 + rts if present (optional)
+MACRO4 MACRO
+    MACRO3 \1
     subi.l      #$10000000,d1
+    IF "\2"
+        MACRO3 \2
+        rts
+    ENDIF
+    ENDM
+
+.L10_0:
+    MACRO3 $10
+    rts
+.Lf_1:
+    MACRO4 $f
     move.w      (a0),d0
     bra.w       L0000cf9a
-
-L0000c8fc:
-    moveq       #$d,d7
-    .L0000c8fe:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c8fe
-    subi.l      #$10000000,d1
+.Le_2:
+    MACRO4 $e
     move.w      (a0),d0
     bsr.w       L0000cf9a
     adda.w      d2,a0
     add.l       d3,d1
     move.w      (a0),d0
     bra.w       L0000cf9a
-
-L0000c922:
-    moveq       #$c,d7
-    .L0000c924:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c924
-    subi.l      #$10000000,d1
-    moveq       #$2,d7
-    .L0000c93a:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c93a
-    rts
-
-L0000c94a:
-    moveq       #$b,d7
-    .L0000c94c:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c94c
-    subi.l      #$10000000,d1
-    moveq       #$3,d7
-    .L0000c962:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c962
-    rts
-
-L0000c972:
-    moveq       #$a,d7
-    .L0000c974:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c974
-    subi.l      #$10000000,d1
-    moveq       #$4,d7
-    .L0000c98a:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c98a
-    rts
-
-L0000c99a:
-    moveq       #$9,d7
-    .L0000c99c:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c99c
-    subi.l      #$10000000,d1
-    moveq       #$5,d7
-    .L0000c9b2:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c9b2
-    rts
-
-L0000c9c2:
-    moveq       #$8,d7
-    .L0000c9c4:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c9c4
-    subi.l      #$10000000,d1
-    moveq       #$6,d7
-    .L0000c9da:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c9da
-    rts
-
-L0000c9ea:
-    moveq       #$7,d7
-    .L0000c9ec:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000c9ec
-        subi.l      #$10000000,d1
-    moveq       #$7,d7
-    .L0000ca02:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca02
-    rts
-
-L0000ca12:
-    moveq       #$6,d7
-    .L0000ca14:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca14
-        subi.l      #$10000000,d1
-    moveq       #$8,d7
-    .L0000ca2a:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca2a
-    rts
-
-L0000ca3a:
-    moveq       #$5,d7
-    .L0000ca3c:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca3c
-        subi.l      #$10000000,d1
-    moveq       #$9,d7
-    .L0000ca52:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca52
-    rts
-
-L0000ca62:
-    moveq       #$4,d7
-    .L0000ca64:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca64
-        subi.l      #$10000000,d1
-    moveq       #$a,d7
-    .L0000ca7a:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca7a
-    rts
-
-L0000ca8a:
-    moveq       #$3,d7
-    .L0000ca8c:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000ca8c
-    subi.l      #$10000000,d1
-    moveq       #$b,d7
-    .L0000caa2:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000caa2
-    rts
-
-L0000cab2:
-    moveq       #$2,d7
-    .L0000cab4:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000cab4
-    subi.l      #$10000000,d1
-    moveq       #$c,d7
-    .L0000caca:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000caca
-    rts
-
-L0000cada:
+.Ld_3:
+    MACRO4 $d,$3
+.Lc_4:
+    MACRO4 $c,$4
+.Lb_5:
+    MACRO4 $b,$5
+.La_6:
+    MACRO4 $a,$6
+.L9_7:
+    MACRO4 $9,$7
+.L8_8:
+    MACRO4 $8,$8
+.L7_9:
+    MACRO4 $7,$9
+.L6_a:
+    MACRO4 $6,$a
+.L5_b:
+    MACRO4 $5,$b
+.L4_c:
+    MACRO4 $4,$c
+.L3_d:
+    MACRO4 $3,$d
+.L2_e:
     move.w      (a0),d0
     bsr.w       L0000cf9a
     adda.w      d2,a0
@@ -14514,73 +13801,61 @@ L0000cada:
     adda.w      d2,a0
     add.l       d3,d1
     subi.l      #$10000000,d1
-    moveq       #$d,d7
-    .L0000caf6:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000caf6
+    MACRO3 $e
     rts
-
-L0000cb06:
+.L1_f:
     move.w      (a0),d0
     bsr.w       L0000cf9a
     adda.w      d2,a0
     add.l       d3,d1
     subi.l      #$10000000,d1
-    moveq       #$e,d7
-    .L0000cb18:
-        move.w      (a0),d0
-        bsr.w       L0000cf9a
-        adda.w      d2,a0
-        add.l       d3,d1
-        dbf         d7,.L0000cb18
+    MACRO3 $f
     rts
 
+; a1=(VDP_CTRL), a2=(VDP_DATA), a0=(DAT_00ff0524) ,d1=(bg1_tilemap_address)
+; d3=$40000, d4=$800000, d5=(DAT_00ff01a8) (max $1f), d6=(DAT_00ff01aa) (max $1f)
 L0000cb28:
     tst.b       (DAT_00ff042f)
-    beq.w       L0000d076
+    beq.w       L0000d076           ; rts
     add.w       d5,d5
     add.w       d5,d5
-    jmp         (L0000cb3a,PC,d5*$1)
+    jmp         (.braw_table,PC,d5.w)
 
-    org $cb3a
-L0000cb3a:
-    bra.w       L0000cbba
-    bra.w       L0000cbca
-    bra.w       L0000cbe0
-    bra.w       L0000cbfe
-    bra.w       L0000cc1e
-    bra.w       L0000cc3e
-    bra.w       L0000cc5e
-    bra.w       L0000cc7e
-    bra.w       L0000cc9e
-    bra.w       L0000ccbe
-    bra.w       L0000ccde
-    bra.w       L0000ccfe
-    bra.w       L0000cd1e
-    bra.w       L0000cd3e
-    bra.w       L0000cd5e
-    bra.w       L0000cd7e
-    bra.w       L0000cd9e
-    bra.w       L0000cdbe
-    bra.w       L0000cdde
-    bra.w       L0000cdfe
-    bra.w       L0000ce1e
-    bra.w       L0000ce3e
-    bra.w       L0000ce5e
-    bra.w       L0000ce7e
-    bra.w       L0000ce9e
-    bra.w       L0000cebe
-    bra.w       L0000cede
-    bra.w       L0000cefe
-    bra.w       L0000cf1e
-    bra.w       L0000cf3e
-    bra.w       L0000cf5e
-    bra.w       L0000cf80
+.braw_table:
+    bra.w       .L20_0
+    bra.w       .L1f_1
+    bra.w       .L1e_2
+    bra.w       .L1d_3
+    bra.w       .L1c_4
+    bra.w       .L1b_5
+    bra.w       .L1a_6
+    bra.w       .L19_7
+    bra.w       .L18_8
+    bra.w       .L17_9
+    bra.w       .L16_a
+    bra.w       .L15_b
+    bra.w       .L14_c
+    bra.w       .L13_d
+    bra.w       .L12_e
+    bra.w       .L11_f
+    bra.w       .L10_10
+    bra.w       .Lf_11
+    bra.w       .Le_12
+    bra.w       .Ld_13
+    bra.w       .Lc_14
+    bra.w       .Lb_15
+    bra.w       .La_16
+    bra.w       .L9_17
+    bra.w       .L8_18
+    bra.w       .L7_19
+    bra.w       .L6_1a
+    bra.w       .L5_1b
+    bra.w       .L4_1c
+    bra.w       .L3_1d
+    bra.w       .L2_1e
+    bra.w       .L1_1f
 
-; _repeats
+; MACRO1 \1 = _repeats
 MACRO1 MACRO
     inline
     moveq       #(\1-1),d7
@@ -14592,471 +13867,87 @@ MACRO1 MACRO
     einline
     ENDM
 
-L0000cbba:
+; MACRO1 \1 = _repeats 1, \2 = _repeats 2 (optional)
+MACRO2 MACRO
+    MACRO1 \1
+    sub.l       d4,d1
+    IF "\2"
+        MACRO1 \2
+        rts
+    ENDIF
+    ENDM
+
+; d3=?, d4=?
+.L20_0:
     MACRO1 $20
-
-    ;moveq       #$1f,d7
-    ;.L0000cbbc:
-    ;    move.w      (a0)+,d0
-    ;    bsr.w       L0000cf9a
-    ;    add.l       d3,d1
-    ;    dbf         d7,.L0000cbbc
     rts
-
-L0000cbca:
-    moveq       #$1e,d7
-    .L0000cbcc:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cbcc
-    sub.l       d4,d1
+.L1f_1:
+    MACRO2 $1f
     move.w      (a0)+,d0
     bra.w       L0000cf9a
 
-L0000cbe0:
-    moveq       #$1d,d7
-    .L0000cbe2:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cbe2
-    sub.l       d4,d1
+.L1e_2:
+    MACRO2 $1e
     move.w      (a0)+,d0
     bsr.w       L0000cf9a
     add.l       d3,d1
     move.w      (a0)+,d0
     bra.w       L0000cf9a
-
-L0000cbfe:
-    moveq       #$1c,d7
-    .L0000cc00:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc00
-    sub.l       d4,d1
-    moveq       #$2,d7
-    .L0000cc10:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc10
-    rts
-L0000cc1e:
-    moveq       #$1b,d7
-    .L0000cc20:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc20
-    sub.l       d4,d1
-    moveq       #$3,d7
-    .L0000cc30:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc30
-    rts
-
-L0000cc3e:
-    moveq       #$1a,d7
-    .L0000cc40:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc40
-    sub.l       d4,d1
-    moveq       #$4,d7
-    .L0000cc50:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc50
-    rts
-
-L0000cc5e:
-    moveq       #$19,d7
-    .L0000cc60:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc60
-    sub.l       d4,d1
-    moveq       #$5,d7
-    .L0000cc70:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc70
-    rts
-
-L0000cc7e:
-    moveq       #$18,d7
-    .L0000cc80:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc80
-    sub.l       d4,d1
-    moveq       #$6,d7
-    .L0000cc90:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cc90
-    rts
-
-L0000cc9e:
-    moveq       #$17,d7
-    .L0000cca0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cca0
-    sub.l       d4,d1
-    moveq       #$7,d7
-    .L0000ccb0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ccb0
-    rts
-
-L0000ccbe:
-    moveq       #$16,d7
-    .L0000ccc0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ccc0
-    sub.l       d4,d1
-    moveq       #$8,d7
-    .L0000ccd0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ccd0
-    rts
-L0000ccde:
-    moveq       #$15,d7
-    .L0000cce0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cce0
-    sub.l       d4,d1
-    moveq       #$9,d7
-    .L0000ccf0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ccf0
-    rts
-
-L0000ccfe:
-    moveq       #$14,d7
-    .L0000cd00:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd00
-    sub.l       d4,d1
-    moveq       #$a,d7
-    .L0000cd10:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd10
-    rts
-
-L0000cd1e:
-    moveq       #$13,d7
-    .L0000cd20:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd20
-    sub.l       d4,d1
-    moveq       #$b,d7
-    .L0000cd30:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd30
-    rts
-
-L0000cd3e:
-    moveq       #$12,d7
-    .L0000cd40:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd40
-    sub.l       d4,d1
-    moveq       #$c,d7
-    .L0000cd50:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd50
-    rts
-
-L0000cd5e:
-    moveq       #$11,d7
-    .L0000cd60:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd60
-    sub.l       d4,d1
-    moveq       #$d,d7
-    .L0000cd70:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd70
-    rts
-
-L0000cd7e:
-    moveq       #$10,d7
-    .L0000cd80:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd80
-    sub.l       d4,d1
-    moveq       #$e,d7
-    .L0000cd90:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cd90
-    rts
-
-L0000cd9e:
-    moveq       #$f,d7
-    .L0000cda0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cda0
-    sub.l       d4,d1
-    moveq       #$f,d7
-    .L0000cdb0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cdb0
-    rts
-L0000cdbe:
-    moveq       #$e,d7
-    .L0000cdc0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cdc0
-    sub.l       d4,d1
-    moveq       #$10,d7
-    .L0000cdd0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cdd0
-    rts
-
-L0000cdde:
-    moveq       #$d,d7
-    .L0000cde0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cde0
-    sub.l       d4,d1
-    moveq       #$11,d7
-    .L0000cdf0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cdf0
-    rts
-
-L0000cdfe:
-    moveq       #$c,d7
-    .L0000ce00:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce00
-    sub.l       d4,d1
-    moveq       #$12,d7
-    .L0000ce10:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce10
-    rts
-
-L0000ce1e:
-    moveq       #$b,d7
-    .L0000ce20:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce20
-    sub.l       d4,d1
-    moveq       #$13,d7
-    .L0000ce30:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce30
-    rts
-
-L0000ce3e:
-    moveq       #$a,d7
-    .L0000ce40:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce40
-    sub.l       d4,d1
-    moveq       #$14,d7
-    .L0000ce50:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce50
-    rts
-
-L0000ce5e:
-    moveq       #$9,d7
-    .L0000ce60:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce60
-    sub.l       d4,d1
-    moveq       #$15,d7
-    .L0000ce70:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce70
-    rts
-
-L0000ce7e:
-    moveq       #$8,d7
-    .L0000ce80:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce80
-    sub.l       d4,d1
-    moveq       #$16,d7
-    .L0000ce90:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ce90
-    rts
-
-L0000ce9e:
-    moveq       #$7,d7
-    .L0000cea0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cea0
-    sub.l       d4,d1
-    moveq       #$17,d7
-    .L0000ceb0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ceb0
-    rts
-
-L0000cebe:
-    moveq       #$6,d7
-    .L0000cec0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cec0
-    sub.l       d4,d1
-    moveq       #$18,d7
-    .L0000ced0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000ced0
-    rts
-
-L0000cede:
-    moveq       #$5,d7
-    .L0000cee0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cee0
-    sub.l       d4,d1
-    moveq       #$19,d7
-    .L0000cef0:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cef0
-    rts
-
-L0000cefe:
-    moveq       #$4,d7
-    .L0000cf00:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf00
-    sub.l       d4,d1
-    moveq       #$1a,d7
-    .L0000cf10:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf10
-    rts
-
-L0000cf1e:
-    moveq       #$3,d7
-    .L0000cf20:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf20
-    sub.l       d4,d1
-    moveq       #$1b,d7
-    .L0000cf30:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf30
-    rts
-L0000cf3e:
-    moveq       #$2,d7
-    .L0000cf40:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf40
-    sub.l       d4,d1
-    moveq       #$1c,d7
-    .L0000cf50:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf50
-    rts
-
-L0000cf5e:
+.L1d_3:
+    MACRO2 $1d,$3
+.L1c_4:
+    MACRO2 $1c,$4
+.L1b_5:
+    MACRO2 $1b,$5
+.L1a_6:
+    MACRO2 $1a,$6
+.L19_7:
+    MACRO2 $19,$7
+.L18_8:
+    MACRO2 $18,$8
+.L17_9:
+    MACRO2 $17,$9
+.L16_a:
+    MACRO2 $16,$a
+.L15_b:
+    MACRO2 $15,$b
+.L14_c:
+    MACRO2 $14,$c
+.L13_d:
+    MACRO2 $13,$d
+.L12_e:
+    MACRO2 $12,$e
+.L11_f:
+    MACRO2 $11,$f
+.L10_10:
+    MACRO2 $10,$10
+.Lf_11:
+    MACRO2 $f,$11
+.Le_12:
+    MACRO2 $e,$12
+.Ld_13:
+    MACRO2 $d,$13
+.Lc_14:
+    MACRO2 $c,$14
+.Lb_15:
+    MACRO2 $b,$15
+.La_16:
+    MACRO2 $a,$16
+.L9_17:
+    MACRO2 $9,$17
+.L8_18:
+    MACRO2 $8,$18
+.L7_19:
+    MACRO2 $7,$19
+.L6_1a:
+    MACRO2 $6,$1a
+.L5_1b:
+    MACRO2 $5,$1b
+.L4_1c:
+    MACRO2 $4,$1c
+.L3_1d:
+    MACRO2 $3,$1d
+.L2_1e:
     move.w      (a0)+,d0
     bsr.w       L0000cf9a
     add.l       d3,d1
@@ -15064,36 +13955,24 @@ L0000cf5e:
     bsr.w       L0000cf9a
     add.l       d3,d1
     sub.l       d4,d1
-    moveq       #$1d,d7
-    .L0000cf72:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf72
+    MACRO1 $1e
     rts
-
-L0000cf80:
+.L1_1f:
     move.w      (a0)+,d0
     bsr.w       L0000cf9a
     add.l       d3,d1
     sub.l       d4,d1
-    moveq       #$1e,d7
-    .L0000cf8c:
-        move.w      (a0)+,d0
-        bsr.w       L0000cf9a
-        add.l       d3,d1
-        dbf         d7,.L0000cf8c
+    MACRO1 $1f
     rts
 
-    org $cf9a
-L0000cf9a:
+L0000cf9a:  ; d0=index
     move        #$2700,SR
     move.l      d1,-(SP)
     movea.l     (DAT_00ff0554),a6
     move.w      d0,d6
     andi.w      #$07fc,d6
-    add.w       d6,d6
-    adda.w      d6,a6
+    add.w       d6,d6   ; to point at 8 byte ojects (sprites?)
+    adda.w      d6,a6   ; add offset to table   +$ff8 max
     move.l      d1,(a1)
     andi.w      #$0003,d0
     beq.b       .L0000cff4
@@ -15119,9 +13998,8 @@ L0000cf9a:
     move.l      (SP)+,d1
     move        #$2300,SR
     rts
-
 .L0000cff4:
-    move.w      #$400,d6
+    move.w      #$0400,d6
     move.w      (a6)+,d0
     eor.w       d6,d0
     move.w      d0,(a2)
@@ -15139,9 +14017,8 @@ L0000cf9a:
     move.l      (SP)+,d1
     move        #$2300,SR
     rts
-
 .L0000d01c:
-    move.w      #$c00,d6
+    move.w      #$0c00,d6
     move.w      ($2,a6),d0
     eor.w       d6,d0
     move.w      d0,(a2)
@@ -15159,7 +14036,6 @@ L0000cf9a:
     move.l      (SP)+,d1
     move        #$2300,SR
     rts
-
 .L0000d04a:
     move.w      #$1400,d6
     move.w      ($4,a6),d0
@@ -15181,7 +14057,7 @@ L0000cf9a:
 L0000d076:
     rts
 
-L0000d078:
+update_hscroll_dma_data_src_ptr:
     move.w      (bg_hscroll_data_index),d0   ; load offset
     add.w       d0,d0               ; x2
     add.w       d0,d0               ; x2    to point  at longwords
@@ -15195,9 +14071,9 @@ L0000d092:
     move.w      (DAT_00ff0016),d0
     add.w       d0,d0
     add.w       d0,d0
-    jmp         (L0000d0a4,PC,d0*$1)
+    jmp         (.jmp_table,PC,d0.w)
 
-L0000d0a4:
+.jmp_table:
     bra.w       L0000d1ba
     bra.w       L0000d1da
     bra.w       L0000d3e4
@@ -15224,12 +14100,12 @@ L0000d0a4:
 
 L0000d100:
     tst.b       (DAT_00ff0012)
-    beq.w       L0000d076
+    beq.w       L0000d076           ; rts
     move.w      (DAT_00ff001a),d0
     cmpi.w      #$19,d0
     bcc.w       .L0000d120
     cmpi.w      #$a,d0
-    bcc.w       L0000d076
+    bcc.w       L0000d076           ; rts
 .L0000d120:
     move.w      (DAT_00ff0004),d1
     sub.w       (DAT_00ff01aa),d1
@@ -15237,7 +14113,7 @@ L0000d100:
     beq.w       .L0000d1a8
     bge.b       .L0000d168
     move.w      (DAT_00ff01aa),d0
-    beq.w       L0000d076
+    beq.w       L0000d076           ; rts
     move.w      (DAT_00ff0004),-(SP)
     move.w      (DAT_00ff047c),-(SP)
     move.w      #$1,(DAT_00ff047c)
@@ -15262,40 +14138,40 @@ L0000d100:
     rts
 .L0000d1a8:
     tst.b       (DAT_00ff0012)
-    bmi.w       L0000d076
+    bmi.w       L0000d076           ; rts
     clr.b       (DAT_00ff0012)
     rts
 
 L0000d1ba:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c28e
-    bsr.w       L0000c4ba
-    bsr.w       L0000c672
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg1_vertically
+    bsr.w       scroll_bg2_horizontally
+    bsr.w       scroll_bg2_vertically
     bra.w       update_bg1_bg2_hscroll
 
 L0000d1da:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c28e
-    bsr.w       L0000c672
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg1_vertically
+    bsr.w       scroll_bg2_vertically
     bsr.w       update_bg1_bg2_hscroll
-    subq.w      #$1,(DAT_00ff0dd4)
+    subq.w      #$1,(DAT_00ff0dc0+$14)      ; ?? It only gets set below so why is decremented first
     bne.w       .L0000d286
-    lea         (DAT_00ff0dd2),a2
+    lea         (DAT_00ff0dc0+$12),a2
     addq.w      #$1,(a2)
     move.w      (a2),d0
     andi.w      #$1f,d0
     lea         (L00013d80),a0
-    move.b      ($0,a0,d0*$1),d1
+    move.b      ($0,a0,d0.w),d1
     ext.w       d1
     move.w      d1,d0
     bpl.b       .L0000d220
     neg.w       d1
 .L0000d220:
-    move.w      d1,(DAT_00ff0dd4)
+    move.w      d1,(DAT_00ff0dc0+$14)
     rol.w       #$1,d0
     andi.w      #$1,d0
     beq.b       .L0000d25c
@@ -15318,30 +14194,22 @@ L0000d1da:
     move.w      (SP)+,(DAT_00ff0004)
 .L0000d286:
     moveq       #-$1,d0
-    subq.w      #$1,(DAT_00ff0dd0)
+    subq.w      #$1,(DAT_00ff0dc0+$10)
     bne.b       .L0000d2bc
-    move.w      #$80,(DAT_00ff0dd0)
-    lea         (DAT_00ff0a42),a1
+    move.w      #$80,(DAT_00ff0dc0+$10)
+    lea         (bg_hscroll_data+$282),a1
     moveq       #$7,d7
     .L0000d2a0:
+    REPT 6
         add.w       d0,(a1)+
         addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
+    ENDR
         dbf         d7,.L0000d2a0
 .L0000d2bc:
-    subq.w      #$1,(DAT_00ff0dce)
+    subq.w      #$1,(DAT_00ff0dc0+$e)
     bne.b       .L0000d2dc
-    move.w      #$40,(DAT_00ff0dce)
-    lea         (DAT_00ff0b02),a1
+    move.w      #$40,(DAT_00ff0dc0+$e)
+    lea         (bg_hscroll_data+$342),a1
     moveq       #$7,d7
     .L0000d2d4:
         add.w       d0,(a1)+
@@ -15351,37 +14219,37 @@ L0000d1da:
     subq.w      #$1,(DAT_00ff0dc0)
     bne.b       .L0000d2fc
     move.w      #$0020,(DAT_00ff0dc0)
-    lea         (DAT_00ff0b22),a1
+    lea         (bg_hscroll_data+$362),a1
     moveq       #$7,d7
     .L0000d2f4:
         add.w       d0,(a1)+
         addq.w      #$2,a1
         dbf         d7,.L0000d2f4
 .L0000d2fc:
-    subq.w      #$1,(DAT_00ff0dc2)
+    subq.w      #$1,(DAT_00ff0dc0+$2)
     bne.b       .L0000d31c
-    move.w      #$10,(DAT_00ff0dc2)
-    lea         (DAT_00ff0b42),a1
+    move.w      #$10,(DAT_00ff0dc0+$2)
+    lea         (bg_hscroll_data+$382),a1
     moveq       #$7,d7
     .L0000d314:
         add.w       d0,(a1)+
         addq.w      #$2,a1
         dbf         d7,.L0000d314
 .L0000d31c:
-    subq.w      #$1,(DAT_00ff0dc4)
+    subq.w      #$1,(DAT_00ff0dc0+$4)
     bne.b       .L0000d33c
-    move.w      #$8,(DAT_00ff0dc4)
-    lea         (DAT_00ff0b62),a1
+    move.w      #$8,(DAT_00ff0dc0+$4)
+    lea         (bg_hscroll_data+$3a2),a1
     moveq       #$7,d7
     .L0000d334:
         add.w       d0,(a1)+
         addq.w      #$2,a1
         dbf         d7,.L0000d334
 .L0000d33c:
-    subq.w      #$1,(DAT_00ff0dc6)
+    subq.w      #$1,(DAT_00ff0dc0+$6)
     bne.b       .L0000d360
-    move.w      #$4,(DAT_00ff0dc6)
-    lea         (DAT_00ff0b82),a1
+    move.w      #$4,(DAT_00ff0dc0+$6)
+    lea         (bg_hscroll_data+$3c2),a1
     moveq       #$7,d7
     .L0000d354:
         add.w       d0,(a1)+
@@ -15390,59 +14258,51 @@ L0000d1da:
         addq.w      #$2,a1
         dbf         d7,.L0000d354
 .L0000d360:
-    subq.w      #$1,(DAT_00ff0dc8)
+    subq.w      #$1,(DAT_00ff0dc0+$8)
     bne.b       .L0000d388
-    move.w      #$2,(DAT_00ff0dc8)
-    lea         (DAT_00ff0bc2),a1
+    move.w      #$2,(DAT_00ff0dc0+$8)
+    lea         (bg_hscroll_data+$402),a1
     moveq       #$7,d7
     .L0000d378:
+    REPT 3
         add.w       d0,(a1)+
         addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
+    ENDR
         dbf         d7,.L0000d378
 .L0000d388:
-    subq.w      #$1,(DAT_00ff0dca)
+    subq.w      #$1,(DAT_00ff0dc0+$a)
     bne.b       .L0000d3b0
-    move.w      #$1,(DAT_00ff0dca)
-    lea         (DAT_00ff0c22),a1
+    move.w      #$1,(DAT_00ff0dc0+$a)
+    lea         (bg_hscroll_data+$462),a1
     moveq       #$7,d7
     .L0000d3a0:
+    REPT 3
         add.w       d0,(a1)+
         addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
+    ENDR
         dbf         d7,.L0000d3a0
 .L0000d3b0:
-    subq.w      #$1,(DAT_00ff0dcc)
-    bne.w       L0000d078
-    move.w      #$1,(DAT_00ff0dcc)
-    lea         (DAT_00ff0c82),a1
+    subq.w      #$1,(DAT_00ff0dc0+$c)
+    bne.w       update_hscroll_dma_data_src_ptr
+    move.w      #$1,(DAT_00ff0dc0+$c)
+    lea         (bg_hscroll_data+$4c2),a1
     moveq       #-$2,d0
     moveq       #$7,d7
     .L0000d3cc:
+    REPT 4
         add.w       d0,(a1)+
         addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
-        add.w       d0,(a1)+
-        addq.w      #$2,a1
+    ENDR
         dbf         d7,.L0000d3cc
-    bra.w       L0000d078
+    bra.w       update_hscroll_dma_data_src_ptr
 
 L0000d3e4:
     bsr.w       L0000d1ba
     tst.b       (DAT_00ff001f)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     subq.w      #$1,(DAT_00ff04d2)
-    bne.w       L0000d076
-    move.w      #$6,(DAT_00ff04d2)
+    bne.w       L0000d076           ; rts
+    move.w      #$0006,(DAT_00ff04d2)
     movea.l     (DAT_00ff0594),a0
     move.w      (a0)+,d0
     bpl.b       .L0000d416
@@ -15457,10 +14317,10 @@ L0000d3e4:
 L0000d42a:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c28e
-    bsr.w       L0000c4ba
-    bsr.w       L0000c672
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg1_vertically
+    bsr.w       scroll_bg2_horizontally
+    bsr.w       scroll_bg2_vertically
     move.b      (level_id),d0
     cmpi.b      #$3,d0
     bne.w       .L0000d510
@@ -15509,17 +14369,17 @@ L0000d42a:
     move.b      #$7,(vram_to_vram_type)   ; will do all 3 DMA transfer types
 .L0000d510:
     lea         (L00013d40),a0
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$7,d0
     bne.w       .L0000d550
-    lea         (DAT_00ff0d20),a1
-    lea         (DAT_00ff0eb0),a2
+    lea         (bg_hscroll_data+$560),a1
+    lea         (DAT_00ff0dc0+$f0),a2
     move.w      #$27,d7
     .L0000d534:
         addi.w      #$8,(a2)
         move.w      (a2)+,d0
         andi.w      #$3f,d0
-        move.b      ($0,a0,d0*$1),d1
+        move.b      ($0,a0,d0.w),d1
         ext.w       d1
         asr.w       #$3,d1
         subq.w      #$3,d1
@@ -15532,7 +14392,7 @@ L0000d42a:
     move.b      (level_id),d1
     cmpi.b      #$3,d1
     beq.b       .L0000d570
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$1,d1
     bne.b       .L0000d572
 .L0000d570:
@@ -15540,35 +14400,35 @@ L0000d42a:
 .L0000d572:
     move.b      (DAT_00ff042b),d1
     bmi.w       .L0000d6b0
-    subq.w      #$1,(DAT_00ff0e00)
+    subq.w      #$1,(DAT_00ff0dc0+$40)
     bne.b       .L0000d5b0
-    move.w      #$9,(DAT_00ff0e00)
-    lea         (DAT_00ff0ac2),a1
+    move.w      #$0009,(DAT_00ff0dc0+$40)  ; reload value
+    lea         (bg_hscroll_data+$302),a1
     REPT 7
         add.w       d0,(a1)+
         addq.w      #$2,a1
     ENDR
     add.w       d0,(a1)+
 .L0000d5b0:
-    subq.w      #$1,(DAT_00ff0e02)
+    subq.w      #$1,(DAT_00ff0dc0+$42)
     bne.b       .L0000d5e4
-    move.w      #$5,(DAT_00ff0e02)
-    lea         (DAT_00ff0ae2),a1
+    move.w      #$0005,(DAT_00ff0dc0+$42)  ; reload value
+    lea         (bg_hscroll_data+$322),a1
     REPT 7
         add.w       d0,(a1)+
         addq.w      #$2,a1
     ENDR
     add.w       d0,(a1)+
 .L0000d5e4:
-    lea         (DAT_00ff0a80),a1
+    lea         (bg_hscroll_data+$2c0),a1
     moveq       #$7,d7
-    .L0000d5ec:  ; TODO
+    .L0000d5ec:
         REPT 21
             add.w       d6,(a1)+
             addq.w      #$2,a1
         ENDR
         dbf         d7,.L0000d5ec
-    lea         (DAT_00ff0c82),a1
+    lea         (bg_hscroll_data+$4c2),a1
     moveq       #$7,d7
     .L0000d64c:
         REPT 10
@@ -15588,16 +14448,16 @@ L0000d42a:
     move.w      (DAT_00ff00be),d2
     add.w       d2,d0
     add.w       d2,d6
-    bsr.w       L0000d6d0
+    bsr.w       .L0000d6d0
     bsr.w       L0000d75c
     lsr.w       #$1,d2
     sub.w       d2,d0
     sub.w       d2,d6
-    bsr.w       L0000d6f2
-    bra.w       L0000d078
+    bsr.w       .L0000d6f2
+    bra.w       update_hscroll_dma_data_src_ptr
 
-L0000d6d0:
-    lea         (DAT_00ff0d20),a1
+.L0000d6d0:
+    lea         (bg_hscroll_data+$560),a1
     moveq       #$7,d7
     .L0000d6d8:
         REPT 5
@@ -15607,19 +14467,19 @@ L0000d6d0:
         dbf         d7,.L0000d6d8
     rts
 
-L0000d6f2:
-    move.b      (DAT_00ff000f),d1
+.L0000d6f2:
+    move.b      (vblank_counter),d1
     addq.b      #$2,d1
     andi.b      #$3,d1
     bne.b       L0000d730
-    lea         (DAT_00ff0b02),a1
-    lea         (DAT_00ff0e74),a2
+    lea         (bg_hscroll_data+$342),a1
+    lea         (DAT_00ff0dc0+$b4),a2
     move.w      #$2f,d7
     .L0000d710:
         addi.w      #$e,(a2)
         move.w      (a2)+,d1
         andi.w      #$3f,d1
-        move.b      ($0,a0,d1*$1),d1
+        move.b      ($0,a0,d1.w),d1
         ext.w       d1
         asr.w       #$8,d1
         add.w       d0,d1
@@ -15631,8 +14491,8 @@ L0000d6f2:
 
 L0000d730:
     tst.w       d0
-    beq.w       L0000d076
-    lea         (DAT_00ff0b02),a1
+    beq.w       L0000d076           ; rts
+    lea         (bg_hscroll_data+$342),a1
     moveq       #$7,d7
     .L0000d73e:
         REPT 6
@@ -15643,18 +14503,18 @@ L0000d730:
     rts
 
 L0000d75c:
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     addq.b      #$1,d1
     andi.b      #$7,d1
     bne.b       L0000d798
-    lea         (DAT_00ff0bc2),a1
-    lea         (DAT_00ff0e10),a2
+    lea         (bg_hscroll_data+$402),a1
+    lea         (DAT_00ff0dc0+$50),a2
     move.w      #$2f,d7
     .L0000d77a:
         addq.w      #$5,(a2)
         move.w      (a2)+,d1
         andi.w      #$3f,d1
-        move.b      ($0,a0,d1*$1),d1
+        move.b      ($0,a0,d1.w),d1
         ext.w       d1
         asr.w       #$4,d1
         add.w       d0,d1
@@ -15666,8 +14526,8 @@ L0000d75c:
 
 L0000d798:
     tst.w       d0
-    beq.w       L0000d076
-    lea         (DAT_00ff0bc2),a1
+    beq.w       L0000d076           ; rts
+    lea         (bg_hscroll_data+$402),a1
     moveq       #$7,d7
     .L0000d7a6:
         REPT 6
@@ -15680,30 +14540,20 @@ L0000d798:
 L0000d7c4:
     bsr.w       L0000d1ba
     tst.b       (DAT_00ff001f)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     subq.w      #$1,(DAT_00ff04d2)
     bne.b       L0000d830
-    move.w      #$4,(DAT_00ff04d2)
+    move.w      #$0004,(DAT_00ff04d2)
 L0000d7e2:
     movea.l     (DAT_00ff0594),a0
     lea         (palettes_0),a1
     lea         (palettes_4),a2
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
+    REPT 4
+        move.w      (a0)+,d0
+        move.w      (a0)+,d1
+        move.w      d1,($0,a1,d0.w)
+        move.w      d1,($0,a2,d0.w)
+    ENDR
     tst.w       (a0)+
     beq.b       .L0000d82a
     movea.l     (a0),a0
@@ -15711,7 +14561,7 @@ L0000d7e2:
     move.l      a0,(DAT_00ff0594)
 L0000d830:
     subq.w      #$1,(DAT_00ff0494)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     movea.l     (DAT_00ff0518),a0
     move.w      (a0)+,d0
     bne.b       .L0000d84c
@@ -15723,21 +14573,21 @@ L0000d830:
     move.w      d0,(DAT_00ff0482)
     move.w      #$ba20,(DAT_00ff0482+2)
     move.w      #$0120,(DAT_00ff0482+4)
-    move.b      #$1,(vram_to_vram_type)   ; will do type1 DMA transfer
+    move.b      #$01,(vram_to_vram_type)   ; will do type1 DMA transfer
     rts
 
 L0000d878:
     bsr.w       L0000d1ba
     tst.b       (DAT_00ff001f)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     subq.w      #$1,(DAT_00ff04d2)
     bne.b       L0000d830
-    move.w      #$8,(DAT_00ff04d2)
+    move.w      #$0008,(DAT_00ff04d2)
     bra.w       L0000d7e2
 
 L0000d89a:
     move.w      (DAT_00ff001a),d0
-    cmpi.w      #$f,d0
+    cmpi.w      #$000f,d0
     bne.b       .L0000d8b4
     move.w      (DAT_00ff047c),d0
     lsr.w       #$1,d0
@@ -15745,29 +14595,29 @@ L0000d89a:
 .L0000d8b4:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    move.w      #$2,(DAT_00ff0478)
-    bsr.w       L0000c1ae
-    bsr.w       L0000c28e
-    move.w      #$1,(DAT_00ff047a)
-    bsr.w       L0000c5a6
-    bsr.w       L0000c672
+    move.w      #$0002,(DAT_00ff0478)
+    bsr.w       scroll_right_bg1
+    bsr.w       scroll_bg1_vertically
+    move.w      #$0001,(DAT_00ff047a)
+    bsr.w       scroll_right_bg2
+    bsr.w       scroll_bg2_vertically
     move.w      (bg2_hscroll_value),d0
     sub.w       d0,(DAT_00ff0090)
     moveq       #-$1,d0
-    subq.w      #$1,(DAT_00ff0e00)
+    subq.w      #$1,(DAT_00ff0dc0+$40)
     bne.b       .L0000d922
-    move.w      #$9,(DAT_00ff0e00)
-    lea         (DAT_00ff0ac2),a1
+    move.w      #$0009,(DAT_00ff0dc0+$40)
+    lea         (bg_hscroll_data+$302),a1
     REPT 7
         add.w       d0,(a1)+
         addq.w      #$2,a1
     ENDR
     add.w       d0,(a1)+
 .L0000d922:
-    subq.w      #$1,(DAT_00ff0e02)
+    subq.w      #$1,(DAT_00ff0dc0+$42)
     bne.b       .L0000d956
-    move.w      #$5,(DAT_00ff0e02)
-    lea         (DAT_00ff0ae2),a1
+    move.w      #$0005,(DAT_00ff0dc0+$42)
+    lea         (bg_hscroll_data+$322),a1
     REPT 7
         add.w       d0,(a1)+
         addq.w      #$2,a1
@@ -15783,7 +14633,7 @@ L0000d89a:
         ENDR
         dbf         d7,.add_d0
     add.w       d0,d0
-    lea         (DAT_00ff0a80),a1
+    lea         (bg_hscroll_data+$2c0),a1
     moveq       #$f,d7
     .L0000d998:
         REPT 10
@@ -15791,15 +14641,15 @@ L0000d89a:
             addq.w      #$2,a1
         ENDR
         dbf         d7,.L0000d998
-    bra.w       L0000d078
+    bra.w       update_hscroll_dma_data_src_ptr
 
 L0000d9c8:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    move.w      #$1,(DAT_00ff047a)
-    move.w      #$1,(bg2_vscroll_change)
-    bsr.w       L0000c4e6
-    bsr.w       L0000c75e
+    move.w      #$0001,(DAT_00ff047a)
+    move.w      #$0001,(bg2_vscroll_change)
+    bsr.w       scroll_left_bg2
+    bsr.w       scroll_up_bg2
     move.w      (bg2_hscroll_value),d0
     add.w       d0,(DAT_00ff0090)
     subq.w      #$1,(DAT_00ff0092)
@@ -15808,7 +14658,7 @@ L0000d9c8:
 L0000da02:
     bsr.w       L0000d1ba
     subq.w      #$1,(DAT_00ff0494)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     movea.l     (DAT_00ff0518),a0
     move.w      (a0)+,d0
     bne.b       L0000da22
@@ -15820,151 +14670,148 @@ L0000da22:
     move.w      d0,(DAT_00ff0482)
     move.w      #$9440,(DAT_00ff0482+2)
     move.w      #$0100,(DAT_00ff0482+4)
-    move.b      #$1,(vram_to_vram_type)   ; will do type1 DMA transfer
+    move.b      #$01,(vram_to_vram_type)   ; will do type1 DMA transfer
     rts
 
 L0000da4e:
     bsr.w       L0000d1ba
-    bra.w       L0000d078
+    bra.w       update_hscroll_dma_data_src_ptr
 
 L0000da56:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c4ba
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg2_horizontally
     bsr.w       update_bg1_bg2_hscroll
-    subq.w      #$1,(DAT_00ff0dc2)
-    bne.w       L0000d076
-    lea         (DAT_00ff0dc4),a2
+    subq.w      #$1,(DAT_00ff0dc0+$2)
+    bne.w       L0000d076           ; rts
+    lea         (DAT_00ff0dc0+$4),a2
     addq.w      #$2,(a2)
     move.w      (a2),d0
     andi.w      #$1f,d0
     lea         (L00013d80),a0
-    move.b      ($0,a0,d0*$1),d1
+    move.b      ($00,a0,d0.w),d1
     ext.w       d1
     move.w      d1,d0
-    bpl.b       L0000da98
+    bpl.b       .L0000da98
     neg.w       d1
-L0000da98:
-    move.w      d1,(DAT_00ff0dc2)
+.L0000da98:
+    move.w      d1,(DAT_00ff0dc0+$2)
     tst.w       d0
     bmi.b       L0000dabc
     move.w      (bg2_vscroll_change),-(SP)
-    move.w      #$1,(bg2_vscroll_change)
-    bsr.w       L0000c69e
+    move.w      #$0001,(bg2_vscroll_change)
+    bsr.w       scroll_down_bg2
     move.w      (SP)+,(bg2_vscroll_change)
     rts
+
 L0000dabc:
     move.w      (bg2_vscroll_change),-(SP)
-    move.w      #$1,(bg2_vscroll_change)
-    bsr.w       L0000c75e
+    move.w      #$0001,(bg2_vscroll_change)
+    bsr.w       scroll_up_bg2
     move.w      (SP)+,(bg2_vscroll_change)
     rts
+
 L0000dad6:
     bsr.w       L0000d1ba
     tst.b       (DAT_00ff001f)
-    bne.w       L0000d076
+    bne.w       L0000d076           ; rts
     subq.w      #$1,(DAT_00ff04d2)
-    bne.w       L0000d076
-    move.w      #$a,(DAT_00ff04d2)
+    bne.w       L0000d076           ; rts
+    move.w      #$000a,(DAT_00ff04d2)   ; reload value
     movea.l     (DAT_00ff0594),a0
     lea         (palettes_0),a1
     lea         (palettes_4),a2
     tst.b       (DAT_00ff0459)
-    beq.b       L0000db18
+    beq.b       .L0000db18
     suba.w      #$20,a1
     suba.w      #$20,a2
-L0000db18:
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
-    move.w      (a0)+,d0
-    move.w      (a0)+,d1
-    move.w      d1,($0,a1,d0*$1)
-    move.w      d1,($0,a2,d0*$1)
+.L0000db18:
+    REPT 3
+        move.w      (a0)+,d0
+        move.w      (a0)+,d1
+        move.w      d1,($0000,a1,d0.w)
+        move.w      d1,($0000,a2,d0.w)
+    ENDR
     tst.w       (a0)+
-    beq.b       L0000db42
+    beq.b       .L0000db42
     movea.l     (a0),a0
-L0000db42:
+.L0000db42:
     move.l      a0,(DAT_00ff0594)
     rts
+
 L0000db4a:
     bsr.w       L0000da56
     bsr.w       L0000db56
     bra.w       L0000dc16
 
 L0000db56:
-    subq.w      #$1,(DAT_00ff0dc6)
-    bne.w       L0000d076
+    subq.w      #$1,(DAT_00ff0dc0+$6)
+    bne.w       L0000d076           ; rts
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    lea         (DAT_00ff0dc8),a2
+    lea         (DAT_00ff0dc0+$8),a2
     addq.w      #$8,(a2)
     move.w      (a2),d0
-    andi.w      #$1f,d0
+    andi.w      #$001f,d0
     lea         (L00013d80),a0
-    move.b      ($0,a0,d0*$1),d1
+    move.b      ($00,a0,d0.w),d1
     ext.w       d1
     move.w      d1,d0
-    bpl.b       L0000db8c
+    bpl.b       .L0000db8c
     neg.w       d1
-L0000db8c:
-    move.w      d1,(DAT_00ff0dc6)
+.L0000db8c:
+    move.w      d1,(DAT_00ff0dc0+$6)
     tst.w       d0
-    bmi.b       L0000dbd6
+    bmi.b       .L0000dbd6
     move.w      (DAT_00ff0002),-(SP)
     move.w      (DAT_00ff0478),-(SP)
     move.w      (DAT_00ff047a),-(SP)
-    move.w      #$1,(DAT_00ff0478)
-    bsr.w       L0000c0e4
-    move.w      #$1,(DAT_00ff047a)
-    bsr.w       L0000c5a6
+    move.w      #$0001,(DAT_00ff0478)
+    bsr.w       scroll_left_bg1
+    move.w      #$0001,(DAT_00ff047a)
+    bsr.w       scroll_right_bg2
     move.w      (SP)+,(DAT_00ff047a)
     move.w      (SP)+,(DAT_00ff0478)
     move.w      (SP)+,(DAT_00ff0002)
     bra.w       update_bg1_bg2_hscroll
-L0000dbd6:
+.L0000dbd6:
     move.w      (DAT_00ff0002),-(SP)
     move.w      (DAT_00ff0478),-(SP)
     move.w      (DAT_00ff047a),-(SP)
-    move.w      #$1,(DAT_00ff0478)
-    bsr.w       L0000c1ae
-    move.w      #$1,(DAT_00ff047a)
-    bsr.w       L0000c4e6
+    move.w      #$0001,(DAT_00ff0478)
+    bsr.w       scroll_right_bg1
+    move.w      #$0001,(DAT_00ff047a)
+    bsr.w       scroll_left_bg2
     move.w      (SP)+,(DAT_00ff047a)
     move.w      (SP)+,(DAT_00ff0478)
     move.w      (SP)+,(DAT_00ff0002)
     bra.w       update_bg1_bg2_hscroll
 
 L0000dc16:
-    subq.w      #$1,(DAT_00ff0dca)
-    bne.w       L0000d076
+    subq.w      #$1,(DAT_00ff0dc0+$a)
+    bne.w       L0000d076           ; rts
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    lea         (DAT_00ff0dcc),a2
+    lea         (DAT_00ff0dc0+$c),a2
     addq.w      #$6,(a2)
     move.w      (a2),d0
-    andi.w      #$1f,d0
+    andi.w      #$001f,d0
     lea         (L00013d80),a0
-    move.b      ($0,a0,d0*$1),d1
+    move.b      ($00,a0,d0.w),d1
     ext.w       d1
     move.w      d1,d0
     bpl.b       .L0000dc4c
     neg.w       d1
 .L0000dc4c:
     lsr.w       #$1,d1
-    ori.w       #$1,d1
-    move.w      d1,(DAT_00ff0dca)
+    ori.w       #$0001,d1
+    move.w      d1,(DAT_00ff0dc0+$a)
     tst.w       d0
     bmi.b       .L0000dc88
     move.w      (DAT_00ff0004),-(SP)
     move.w      (DAT_00ff047c),-(SP)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$0001,(DAT_00ff047c)
     move.w      (DAT_00ff01aa),d0
     bsr.w       L0000c2c4
     move.w      (SP)+,(DAT_00ff047c)
@@ -15973,7 +14820,7 @@ L0000dc16:
 .L0000dc88:
     move.w      (DAT_00ff0004),-(SP)
     move.w      (DAT_00ff047c),-(SP)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$0001,(DAT_00ff047c)
     move.w      (DAT_00ff01aa),d2
     bsr.w       L0000c3e0
     move.w      (SP)+,(DAT_00ff047c)
@@ -15983,15 +14830,15 @@ L0000dc16:
 L0000dcb4:
     bsr.w       L0000db4a
     move.w      (bg2_vscroll_change),-(SP)
-    move.w      #$1,(bg2_vscroll_change)
-    bsr.w       L0000c75e
+    move.w      #$0001,(bg2_vscroll_change)
+    bsr.w       scroll_up_bg2
     move.w      (SP)+,(bg2_vscroll_change)
     rts
 
 L0000dcd2:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
+    bsr.w       scroll_bg1_horizontally
     bsr.w       update_bg1_bg2_hscroll
     bsr.w       L0000db56
     bra.w       L0000dc16
@@ -15999,34 +14846,34 @@ L0000dcd2:
 L0000dcee:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c28e
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg1_vertically
     clr.b       (DAT_00ff042f)
-    bsr.w       L0000c4ba
-    bsr.w       L0000c672
-    move.b      #$1,(DAT_00ff042f)
+    bsr.w       scroll_bg2_horizontally
+    bsr.w       scroll_bg2_vertically
+    move.b      #$01,(DAT_00ff042f)
     bsr.w       update_bg1_bg2_hscroll
     clr.w       (bg1_hscroll_value)
     move.w      (DAT_00ff0dc0),d0
     bne.b       .L0000dd44
-    move.b      #$1,(DAT_00ff042f)
+    move.b      #$01,(DAT_00ff042f)
     bsr.w       L0000c06c
-    clr.b       (DAT_00ff000f)
+    clr.b       (vblank_counter)
     moveq       #$22,d0
     jsr         write_z80_reg12
 .L0000dd44:
     move.w      (DAT_00ff0dc0),d0
-    cmpi.w      #$f,d0
+    cmpi.w      #$000f,d0
     beq.b       .L0000dd64
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$1f,d1
     bne.b       .L0000dd64
     addq.w      #$1,d0
     move.w      d0,(DAT_00ff0dc0)
 .L0000dd64:
-    cmpi.w      #$4,d0
+    cmpi.w      #$0004,d0
     bcs.b       .L0000dd7e
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$1f,d1
     bne.b       .L0000dd7e
     moveq       #$23,d0
@@ -16042,24 +14889,24 @@ L0000dd7e:
 L0000dd96:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c28e
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg1_vertically
     clr.b       (DAT_00ff042f)
-    bsr.w       L0000c4ba
-    bsr.w       L0000c672
-    move.b      #$1,(DAT_00ff042f)
+    bsr.w       scroll_bg2_horizontally
+    bsr.w       scroll_bg2_vertically
+    move.b      #$01,(DAT_00ff042f)
     bsr.w       update_bg1_bg2_hscroll
     clr.w       (bg1_hscroll_value)
-    move.w      #$0,(palettes_4)
+    move.w      #$0000,(palettes_4)
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     move.w      (DAT_00ff0dc0),d0
-    cmpi.w      #$f,d0
+    cmpi.w      #$000f,d0
     beq.b       .L0000de04
-    cmpi.w      #$4,d0
+    cmpi.w      #$0004,d0
     beq.b       .L0000de24
-    move.b      (DAT_00ff000f),d1
-    andi.b      #$f,d1
+    move.b      (vblank_counter),d1
+    andi.b      #$0f,d1
     bne.b       L0000dd7e
     subq.w      #$1,d0
     move.w      d0,(DAT_00ff0dc0)
@@ -16083,27 +14930,27 @@ L0000dd96:
     bpl.b       .d3_gte_d2
     neg.w       d3          ; ~d3 if d3<d2
 .d3_gte_d2:
-    cmpi.w      #$4,d3
+    cmpi.w      #$0004,d3
     bhi.w       L0000dd7e
     move.w      (bg_hscroll_data),d4
-    andi.w      #$1ff,d4    ; trim 3 top bits
+    andi.w      #$01ff,d4    ; trim 3 top bits
     move.w      (bg_hscroll_data+$2),d5
-    andi.w      #$1ff,d5    ; trim 3 top bits
+    andi.w      #$01ff,d5    ; trim 3 top bits
     sub.w       d4,d5       ; d5=d5-d4
     bpl.b       .d5_gte_d4
     neg.w       d5          ; ~d5 if d5<d4
 .d5_gte_d4:
-    cmpi.w      #$2,d5
+    cmpi.w      #$0002,d5
     bhi.w       L0000dd7e               ; leave if  >= 2
     move.w      d2,(bg2_vscroll_value)  ; update bg2 vscroll value
     move.w      (bg_hscroll_data),d5
-    andi.w      #$1ff,d5
+    andi.w      #$01ff,d5
     move.w      (bg_hscroll_data+$2),d4
-    andi.w      #$1ff,d4
+    andi.w      #$01ff,d4
     sub.w       d4,d5                   ; d5=d5-d4
     move.w      d5,(bg2_hscroll_value)       ; save d5
     bsr.w       update_bg1_bg2_hscroll
-    move.b      #$1,(DAT_00ff042f)
+    move.b      #$01,(DAT_00ff042f)
     bsr.w       L0000c06c
     clr.w       (DAT_00ff0016)
     clr.w       (DAT_00ff0dc0)
@@ -16111,7 +14958,7 @@ L0000dd96:
     moveq       #$3,d0
     jsr         fill_bottom_palette
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     moveq       #$0,d0
     moveq       #$1,d1
     jmp         write_z80_reg4_reg5
@@ -16120,7 +14967,7 @@ L0000dec6:
     clr.b       (DAT_00ff042b)
     move.w      (DAT_00ff0092),d0
     bpl.b       .L0000dede
-    move.b      #$1,(DAT_00ff042b)
+    move.b      #$01,(DAT_00ff042b)
     neg.w       d0
 .L0000dede:
     move.w      d0,(DAT_00ff0478)
@@ -16128,7 +14975,7 @@ L0000dec6:
     clr.b       (DAT_00ff042c)
     move.w      (DAT_00ff0094),d0
     bpl.b       .L0000df02
-    move.b      #$1,(DAT_00ff042c)
+    move.b      #$01,(DAT_00ff042c)
     neg.w       d0
 .L0000df02:
     move.w      d0,(DAT_00ff047c)
@@ -16137,7 +14984,7 @@ L0000dec6:
 
 L0000df12:
     tst.w       (DAT_00ff003c)
-    beq.w       L0000d076
+    beq.w       L0000d076           ; rts
     lea         (DAT_00ff0dc0),a0
     lea         (bg_hscroll_data+$2),a1
     moveq       #$1,d0
@@ -16207,21 +15054,21 @@ L0000df12:
     moveq       #$1,d1
     moveq       #$c,d2
     bsr.w       L0000e182
-    bra.w       L0000d078
+    bra.w       update_hscroll_dma_data_src_ptr
 
 L0000dfdc:
     clr.w       (bg1_hscroll_value)
-    bsr.w       L0000c0d6
-    bsr.w       L0000c28e
+    bsr.w       scroll_bg1_horizontally
+    bsr.w       scroll_bg1_vertically
     clr.w       (bg2_hscroll_value)
-    move.w      #$2,(DAT_00ff047a)
-    move.w      #$2,(bg2_vscroll_change)
-    bsr.w       .L0000e04e
+    move.w      #$0002,(DAT_00ff047a)
+    move.w      #$0002,(bg2_vscroll_change)
+    bsr.w       L0000e04e
     move.w      (bg2_hscroll_value),-(SP)
     clr.w       (bg2_hscroll_value)
     move.w      (DAT_00ff00bc),(DAT_00ff047a)
     move.w      (DAT_00ff00be),(bg2_vscroll_change)
-    bsr.w       .L0000e060
+    bsr.w       L0000e060
     move.w      (SP)+,d7
     add.w       d7,(bg2_hscroll_value)
     bsr.w       update_bg1_bg2_hscroll
@@ -16230,28 +15077,30 @@ L0000dfdc:
     clr.w       (DAT_00ff00bc)
     clr.w       (DAT_00ff00be)
     rts
-.L0000e04e:
+
+L0000e04e:
     move.b      (DAT_00ff042b),d0
-    bmi.w       L0000d076
-    beq.w       L0000c5a6
-    bra.w       L0000c4e6
-.L0000e060:
+    bmi.w       L0000d076           ; rts
+    beq.w       scroll_right_bg2
+    bra.w       scroll_left_bg2
+
+L0000e060:
     tst.w       (DAT_00ff00b8)
     beq.b       .L0000e074
     bmi.b       .L0000e070
-    bsr.w       L0000c4e6
+    bsr.w       scroll_left_bg2
     bra.b       .L0000e074
 .L0000e070:
-    bsr.w       L0000c5a6
+    bsr.w       scroll_right_bg2
 .L0000e074:
     tst.w       (DAT_00ff00ba)
-    beq.w       L0000d076
-    bmi.w       L0000c75e
-    bra.w       L0000c69e
+    beq.w       L0000d076           ; rts
+    bmi.w       scroll_up_bg2
+    bra.w       scroll_down_bg2
 
 L0000e086:
     lea         (DAT_00ff0dc0),a0
-    lea         (bg_hscroll_data2+$c2),a1
+    lea         (bg_hscroll_data+$202),a1
     moveq       #$1,d0
     moveq       #$5d,d1
     moveq       #$1,d2
@@ -16298,7 +15147,7 @@ L0000e086:
     moveq       #$1,d1
     moveq       #$10,d2
     bsr.w       L0000e182
-    lea         (DAT_00ff0aa0),a1
+    lea         (bg_hscroll_data+$2e0),a1
     moveq       #$3,d1
     moveq       #$c,d2
     bsr.w       L0000e182
@@ -16308,11 +15157,11 @@ L0000e086:
     moveq       #$1,d1
     moveq       #$10,d2
     bsr.w       L0000e182
-    bra.w       L0000d078
+    bra.w       update_hscroll_dma_data_src_ptr
 
 L0000e12e:
     lea         (DAT_00ff0dc0),a0
-    lea         (DAT_00ff0ac2),a1
+    lea         (bg_hscroll_data+$302),a1
     moveq       #$1,d0
     moveq       #$50,d1
     moveq       #$8,d2
@@ -16329,19 +15178,15 @@ L0000e12e:
     moveq       #$a,d1
     moveq       #$10,d2
     bsr.w       L0000e182
-    bra.w       L0000d078
+    bra.w       update_hscroll_dma_data_src_ptr
 
 L0000e168:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
     subq.w      #$1,(DAT_00ff01a8)
-    bsr.w       L0000c4ba
+    bsr.w       scroll_bg2_horizontally
     bra.w       update_bg1_bg2_hscroll
 
-;moveq       #$1,d0
-;moveq       #$5d,d1
-;moveq       #$1,d2
-;bsr.w       L0000e182
 ; d0=value to add to dst, d1=new value if (a0)=0, d2=len,a0=?, a1=dst
 L0000e182:
     movem.l     a1/d2,-(SP)
@@ -16366,37 +15211,36 @@ L0000e1a4:
     move.l      #(L00077dcc),(DAT_00ff0514)
     bsr.w       L0000e20c
     bsr.w       L0000e2be
-    lea         (DAT_00ff0676),a0
+    lea         (hud_dragon_temp_arrow),a0
     move.w      (a0),d0
     cmpi.w      #$868d,d0
-    beq.w       L0000e60c
-    move.b      (DAT_00ff0020),d0
+    beq.w       L0000e60c    ; rts
+    move.b      (monster_selection_index),d0
     andi.w      #$f,d0
     add.w       d0,d0
     add.w       d0,d0
-    jsr         (L0000e1f8,PC,d0*$1)
-    move.w      (DAT_00ffd91c),(DAT_00ff00c4)
-    move.w      (DAT_00ffd920),(DAT_00ff00c6)
-    rts
-    
-L0000e1f8:    
-    bra.w       L0000e83e
+    jsr         (.jsr_table,PC,d0.w)
+    move.w      (DAT_00ffd90a+$12),(DAT_00ff00c4)     ; written to but not used it would seem
+    move.w      (DAT_00ffd90a+$16),(DAT_00ff00c6)     ; written to but not used it would seem
+    rts    
+.jsr_table:
+    bra.w       L0000e83e   ; select dragon
     bra.w       L0000ed12
     bra.w       L0000ef02
     bra.w       L0000f4c4
-    bra.w       L0000e60c
+    bra.w       L0000e60c    ; rts
 
 L0000e20c:
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$3f,d0
-    bne.w       L0000e60c
-    lea         (DAT_00ffdaba+$a),a0
-    lea         (DAT_00ffdbfa),a2
+    bne.w       L0000e60c    ; rts
+    lea         (monster_data_array+$a),a0
+    lea         (monster_stats_array),a2
     moveq       #$0,d6
     moveq       #$3,d7
     .L0000e22a:
         movem.l     a2/a0/d6,-(SP)
-        cmp.b       (DAT_00ff0020),d6
+        cmp.b       (monster_selection_index),d6
         beq.b       .L0000e24e
         move.w      ($2,a0),d0
         cmpi.w      #$868d,d0
@@ -16412,44 +15256,45 @@ L0000e20c:
         adda.w      #$a,a2
         dbf         d7,.L0000e22a
     rts
-L0000e262:
-    move.b      (DAT_00ff0020),d0
+
+save_monster_stats:
+    move.b      (monster_selection_index),d0
     ext.w       d0
     mulu.w      #$a,d0
-    lea         (DAT_00ffdbfa),a0
+    lea         (monster_stats_array),a0
     adda.w      d0,a0
-    move.l      (DAT_00ff002e),(a0)+
-    move.l      (DAT_00ff0032),(a0)+
-    move.b      (DAT_00ff0021),(a0)+
-    move.b      (DAT_00ff0022),(a0)+
+    move.l      (new_dragon_life_bar_level),(a0)+
+    move.l      (new_dragon_life_bar_length),(a0)+
+    move.b      (new_dragon_level),(a0)+
+    move.b      (update_dragon_hud_flag),(a0)+
 L0000e28e:
-    move.b      (DAT_00ff0020),d0
+    move.b      (monster_selection_index),d0
     ext.w       d0
     mulu.w      #$40,d0
-    lea         (DAT_00ffdaba+$a),a0
+    lea         (monster_data_array+$a),a0
     adda.w      d0,a0
-    lea         (DAT_00ff0674),a1
+    lea         (hud_dragon_life_bar),a1
     moveq       #$a,d7
     .L0000e2aa:
         move.w      (a1)+,(a0)+
         dbf         d7,.L0000e2aa
-    lea         (DAT_00ff06f4),a1
+    lea         (hud_monster_level),a1
     adda.w      #$a,a0
     move.w      (a1)+,(a0)+
     rts
 
 L0000e2be:
     tst.b       (DAT_00ff0057)
-    beq.w       L0000e60c
+    beq.w       L0000e60c    ; rts
     clr.b       (DAT_00ff0057)
-    lea         (DAT_00ffdaba+$a),a0
+    lea         (monster_data_array+$a),a0
     lea         (L00012d60),a1
-    lea         (DAT_00ffdbfa),a2
+    lea         (monster_stats_array),a2
     moveq       #$0,d6
     moveq       #$3,d7
     .L0000e2e4:
         movem.l     a2-a0/d7-d6,-(SP)
-        cmp.b       (DAT_00ff0020),d6
+        cmp.b       (monster_selection_index),d6
         bne.b       .L0000e2fc
         move.b      (DAT_00ffd90a),d0
         cmpi.b      #$2,d0
@@ -16460,8 +15305,8 @@ L0000e2be:
         bne.w       .L0000e38a
     .L0000e308:
         mulu.w      #$40,d6
-        lea         (L00014232),a3
-        lea         (DAT_00ffdaba),a4
+        lea         (default_monster_data),a3
+        lea         (monster_data_array),a4
         adda.w      d6,a3
         adda.w      d6,a4
         REPT 16
@@ -16471,14 +15316,14 @@ L0000e2be:
         move.l      ($14,a1),($4,a2)
         clr.b       ($8,a2)
         move.b      #$10,($9,a2)
-        move.l      (DAT_00ff002e),-(SP)
-        move.l      (DAT_00ff057c),-(SP)
-        move.l      #$c,(DAT_00ff002e)
-        move.l      #$c,(DAT_00ff057c)
+        move.l      (new_dragon_life_bar_level),-(SP)
+        move.l      (dragon_life_bar_length),-(SP)
+        move.l      #$c,(new_dragon_life_bar_level)
+        move.l      #$c,(dragon_life_bar_length)
         move.b      #$1,(DAT_00ff0442)
-        jsr         L00002fec.l
-        move.l      (SP)+,(DAT_00ff057c)
-        move.l      (SP)+,(DAT_00ff002e)
+        jsr         update_dragon_life_bar.l
+        move.l      (SP)+,(dragon_life_bar_length)
+        move.l      (SP)+,(new_dragon_life_bar_level)
     .L0000e38a:
         movem.l     (SP)+,d6-d7/a0-a2
         addq.w      #$1,d6
@@ -16486,20 +15331,20 @@ L0000e2be:
         adda.w      #$18,a1
         adda.w      #$a,a2
         dbf         d7,.L0000e2e4
-    move.b      (DAT_00ff0020),d0
+    move.b      (monster_selection_index),d0
     cmpi.b      #$4,d0
-    beq.w       L0000e60c
-    tst.b       (DAT_00ff0022)
-    bpl.w       L0000e60c
-    movea.l     (DAT_00ff0598),a1
-    jsr         copy_16_words_to_00ff066a
-    jsr         copy_16_words_to_00ff06ea
+    beq.w       L0000e60c    ; rts
+    tst.b       (update_dragon_hud_flag)
+    bpl.w       L0000e60c    ; rts
+    movea.l     (monster_selection_pointer),a1
+    jsr         change_hud_dragon_top_tiles
+    jsr         change_hud_dragon_bottom_tiles
     jmp         L00005366
 
 L0000e3d0:
-    jsr         L00002fc6
-    move.b      #$ff,(DAT_00ff0022)
-    clr.b       (DAT_00ff0021)
+    jsr         update_dragon_life_bar_level
+    move.b      #$ff,(update_dragon_hud_flag)
+    clr.b       (new_dragon_level)
     jsr         L0000308a.l
     bsr.w       L0000e28e
     move.w      ($14,a6),d1
@@ -16507,7 +15352,7 @@ L0000e3d0:
     movea.l     ($3c,a6),a0
     tst.l       (a0)
     beq.w       L0000e46c
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$3,d0
     beq.b       L0000e442
 L0000e40c:
@@ -16546,7 +15391,7 @@ L0000e45e:
     move.w      d2,($16,a6)
     bra.b       L0000e428
 L0000e46c:
-    movea.l     (DAT_00ff0598),a0
+    movea.l     (monster_selection_pointer),a0
     adda.w      #$4,a0
     lea         (L00014372),a1
     REPT 7
@@ -16556,9 +15401,9 @@ L0000e46c:
     REPT 7
         move.l      (a1)+,(a0)+
     ENDR
-    movea.l     (DAT_00ff0598),a1
-    jsr         copy_16_words_to_00ff066a
-    jsr         copy_16_words_to_00ff06ea
+    movea.l     (monster_selection_pointer),a1
+    jsr         change_hud_dragon_top_tiles
+    jsr         change_hud_dragon_bottom_tiles
     addq.w      #$1,(DAT_00ff04bc)
     clr.b       (a6)
     lea         (palettes_5+$a),a1
@@ -16567,7 +15412,7 @@ L0000e46c:
     ENDR
     move.w      #CRAM_WHITE,(a1)+
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     bra.w       L0000e428
 L0000e4d6:
     move.w      (DAT_00ff04b2),d0
@@ -16635,29 +15480,29 @@ L0000e58c:
 L0000e590:
     clr.b       ($3b,a6)
     tst.w       d0
-    bmi.b       L0000e60c
+    bmi.b       L0000e60c    ; rts
     move.w      d0,($c,a6)
     move.b      ($2d,a6),d1
     beq.b       L0000e5b0
     tst.b       (DAT_00ff0442)
     bne.b       L0000e5b0
     andi.b      #$3,d1
-    bne.b       L0000e60c
+    bne.b       L0000e60c    ; rts
 L0000e5b0:
     move.w      ($12,a6),d1
     sub.w       (DAT_00ff01a8),d1
     addi.w      #$80,d1
     cmpi.w      #$30,d1
-    bls.b       L0000e60c
+    bls.b       L0000e60c    ; rts
     cmpi.w      #$210,d1
-    bcc.b       L0000e60c
+    bcc.b       L0000e60c    ; rts
     move.w      ($16,a6),d2
     sub.w       (DAT_00ff01aa),d2
     addi.w      #$a0,d2
     cmpi.w      #$30,d2
-    bls.b       L0000e60c
+    bls.b       L0000e60c    ; rts
     cmpi.w      #$1b0,d2
-    bcc.b       L0000e60c
+    bcc.b       L0000e60c    ; rts
     move.w      (DAT_00ff04c8),d3
     move.b      d3,($3a,a6)
     move.w      #$380,d4
@@ -16818,6 +15663,7 @@ L0000e7a8:
     moveq       #$0,d0
     movem.w     (SP)+,d1-d2
     rts
+
 L0000e7b0:
     lsr.w       #$4,d1
     lsr.w       #$4,d2
@@ -16860,24 +15706,25 @@ L0000e814:
     move.b      d0,($1b,a6)
     move.b      #$28,($2d,a6)
     rts
+
 L0000e83e:
-    tst.b       (DAT_00ff0447)
+    tst.b       (dragon_xp)
     beq.b       L0000e84c
-    subq.b      #$1,(DAT_00ff0447)
+    subq.b      #$1,(dragon_xp)
 L0000e84c:                 
     tst.b       (DAT_00ff0001)
     bne.w       L0000e88c
     tst.b       (DAT_00ffd90a)
     beq.w       L0000e88c
-    move.w      (DAT_00ffd926),d0
+    move.w      (DAT_00ffd90a+$1c),d0
     cmpi.w      #$6,d0
     beq.w       L0000e88c
     cmpi.w      #$7,d0
     beq.w       L0000e88c
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     bne.w       L0000e88c
-    move.b      #$3c,(DAT_00ff0447)
+    move.b      #$3c,(dragon_xp)
 L0000e88c:
     bsr.b       L0000e896
     bsr.w       L0000ea84
@@ -16886,117 +15733,116 @@ L0000e88c:
 L0000e896:
     lea         (DAT_00ffd90a),a6
     move.b      (a6),d0
-    beq.w       L0000ed10
+    beq.w       L0000ed10   ; rts
     cmpi.b      #$1,d0
     bne.w       L0000e3d0
     bsr.w       L0000ecf2
     move.b      (DAT_00ff0000),(DAT_00ff0443)
     bsr.w       L0000e7de
     tst.b       ($2d,a6)
-    beq.b       L0000e8ce
+    beq.b       .L0000e8ce
     subq.b      #$1,($2d,a6)
-    bne.b       L0000e8ce
+    bne.b       .L0000e8ce
     bclr.b      #$1,($1b,a6)
-L0000e8ce:
+.L0000e8ce:
     move.w      (DAT_00ff0002),d3
     move.w      (DAT_00ff0004),d4
     subi.w      #$5,d4
     move.w      (DAT_00ff001a),d0
     cmpi.w      #$2,d0
-    beq.b       L0000e8f0
+    beq.b       .L0000e8f0
     cmpi.w      #$6,d0
-    bne.b       L0000e8f4
-L0000e8f0:
+    bne.b       .L0000e8f4
+.L0000e8f0:
     addi.w      #$10,d4
-L0000e8f4:
+.L0000e8f4:
     bsr.w       L0000ea0a
     move.w      d3,d1
     move.w      d4,d2
     bsr.w       L0000e6d8
-L0000e900:
     tst.b       d0
-    bpl.b       L0000e910
+    bpl.b       .L0000e910
     move.w      (DAT_00ff0002),d3
     move.w      (DAT_00ff0004),d4
-L0000e910:
+.L0000e910:
     move.w      ($20,a6),d0
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$0,d1
-    bne.b       L0000e950
+    bne.b       .L0000e950
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
     bsr.w       L0000e502
     moveq       #$0,d5
     cmpi.w      #$4,d0
-    bcs.b       L0000e946
+    bcs.b       .L0000e946
     moveq       #$1,d5
     cmpi.w      #$8,d0
-    bcs.b       L0000e946
+    bcs.b       .L0000e946
     moveq       #$2,d5
     cmpi.w      #$10,d0
-    bcs.b       L0000e946
+    bcs.b       .L0000e946
     moveq       #$3,d5
-L0000e946:
+.L0000e946:
     move.w      d5,($28,a6)
     jsr         L00003424.l
-L0000e950:
+.L0000e950:
     bsr.w       L0000e60e
     move.w      ($1c,a6),d7
     move.b      (DAT_00ff0443),d0
     andi.b      #$1,d0
-    beq.b       L0000e9b8
+    beq.b       .L0000e9b8
     btst.b      #$0,($1b,a6)
-    beq.b       L0000e99a
+    beq.b       .L0000e99a
     cmpi.w      #$6,d7
-    beq.w       L0000e9f8
-    tst.b       (DAT_00ff0447)
-    bne.w       L0000e98c
+    beq.w       .L0000e9f8
+    tst.b       (dragon_xp)
+    bne.w       .L0000e98c
     cmpi.w      #$3,d7
     beq.w       L0000e554
     moveq       #$3,d0
     bra.w       L0000e526
-L0000e98c:
+.L0000e98c:
     cmpi.w      #$5,d7
     beq.w       L0000e554
     moveq       #$5,d0
     bra.w       L0000e526
-L0000e99a:
+.L0000e99a:
     cmpi.w      #$7,d7
-    beq.b       L0000e9a6
+    beq.b       .L0000e9a6
     moveq       #$7,d0
     bra.w       L0000e526
-L0000e9a6:
+.L0000e9a6:
     tst.b       ($1,a6)
     beq.w       L0000e554
     bset.b      #$0,($1b,a6)
     bra.w       L0000e554
-L0000e9b8:
+.L0000e9b8:
     btst.b      #$0,($1b,a6)
-    bne.b       L0000e9ec
+    bne.b       .L0000e9ec
     cmpi.w      #$7,d7
-    beq.b       L0000e9a6
-    tst.b       (DAT_00ff0447)
-    bne.w       L0000e9de
+    beq.b       .L0000e9a6
+    tst.b       (dragon_xp)
+    bne.w       .L0000e9de
     cmpi.w      #$0,d7
     beq.w       L0000e554
     moveq       #$0,d0
     bra.w       L0000e526
-L0000e9de:
+.L0000e9de:
     cmpi.w      #$2,d7
     beq.w       L0000e554
     moveq       #$2,d0
     bra.w       L0000e526
-L0000e9ec:
+.L0000e9ec:
     cmpi.w      #$6,d7
-    beq.b       L0000e9f8
+    beq.b       .L0000e9f8
     moveq       #$6,d0
     bra.w       L0000e526
-L0000e9f8:
+.L0000e9f8:
     tst.b       ($1,a6)
     beq.w       L0000e554
-L0000ea00:
     bclr.b      #$0,($1b,a6)
     bra.w       L0000e554
+
 L0000ea0a:
     btst.b      #$0,(DAT_00ff0000)
     beq.b       L0000ea4c
@@ -17034,16 +15880,16 @@ L0000ea6a:
     subi.w      #$16,d3
     rts
 L0000ea84:
-    move.b      (DAT_00ff0447),d0
+    move.b      (dragon_xp),d0
     cmpi.b      #$3c,d0
     bne.w       L0000ebe4
-    move.b      (DAT_00ff0021),d0
+    move.b      (new_dragon_level),d0
     beq.b       L0000eaa2
     cmpi.b      #$1,d0
     beq.b       L0000eabc
     bra.b       L0000eae8
 L0000eaa2:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6   ; next struct
     tst.b       (a6)
     bne.w       L0000ebe4
     move.w      #$8,d5
@@ -17051,7 +15897,7 @@ L0000eaa2:
     bsr.b       L0000eb26
     bra.w       L0000ebe4
 L0000eabc:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     bne.w       L0000ebe4
@@ -17064,7 +15910,7 @@ L0000eabc:
     bsr.b       L0000eb26
     bra.w       L0000ebe4
 L0000eae8:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     add.b       ($80,a6),d0
@@ -17088,10 +15934,10 @@ L0000eb26:
     bsr.w       L0000e64e
     movem.w     (SP)+,d4-d7
     move.l      a0,($3c,a6)
-    beq.w       L0000ed10
+    beq.w       L0000ed10   ; rts
     moveq       #$2,d0
     jsr         write_z80_reg12
-    clr.b       (DAT_00ff0022)
+    clr.b       (update_dragon_hud_flag)
     move.b      #$1,(a6)
     move.l      #$1,($e,a6)
     move.b      #$18,($1b,a6)
@@ -17108,27 +15954,27 @@ L0000eb26:
     move.w      d0,($34,a6)
     clr.w       ($22,a6)
     clr.w       ($24,a6)
-    btst.b      #$0,(DAT_00ffd925)
+    btst.b      #$0,(DAT_00ffd90a+$1b)
     beq.b       L0000ebc2
-    move.w      (DAT_00ffd91c),d0
+    move.w      (DAT_00ffd90a+$12),d0
     addi.w      #$e,d0
     move.w      d0,($12,a6)
-    move.w      (DAT_00ffd920),d0
+    move.w      (DAT_00ffd90a+$16),d0
     subi.w      #$f,d0
     move.w      d0,($16,a6)
     move.w      d5,($20,a6)
     rts
 L0000ebc2:
-    move.w      (DAT_00ffd91c),d0
+    move.w      (DAT_00ffd90a+$12),d0
     subi.w      #$e,d0
     move.w      d0,($12,a6)
-    move.w      (DAT_00ffd920),d0
+    move.w      (DAT_00ffd90a+$16),d0
     subi.w      #$f,d0
     move.w      d0,($16,a6)
     move.w      d4,($20,a6)
     rts
 L0000ebe4:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     moveq       #$3,d7
     .L0000ebec:
         move.w      d7,-(SP)
@@ -17204,7 +16050,7 @@ L0000ebe4:
     bra.b       .L0000ec9e
     
 L0000ecc2:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     moveq       #$3,d7
     .L0000ecca:
         move.w      d7,-(SP)
@@ -17222,16 +16068,18 @@ L0000ecc2:
         adda.w      #$40,a6
         dbf         d7,.L0000ecca
     rts
+
 L0000ecf2:
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$7,d0
     bne.b       L0000ed10
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     beq.b       L0000ed10
-    addq.b      #$1,(DAT_00ff0022)
+    addq.b      #$1,(update_dragon_hud_flag)
 L0000ed10:
     rts
+
 L0000ed12:
     lea         (DAT_00ffd90a),a6
     move.b      (a6),d0
@@ -17240,20 +16088,20 @@ L0000ed12:
     bne.w       L0000e3d0
     bsr.w       L0000e7de
     tst.b       ($2d,a6)
-    beq.b       L0000ed60
+    beq.b       .L0000ed60
     btst.b      #$1,($1b,a6)
-    beq.b       L0000ed54
-    tst.b       (DAT_00ff0022)
-    beq.w       L0000ee78
-    move.b      (DAT_00ff000f),d1
+    beq.b       .L0000ed54
+    tst.b       (update_dragon_hud_flag)
+    beq.w       .L0000ee78
+    move.b      (vblank_counter),d1
     andi.b      #$3,d1
-    bne.b       L0000ed54
-    subq.b      #$1,(DAT_00ff0022)
-L0000ed54:
+    bne.b       .L0000ed54
+    subq.b      #$1,(update_dragon_hud_flag)
+.L0000ed54:
     subq.b      #$1,($2d,a6)
-    bne.b       L0000ed60
+    bne.b       .L0000ed60
     bclr.b      #$1,($1b,a6)
-L0000ed60:
+.L0000ed60:
     bsr.w       L0000eeb8
     bsr.w       L0000e4d6
     move.w      (DAT_00ff04b2),d0
@@ -17266,14 +16114,14 @@ L0000ed60:
     move.l      a0,-(SP)
     addi.w      #$2d,d3
     btst.b      #$0,(DAT_00ff0000)
-    beq.b       L0000ed96
+    beq.b       .L0000ed96
     subi.w      #$5a,d3
-L0000ed96:
+.L0000ed96:
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
     bsr.w       L0000e6d8
     tst.b       d0
-    bpl.b       L0000edde
+    bpl.b       .L0000edde
     move.w      ($20,a6),d0
     addi.w      #$10,d0
     andi.w      #$1f,d0
@@ -17292,38 +16140,37 @@ L0000ed96:
     sub.l       d3,d1
     move.l      d0,($12,a6)
     move.l      d1,($16,a6)
-L0000edde:
+.L0000edde:
     move.w      ($20,a6),d0
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$0,d1
-    bne.b       L0000ee28
+    bne.b       .L0000ee28
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
     bsr.w       L0000e502
     moveq       #$1,d5
     cmpi.w      #$10,d0
-L0000ee00:
-    bcs.b       L0000ee1e
+    bcs.b       .L0000ee1e
     moveq       #$2,d5
     cmpi.w      #$0020,d0
-    bcs.b       L0000ee1e
+    bcs.b       .L0000ee1e
     moveq       #$4,d5
     cmpi.w      #$30,d0
-    bcs.b       L0000ee1e
-    move.b      (DAT_00ff0022),d5
+    bcs.b       .L0000ee1e
+    move.b      (update_dragon_hud_flag),d5
     ext.w       d5
     lsr.w       #$1,d5
     addq.w      #$6,d5
-L0000ee1e:
+.L0000ee1e:
     move.w      d5,($28,a6)
     jsr         L00003424.l
-L0000ee28:
+.L0000ee28:
     bsr.w       L0000e60e
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     ext.w       d0
-    beq.b       L0000ee38
+    beq.b       .L0000ee38
     subq.w      #$1,d0
-L0000ee38:
+.L0000ee38:
     lsr.w       #$2,d0
     move.w      d0,d1
     add.w       d1,d1
@@ -17335,22 +16182,22 @@ L0000ee38:
     movea.l     (SP)+,a0
     move.b      (a0)+,d6
     andi.b      #$1,d6
-    beq.b       L0000ee6a
+    beq.b       .L0000ee6a
     addi.w      #$b,d0
     cmp.w       d0,d7
     beq.w       L0000e554
     bra.w       L0000e526
-L0000ee6a:
+.L0000ee6a:
     addi.w      #$f,d0
     cmp.w       d0,d7
     beq.w       L0000e554
     bra.w       L0000e526
-L0000ee78:
-    move.b      #$5,(DAT_00ff0022)
-    subq.l      #$1,(DAT_00ff002e)
-    beq.w       L0000ee8e
-    bpl.w       L0000ed54
-L0000ee8e:
+.L0000ee78:
+    move.b      #$5,(update_dragon_hud_flag)
+    subq.l      #$1,(new_dragon_life_bar_level)
+    beq.w       .L0000ee8e
+    bpl.w       .L0000ed54
+.L0000ee8e:
     move.b      #$2,(a6)
     clr.l       ($e,a6)
     move.w      ($12,a6),($14,a6)
@@ -17360,64 +16207,66 @@ L0000ee8e:
     moveq       #$13,d0
     jsr         write_z80_reg12
     bra.w       L0000e3d0
+
 L0000eeb8:
-    move.b      (DAT_00ff0021),d0
+    move.b      (new_dragon_level),d0
     beq.b       L0000eee6
     cmpi.b      #$1,d0
     beq.b       L0000eef4
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$f,d0
     bne.b       L0000eee4
 L0000eed2:
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     beq.b       L0000eee4
-    addq.b      #$1,(DAT_00ff0022)
+    addq.b      #$1,(update_dragon_hud_flag)
 L0000eee4:
     rts
-
 L0000eee6:
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$3f,d0
     bne.b       L0000eee4
     bra.b       L0000eed2
 L0000eef4:
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$1f,d0
     bne.b       L0000eee4
     bra.b       L0000eed2
+
 L0000ef02:
-    clr.b       (DAT_00ffd945)
-    clr.b       (DAT_00ffd985)
-    clr.b       (DAT_00ffd9c5)
-    clr.b       (DAT_00ffda05)
-    clr.b       (DAT_00ffda45)
-    clr.b       (DAT_00ffda85)
-    move.b      (DAT_00ffd94a),d0
+    clr.b       (DAT_00ffd90a+$3b)
+    clr.b       (DAT_00ffd90a+$7b)
+    clr.b       (DAT_00ffd90a+$bb)
+    clr.b       (DAT_00ffd90a+$fb)
+    clr.b       (DAT_00ffd90a+$13b)
+    clr.b       (DAT_00ffd90a+$17b)
+    move.b      (DAT_00ffd90a+$40),d0
     subq.b      #$1,d0
-    bne.b       L0000ef3c
-    clr.b       (DAT_00ffd94a)
-    clr.b       (DAT_00ffd98a)
-L0000ef3c:
+    bne.b       .L0000ef3c
+    clr.b       (DAT_00ffd90a+$40)
+    clr.b       (DAT_00ffd90a+$80)
+.L0000ef3c:
     bsr.w       L0000f49a
     bsr.b       L0000ef52
     bsr.w       L0000f1b8
     bsr.w       L0000f3fa
     bsr.w       L0000f064
     bra.w       L0000f438
+
 L0000ef52:
-    tst.b       (DAT_00ff0022)
+    tst.b       (update_dragon_hud_flag)
     bmi.w       L0000f4c2
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     beq.w       L0000f01e
     cmpi.b      #$6,d0
     bne.w       L0000f4c2
-    move.b      (DAT_00ff0022),d0
-    beq.b       L0000ef7e
+    move.b      (update_dragon_hud_flag),d0
+    beq.b       .L0000ef7e
     subq.b      #$1,d0
-L0000ef7e:
+.L0000ef7e:
     ext.w       d0
     lsr.w       #$2,d0
     add.w       d0,d0
@@ -17426,25 +16275,25 @@ L0000ef7e:
     subq.w      #$2,d0
     movea.l     (DAT_00ff0580),a0
     tst.l       (a0)
-    bne.b       L0000ef9e
+    bne.b       .L0000ef9e
     lea         (L00013da0),a0
-L0000ef9e:
+.L0000ef9e:
     move.w      (a0),d1
     move.w      ($2,a0),d2
-    move.w      ($4,a0,d0*$1),d3
+    move.w      ($4,a0,d0.w),d3
     move.w      d3,d4
     andi.w      #$8000,d4
     rol.w       #$3,d4
     andi.b      #-$5,($1b,a6)
     or.b        d4,($1b,a6)
     andi.w      #$f,d3
-    move.b      (DAT_00ff0021),d5
+    move.b      (new_dragon_level),d5
     ext.w       d5
     add.w       d5,d3
     addi.w      #$18,d3
     move.w      d3,($26,a6)
-    add.w       (DAT_00ffd91c),d1
-    add.w       (DAT_00ffd920),d2
+    add.w       (DAT_00ffd90a+$12),d1
+    add.w       (DAT_00ffd90a+$16),d2
     move.w      d1,d5
     move.w      d2,d6
     sub.w       ($12,a6),d5
@@ -17457,7 +16306,7 @@ L0000ef9e:
     move.w      (a0),d1
     neg.w       d1
     move.w      d3,($26,a6)
-    add.w       (DAT_00ffd91c),d1
+    add.w       (DAT_00ffd90a+$12),d1
     move.w      d1,($12,a6)
     move.w      d2,($16,a6)
     adda.w      #$a,a0
@@ -17490,11 +16339,11 @@ L0000f064:
     bne.w       L0000e3d0
     bsr.w       L0000e7de
     tst.b       ($2d,a6)
-    beq.b       L0000f08e
+    beq.b       .L0000f08e
     subq.b      #$1,($2d,a6)
-    bne.b       L0000f08e
+    bne.b       .L0000f08e
     bclr.b      #$1,($1b,a6)
-L0000f08e:
+.L0000f08e:
     bsr.w       L0000e4d6
     move.w      (DAT_00ff04b2),d0
     subi.w      #$78,d0
@@ -17507,119 +16356,119 @@ L0000f08e:
     subi.w      #$f,d4
     move.w      (DAT_00ff001a),d0
     cmpi.w      #$2,d0
-    beq.b       L0000f0c4
+    beq.b       .L0000f0c4
     cmpi.w      #$6,d0
-    bne.b       L0000f0c8
-L0000f0c4:
+    bne.b       .L0000f0c8
+.L0000f0c4:
     addi.w      #$19,d4
-L0000f0c8:
+.L0000f0c8:
     addi.w      #$32,d3
     btst.b      #$0,(DAT_00ff0000)
-    beq.b       L0000f0da
+    beq.b       .L0000f0da
     subi.w      #$64,d3
-L0000f0da:
+.L0000f0da:
     move.w      d3,d1
     move.w      d4,d2
     bsr.w       L0000e6d8
     tst.b       d0
-    bpl.b       L0000f0f2
+    bpl.b       .L0000f0f2
     move.w      (DAT_00ff0002),d3
     move.w      (DAT_00ff0004),d4
-L0000f0f2:
+.L0000f0f2:
     move.w      ($20,a6),d0
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$0,d1
-    bne.b       L0000f132
+    bne.b       .L0000f132
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
     bsr.w       L0000e502
     moveq       #$0,d5
     cmpi.w      #$4,d0
-    bcs.b       L0000f128
+    bcs.b       .L0000f128
     moveq       #$1,d5
     cmpi.w      #$8,d0
-    bcs.b       L0000f128
+    bcs.b       .L0000f128
     moveq       #$2,d5
     cmpi.w      #$10,d0
-    bcs.b       L0000f128
+    bcs.b       .L0000f128
     moveq       #$4,d5
-L0000f128:
+.L0000f128:
     move.w      d5,($28,a6)
     jsr         L00003424.l
-L0000f132:
+.L0000f132:
     bsr.w       L0000e60e
     move.w      ($1c,a6),d7
     movea.l     (SP)+,a0
     move.b      (a0)+,d0
     andi.b      #$1,d0
-    beq.b       L0000f17e
+    beq.b       .L0000f17e
     btst.b      #$0,($1b,a6)
-    beq.b       L0000f160
+    beq.b       .L0000f160
     cmpi.w      #$17,d7
-    beq.b       L0000f1a6
+    beq.b       .L0000f1a6
     cmpi.w      #$15,d7
     beq.w       L0000e554
     moveq       #$15,d0
     bra.w       L0000e526
-L0000f160:
+.L0000f160:
     cmpi.w      #$18,d7
-    beq.b       L0000f16c
+    beq.b       .L0000f16c
     moveq       #$18,d0
     bra.w       L0000e526
-L0000f16c:
+.L0000f16c:
     tst.b       ($1,a6)
     beq.w       L0000e554
     bset.b      #$0,($1b,a6)
     bra.w       L0000e554
-L0000f17e:
+.L0000f17e:
     btst.b      #$0,($1b,a6)
-    bne.b       L0000f19a
+    bne.b       .L0000f19a
     cmpi.w      #$18,d7
-    beq.b       L0000f16c
+    beq.b       .L0000f16c
     cmpi.w      #$13,d7
     beq.w       L0000e554
     moveq       #$13,d0
     bra.w       L0000e526
-L0000f19a:
+.L0000f19a:
     cmpi.w      #$17,d7
-    beq.b       L0000f1a6
+    beq.b       .L0000f1a6
     moveq       #$17,d0
     bra.w       L0000e526
-L0000f1a6:
+.L0000f1a6:
     tst.b       ($1,a6)
     beq.w       L0000e554
     bclr.b      #$0,($1b,a6)
     bra.w       L0000e554
+
 L0000f1b8:
     tst.b       (DAT_00ff0001)
     bne.w       L0000f4c2
-    tst.b       (DAT_00ff0022)
+    tst.b       (update_dragon_hud_flag)
     bmi.w       L0000f4c2
     tst.b       (DAT_00ff0446)
-    bpl.w       L0000f2ba
-    move.b      (DAT_00ff0022),d0
+    bpl.w       .L0000f2ba
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     bne.w       L0000f4c2
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     cmpi.b      #$6,d0
     beq.w       L0000f2fa
     cmpi.b      #$8,d0
     beq.w       L0000f350
-L0000f200:
-    clr.b       (DAT_00ff0022)
+    clr.b       (update_dragon_hud_flag)
     moveq       #-$1,d2
     move.l      #$1f4,d1
-    move.b      (DAT_00ff0021),d0
-    beq.b       L0000f22c
+    move.b      (new_dragon_level),d0
+    beq.b       .L0000f22c
     addq.b      #$1,d2
     move.l      #$15e,d1
     cmpi.b      #$1,d0
-    beq.b       L0000f22c
+    beq.b       .L0000f22c
     addq.b      #$1,d2
     move.l      #$12c,d1
-L0000f22c:
+.L0000f22c:
     move.b      #$a,(DAT_00ff0445)
     move.b      d2,(DAT_00ff0446)
     move.l      d1,($36,a6)
@@ -17647,25 +16496,26 @@ L0000f22c:
         move.w      d0,(a0)+
         dbf         d7,.L0000f2a4
     moveq       #$1,d2
-    jsr         L000036fe.l
+    jsr         prepare_dma_palette_transfer
     moveq       #$3,d0
     jmp         write_z80_reg12
-L0000f2ba:
+
+.L0000f2ba:
     clr.l       ($36,a6)
     subq.b      #$1,(DAT_00ff0445)
     bpl.w       L0000f4c2
     move.l      #$1f4,d1
-    move.b      (DAT_00ff0021),d0
-    beq.b       L0000f2e8
+    move.b      (new_dragon_level),d0
+    beq.b       .L0000f2e8
     move.l      #$15e,d1
     cmpi.b      #$1,d0
-    beq.b       L0000f2e8
+    beq.b       .L0000f2e8
     move.l      #$12c,d1
-L0000f2e8:
-    lea         (DAT_00ffd94a),a6
+.L0000f2e8:
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (DAT_00ff0446),d2
     subq.b      #$1,d2
-    bra.w       L0000f22c
+    bra.w       .L0000f22c
 L0000f2fa:
     btst.b      #$2,($1b,a6)
 L0000f300:
@@ -17673,8 +16523,8 @@ L0000f300:
     bsr.w       L0000e64e
     move.l      a0,d0
     beq.w       L0000f4c2
-    move.b      #$4,(DAT_00ffd94a)
-    move.b      #$4,(DAT_00ffd98a)
+    move.b      #$4,(DAT_00ffd90a+$40)
+    move.b      #$4,(DAT_00ffd90a+$80)
     move.w      #$4,($28,a6)
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
@@ -17689,17 +16539,18 @@ L0000f330:
     andi.w      #$8000,d1
     move.w      d1,($2a,a6)
     rts
+
 L0000f350:
     move.w      ($20,a6),d0
-    move.b      (DAT_00ff000f),d1
+    move.b      (vblank_counter),d1
     andi.b      #$1,d1
-    bne.b       L0000f37a
+    bne.b       .L0000f37a
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
-    move.w      (DAT_00ffd91c),d3
-    move.w      (DAT_00ffd920),d4
+    move.w      (DAT_00ffd90a+$12),d3
+    move.w      (DAT_00ffd90a+$16),d4
     jsr         L00003424.l
-L0000f37a:
+.L0000f37a:
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.w      ($24,a6),d3
@@ -17719,7 +16570,7 @@ L0000f37a:
     move.l      d0,($12,a6)
     move.l      d1,($16,a6)
     swap        d0
-    move.w      (DAT_00ffd91c),d2
+    move.w      (DAT_00ffd90a+$12),d2
     sub.w       d2,d0
     neg.w       d0
     add.w       d2,d0
@@ -17729,17 +16580,16 @@ L0000f37a:
     sub.w       ($52,a6),d1
     andi.w      #$8000,d1
     cmp.w       ($2a,a6),d1
-    beq.b       L0000f3f2
-    move.b      #$5,(DAT_00ffd94a)
-    move.b      #$5,(DAT_00ffd98a)
-L0000f3f2:
+    beq.b       .L0000f3f2
+    move.b      #$5,(DAT_00ffd90a+$40)
+    move.b      #$5,(DAT_00ffd90a+$80)
+.L0000f3f2:
     move.w      #$0020,($26,a6)
     bra.b       L0000f474
 L0000f3fa:
-    tst.b       (DAT_00ff0022)
-L0000f400:
+    tst.b       (update_dragon_hud_flag)
     bmi.w       L0000f4c2
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     cmpi.b      #$6,d0
@@ -17747,17 +16597,17 @@ L0000f400:
     tst.w       ($2a,a6)
     beq.w       L0000f4c2
     move.w      ($1c,a6),d0
-    move.b      (DAT_00ff0021),d5
+    move.b      (new_dragon_level),d5
     ext.w       d5
     sub.w       d5,d0
     cmpi.w      #$1c,d0
     bcs.w       L0000f4c2
     bra.b       L0000f474
+
 L0000f438:
-                      ;             ;0000f47e(*)
-    tst.b       (DAT_00ff0022)
+    tst.b       (update_dragon_hud_flag)
     bmi.w       L0000f4c2
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     cmpi.b      #$6,d0
@@ -17765,7 +16615,7 @@ L0000f438:
     tst.w       ($2a,a6)
     beq.w       L0000f4c2
     move.w      ($1c,a6),d0
-    move.b      (DAT_00ff0021),d5
+    move.b      (new_dragon_level),d5
     ext.w       d5
     sub.w       d5,d0
     cmpi.w      #$1c,d0
@@ -17773,28 +16623,29 @@ L0000f438:
 L0000f474:
     move.w      ($26,a6),d0
     cmp.w       ($1c,a6),d0
-    beq.b       L0000f48e
+    beq.b       .L0000f48e
     move.w      d0,-(SP)
     bsr.w       L0000e526
     move.w      (SP)+,d0
     adda.w      #$40,a6
     bra.w       L0000e526
-L0000f48e:
+.L0000f48e:
     bsr.w       L0000e554
     adda.w      #$40,a6
     bra.w       L0000e554
 L0000f49a:
-    tst.b       (DAT_00ff0022)
+    tst.b       (update_dragon_hud_flag)
     bmi.w       L0000f4c2
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$1f,d0
     bne.b       L0000f4c2
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     beq.b       L0000f4c2
-    addq.b      #$1,(DAT_00ff0022)
+    addq.b      #$1,(update_dragon_hud_flag)
 L0000f4c2:
     rts
+
 L0000f4c4:
     bsr.w       L0000f4d0
     bsr.w       L0000f624
@@ -17845,7 +16696,7 @@ L0000f4d0:
     move.w      (DAT_00ff0004),d4
 .L0000f55e:
     move.w      ($20,a6),d0
-    move.b      (DAT_00ff000f),d5
+    move.b      (vblank_counter),d5
     andi.b      #$0,d5
     bne.b       .L0000f59e
     move.w      ($12,a6),d1
@@ -17914,28 +16765,28 @@ L0000f624:
     bne.w       L0000f7cc
     tst.b       (DAT_00ffd90a)
     beq.w       L0000f7cc
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     add.b       ($80,a6),d0
     bne.b       .L0000f64e
     bsr.w       L0000f99c
 .L0000f64e:
-    move.w      (DAT_00ffd926),d0
+    move.w      (DAT_00ffd90a+$1c),d0
     cmpi.w      #$23,d0
     beq.w       L0000f7cc
     cmpi.w      #$24,d0
     beq.w       L0000f7cc
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     bne.w       L0000f7cc
-    move.b      (DAT_00ff0021),d0
+    move.b      (new_dragon_level),d0
     beq.b       .L0000f682
     cmpi.b      #$1,d0
     beq.b       .L0000f6a6
     bra.b       .L0000f6e2
 .L0000f682:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     tst.b       (a6)
     bne.w       L0000f7cc
     move.w      #$26,d7
@@ -17945,7 +16796,7 @@ L0000f624:
     bsr.w       L0000f738
     bra.w       L0000f7cc
 .L0000f6a6:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     bne.w       L0000f7cc
@@ -17962,7 +16813,7 @@ L0000f624:
     bsr.b       L0000f738
     bra.w       L0000f7cc
 .L0000f6e2:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     move.b      (a6),d0
     add.b       ($40,a6),d0
     add.b       ($80,a6),d0
@@ -18008,11 +16859,11 @@ L0000f738:
     move.w      d0,($34,a6)
     clr.w       ($22,a6)
     clr.w       ($24,a6)
-    move.w      (DAT_00ffd91c),($12,a6)
-    move.w      (DAT_00ffd920),d0
+    move.w      (DAT_00ffd90a+$12),($12,a6)
+    move.w      (DAT_00ffd90a+$16),d0
     subi.w      #$a,d0
     move.w      d0,($16,a6)
-    btst.b      #$0,(DAT_00ffd925)
+    btst.b      #$0,(DAT_00ffd90a+$1b)
     beq.b       .L0000f7c2
     move.w      d7,($26,a6)
     move.w      d5,($20,a6)
@@ -18023,7 +16874,7 @@ L0000f738:
     rts
 
 L0000f7cc:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     moveq       #$3,d7
     .L0000f7d4:
         move.w      d7,-(SP)
@@ -18044,10 +16895,10 @@ L0000f7cc:
         beq.w       .L0000f8d8
         btst.b      #$3,($44,a0)
         bne.w       .L0000f8d8
-        tst.b       (DAT_00ff0022)
+        tst.b       (update_dragon_hud_flag)
         beq.w       .L0000f8fc
         move.w      ($20,a6),d0
-        move.b      (DAT_00ff000f),d1
+        move.b      (vblank_counter),d1
         andi.b      #$1,d1
         bne.b       .L0000f846
         move.w      ($12,a6),d1
@@ -18056,12 +16907,12 @@ L0000f7cc:
         move.w      ($22,a0),d4
         jsr         L00003424.l
     .L0000f846:
-        tst.b       (DAT_00ff0022)
+        tst.b       (update_dragon_hud_flag)
         beq.b       .L0000f860
-        move.b      (DAT_00ff000f),d1
+        move.b      (vblank_counter),d1
         andi.b      #$7,d1
         bne.b       .L0000f860
-        subq.b      #$1,(DAT_00ff0022)
+        subq.b      #$1,(update_dragon_hud_flag)
     .L0000f860:
         bsr.w       L0000e60e
         swap        d0
@@ -18088,7 +16939,7 @@ L0000f7cc:
         moveq       #$0,d7
         bsr.w       L000082fc
     .L0000f8ae:
-        move.b      (DAT_00ff000f),d0
+        move.b      (vblank_counter),d0
         andi.b      #$7,d0
         bne.b       .L0000f8c8
         move.w      ($28,a6),d2
@@ -18116,8 +16967,8 @@ L0000f7cc:
 .L0000f8fc:
     move.w      ($12,a6),d1
     move.w      ($16,a6),d2
-    move.w      (DAT_00ffd91c),d3
-    move.w      (DAT_00ffd920),d4
+    move.w      (DAT_00ffd90a+$12),d3
+    move.w      (DAT_00ffd90a+$16),d4
     movem.w     d4-d3,-(SP)
     move.w      d3,d5
     move.w      d4,d6
@@ -18156,7 +17007,7 @@ L0000f7cc:
     bra.w       .L0000f8c8
     
 L0000f96e:
-    lea         (DAT_00ffd94a),a6
+    lea         (DAT_00ffd90a+$40),a6
     moveq       #$3,d7
     .L0000f976:
         move.w      d7,-(SP)
@@ -18176,13 +17027,13 @@ L0000f96e:
     rts
 
 L0000f99c:
-    move.b      (DAT_00ff000f),d0
+    move.b      (vblank_counter),d0
     andi.b      #$7,d0
     bne.b       L0000f9ba
-    move.b      (DAT_00ff0022),d0
+    move.b      (update_dragon_hud_flag),d0
     cmpi.b      #$10,d0
     beq.b       L0000f9ba
-    addq.b      #$1,(DAT_00ff0022)
+    addq.b      #$1,(update_dragon_hud_flag)
 L0000f9ba:
     rts
 
@@ -18295,7 +17146,7 @@ L0000fa8a:
     move.b      d3,d4       ; else d4 is $00 or $10, restore d4 with intial value from d3
     andi.w      #$1c,d4     ; mask 3 top bits
     lsr.w       #$2,d4      ; * 4
-    move.b      ($2,a0,d4*$1),d5    ; d5=(a0+2)
+    move.b      ($2,a0,d4.w),d5    ; d5=(a0+2)
     subq.w      #$2,d6
     move.b      d5,(a2)+
     move.b      d5,(a2)+
@@ -18438,8 +17289,8 @@ L0000fb72:  ; looks like decompression to me
     movem.l     (SP)+,d1-d2
 exit_L0000fc02:
     rts
-    
-L0000fc04:  ; a0=src,a1=(always DAT_00ffdd94 saved to a2), ?
+
+L0000fc04:  ; a0=src,a1=(always DAT_00ffdd94 saved to a2), a0, a2, d5 and d7 saved to structure
     movem.l     a6-a0/d7-d0,-(SP)
     movea.l     a1,a2
     move.b      (a0)+,d0
@@ -18449,359 +17300,154 @@ L0000fc04:  ; a0=src,a1=(always DAT_00ffdd94 saved to a2), ?
     andi.w      #$3fff,d7
     cmpi.w      #$8000,d0
     bcc.b       .L0000fc26
-    move.w      #$1,(DAT_00ff04ca)  ; save 1 and exit if <= $8000
+    move.w      #$1,(tile_action_code)  ; save 1 and exit if <= $8000 for CPU to VRAM DMA
     bra.b       .exit
 .L0000fc26:
     cmpi.w      #$c000,d0
     bcc.b       .L0000fc38
-    move.w      #$2,(DAT_00ff04ca)  ; save 2
+    move.w      #$2,(tile_action_code)  ; save 2 for VRAM fill
     moveq       #$0,d5              ; and d5=0
     bra.b       .exit
 .L0000fc38:
-    move.w      #$2,(DAT_00ff04ca)  ; save 2 if  >$c000 for an illegal value
+    move.w      #$2,(tile_action_code)  ; save 2 if  >$c000 for VRAM to VRAM DMA
     moveq       #-$1,d5             ; and d5=-1
 .exit:  ; push d5,d7,a0,a2 to stack
-    movem.l     d5/d7/a0/a2,DAT_00ffc4ca    ; push all these registers to stack
+    movem.l     d5/d7/a0/a2,d5_d7_a0_a2    ; push all these registers to d5_d7_a0_a2
     movem.l     (SP)+,d0-d7/a0-a6
     rts
 
-L0000fc50:
+; LOAD_COMPRESSED_WORD _d0,_d1,_d2 ; _d0 default value, _d1 repeat flags, _d2 is return register
+LOAD_COMPRESSED_WORD MACRO
+    INLINE
+    move.w      \1,\3
+    add.w       \2,\2       ; d4 x2
+    bcc.b       .break1
+    move.b      (a0)+,\3
+.break1:
+    rol.w       #$8,\3      ; _d rol 8 which will swap bytes
+    add.w       \2,\2       ; d4 x2
+    bcc.b       .break2
+    move.b      (a0)+,\3
+.break2:
+    EINLINE
+    ENDM
+
+; LOAD_COMPRESSED_LONG _d0,_d1,_d2 ; _d0 default value, _d1 repeat flags, _d2 is return register
+LOAD_COMPRESSED_LONG MACRO
+    LOAD_COMPRESSED_WORD \1,\2,\3
+    swap \3
+    LOAD_COMPRESSED_WORD \1,\2,\3
+    ENDM
+
+; function pulls reg values from memoy where:
+; a0=src, a2=dst, d5=default value used during decompressiopn, d7=number of tiles
+copy_or_decompress_n_tiles:
     movem.l     a6-a0/d7-d0,-(SP)
-    move.w      (DAT_00ff04ca),d0
+    move.w      (tile_action_code),d0
     cmpi.w      #$1,d0
-    bcs.w       L0000feba
-    beq.w       L0000fec0
-    movem.l     DAT_00ffc4ca,d5/d7/a0/a2
+    bcs.w       .exit                   ; if (tile_action_code)=0, stack + rts
+    beq.w       .copy_n_tiles            ; if (tile_action_code)=1, copy 32 bytes from a0 to a2 (1 tile)
+    movem.l     d5_d7_a0_a2,d5/d7/a0/a2 ; pull register values from RAM
     move.l      #$11111111,d6
-    move.w      #$3,d0
+    move.w      #$0003,d0
     subq.w      #$4,d7
-    bhi.b       .L0000fc88
+    bhi.b       .decompressed_n_tiles
     addq.w      #$4,d7
-    clr.w       (DAT_00ff04ca)
+    clr.w       (tile_action_code)
     move.w      d7,d0
     subq.w      #$1,d0
-.L0000fc88:
+.decompressed_n_tiles:
     swap        d7
     move.w      d0,d7
     .L0000fc8c:
         movea.l     a0,a1
-        addq.w      #$4,a0
-        move.b      (a1)+,d4
-        lsl.w       #$8,d4
-        move.b      (a1)+,d4
-        move.w      d5,d0
-        add.w       d4,d4
-        bcc.b       .L0000fc9e
-        move.b      (a0)+,d0
-    .L0000fc9e:
-        rol.w       #$8,d0
-        add.w       d4,d4
-        bcc.b       .L0000fca6
-        move.b      (a0)+,d0
-    .L0000fca6:
-        swap        d0
-        move.w      d5,d0
-        add.w       d4,d4
-        bcc.b       .L0000fcb0
-        move.b      (a0)+,d0
-    .L0000fcb0:
-        rol.w       #$8,d0
-        add.w       d4,d4
-        bcc.b       .L0000fcb8
-        move.b      (a0)+,d0
-    .L0000fcb8:
-        move.w      d5,d1
-        add.w       d4,d4
-        bcc.b       .L0000fcc0
-        move.b      (a0)+,d1
-    .L0000fcc0:
-        rol.w       #$8,d1
-        add.w       d4,d4
-        bcc.b       .L0000fcc8
-        move.b      (a0)+,d1
-    .L0000fcc8:
-        swap        d1
-        move.w      d5,d1
-        add.w       d4,d4
-        bcc.b       .L0000fcd2
-        move.b      (a0)+,d1
-    .L0000fcd2:
-        rol.w       #$8,d1
-        add.w       d4,d4
-        bcc.b       .L0000fcda
-        move.b      (a0)+,d1
-    .L0000fcda:
-        move.w      d5,d2
-        add.w       d4,d4
-        bcc.b       .L0000fce2
-        move.b      (a0)+,d2
-    .L0000fce2:
-        rol.w       #$8,d2
-        add.w       d4,d4
-        bcc.b       .L0000fcea
-        move.b      (a0)+,d2
-    .L0000fcea:
-        swap        d2
-        move.w      d5,d2
-        add.w       d4,d4
-        bcc.b       .L0000fcf4
-        move.b      (a0)+,d2
-    .L0000fcf4:
-        rol.w       #$8,d2
-        add.w       d4,d4
-        bcc.b       .L0000fcfc
-        move.b      (a0)+,d2
-    .L0000fcfc:
-        move.w      d5,d3
-        add.w       d4,d4
-        bcc.b       .L0000fd04
-        move.b      (a0)+,d3
-    .L0000fd04:
-        rol.w       #$8,d3
-        add.w       d4,d4
-        bcc.b       .L0000fd0c
-        move.b      (a0)+,d3
-    .L0000fd0c:
-        swap        d3
-        move.w      d5,d3
-        add.w       d4,d4
-        bcc.b       .L0000fd16
-        move.b      (a0)+,d3
-    .L0000fd16:
-        rol.w       #$8,d3
-        add.w       d4,d4
-        bcc.b       .L0000fd1e
-        move.b      (a0)+,d3
-    .L0000fd1e:
-        movea.l     d0,a3
-        movea.l     d1,a4
-        movea.l     d2,a5
-        movea.l     d3,a6
-        and.l       d6,d0
-        rol.l       #$3,d0
-        and.l       d6,d1
-        rol.l       #$2,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        add.l       d2,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        add.l       d3,d0
-        add.l       d6,d6
-        move.l      d0,(a2)+
-        move.l      a3,d0
-        move.l      a4,d1
-        move.l      a5,d2
-        move.l      a6,d3
-        and.l       d6,d0
-        rol.l       #$2,d0
-        and.l       d6,d1
-        add.l       d1,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        ror.l       #$1,d3
-        add.l       d3,d0
-        add.l       d6,d6
-        move.l      d0,(a2)+
-        move.l      a3,d0
-        move.l      a4,d1
-        move.l      a5,d2
-        move.l      a6,d3
-        and.l       d6,d0
-        add.l       d0,d0
-        and.l       d6,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        ror.l       #$1,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        ror.l       #$2,d3
-        add.l       d3,d0
-        add.l       d6,d6
-        move.l      d0,(a2)+
-        move.l      a3,d0
-        move.l      a4,d1
-        move.l      a5,d2
-        move.l      a6,d3
-        and.l       d6,d0
-        and.l       d6,d1
-        ror.l       #$1,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        ror.l       #$2,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        ror.l       #$3,d3
-        add.l       d3,d0
-        rol.l       #$1,d6
-        move.l      d0,(a2)+
-        move.b      (a1)+,d4
-        lsl.w       #$8,d4
-        move.b      (a1)+,d4
-        move.w      d5,d0
-        add.w       d4,d4
-        bcc.b       .L0000fdac
-        move.b      (a0)+,d0
-    .L0000fdac:
-        rol.w       #$8,d0
-        add.w       d4,d4
-        bcc.b       .L0000fdb4
-        move.b      (a0)+,d0
-    .L0000fdb4:
-        swap        d0
-        move.w      d5,d0
-        add.w       d4,d4
-        bcc.b       .L0000fdbe
-        move.b      (a0)+,d0
-    .L0000fdbe:
-        rol.w       #$8,d0
-        add.w       d4,d4
-        bcc.b       .L0000fdc6
-        move.b      (a0)+,d0
-    .L0000fdc6:
-        move.w      d5,d1
-        add.w       d4,d4
-        bcc.b       .L0000fdce
-        move.b      (a0)+,d1
-    .L0000fdce:
-        rol.w       #$8,d1
-        add.w       d4,d4
-        bcc.b       .L0000fdd6
-        move.b      (a0)+,d1
-    .L0000fdd6:
-        swap        d1
-        move.w      d5,d1
-        add.w       d4,d4
-        bcc.b       .L0000fde0
-        move.b      (a0)+,d1
-    .L0000fde0:
-        rol.w       #$8,d1
-        add.w       d4,d4
-        bcc.b       .L0000fde8
-        move.b      (a0)+,d1
-    .L0000fde8:
-        move.w      d5,d2
-        add.w       d4,d4
-        bcc.b       .L0000fdf0
-        move.b      (a0)+,d2
-    .L0000fdf0:
-        rol.w       #$8,d2
-        add.w       d4,d4
-        bcc.b       .L0000fdf8
-        move.b      (a0)+,d2
-    .L0000fdf8:
-        swap        d2
-        move.w      d5,d2
-        add.w       d4,d4
-        bcc.b       .L0000fe02
-        move.b      (a0)+,d2
-    .L0000fe02:
-        rol.w       #$8,d2
-        add.w       d4,d4
-        bcc.b       .L0000fe0a
-        move.b      (a0)+,d2
-    .L0000fe0a:
-        move.w      d5,d3
-        add.w       d4,d4
-        bcc.b       .L0000fe12
-        move.b      (a0)+,d3
-    .L0000fe12:
-        rol.w       #$8,d3
-        add.w       d4,d4
-        bcc.b       .L0000fe1a
-        move.b      (a0)+,d3
-    .L0000fe1a:
-        swap        d3
-        move.w      d5,d3
-        add.w       d4,d4
-        bcc.b       .L0000fe24
-        move.b      (a0)+,d3
-    .L0000fe24:
-        rol.w       #$8,d3
-        add.w       d4,d4
-        bcc.b       .L0000fe2c
-        move.b      (a0)+,d3
-    .L0000fe2c:
-        movea.l     d0,a3
-        movea.l     d1,a4
-        movea.l     d2,a5
-        movea.l     d3,a6
-        and.l       d6,d0
-        rol.l       #$3,d0
-        and.l       d6,d1
-        rol.l       #$2,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        add.l       d2,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        add.l       d3,d0
-        add.l       d6,d6
-        move.l      d0,(a2)+
-        move.l      a3,d0
-        move.l      a4,d1
-        move.l      a5,d2
-        move.l      a6,d3
-        and.l       d6,d0
-        rol.l       #$2,d0
-        and.l       d6,d1
-        add.l       d1,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        ror.l       #$1,d3
-        add.l       d3,d0
-        add.l       d6,d6
-        move.l      d0,(a2)+
-        move.l      a3,d0
-        move.l      a4,d1
-        move.l      a5,d2
-        move.l      a6,d3
-        and.l       d6,d0
-        add.l       d0,d0
-        and.l       d6,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        ror.l       #$1,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        ror.l       #$2,d3
-        add.l       d3,d0
-        add.l       d6,d6
-        move.l      d0,(a2)+
-        move.l      a3,d0
-        move.l      a4,d1
-        move.l      a5,d2
-        move.l      a6,d3
-        and.l       d6,d0
-        and.l       d6,d1
-        ror.l       #$1,d1
-        add.l       d1,d0
-        and.l       d6,d2
-        ror.l       #$2,d2
-        add.l       d2,d0
-        and.l       d6,d3
-        ror.l       #$3,d3
-        add.l       d3,d0
-        rol.l       #$1,d6
-        move.l      d0,(a2)+
+        addq.w      #$4,a0      ; length?
+        REPT 2
+            move.b      (a1)+,d4    ;
+            lsl.w       #$8,d4      ;
+            move.b      (a1)+,d4    ; d4=(a1).b*$100+(a1+1).b
+            LOAD_COMPRESSED_LONG d5,d4,d0
+            LOAD_COMPRESSED_LONG d5,d4,d1
+            LOAD_COMPRESSED_LONG d5,d4,d2
+            LOAD_COMPRESSED_LONG d5,d4,d3
+            movea.l     d0,a3
+            movea.l     d1,a4
+            movea.l     d2,a5
+            movea.l     d3,a6
+            and.l       d6,d0
+            rol.l       #$3,d0
+            and.l       d6,d1
+            rol.l       #$2,d1
+            add.l       d1,d0
+            and.l       d6,d2
+            add.l       d2,d2
+            add.l       d2,d0
+            and.l       d6,d3
+            add.l       d3,d0
+            add.l       d6,d6
+            move.l      d0,(a2)+
+            move.l      a3,d0
+            move.l      a4,d1
+            move.l      a5,d2
+            move.l      a6,d3
+            and.l       d6,d0
+            rol.l       #$2,d0
+            and.l       d6,d1
+            add.l       d1,d1
+            add.l       d1,d0
+            and.l       d6,d2
+            add.l       d2,d0
+            and.l       d6,d3
+            ror.l       #$1,d3
+            add.l       d3,d0
+            add.l       d6,d6
+            move.l      d0,(a2)+
+            move.l      a3,d0
+            move.l      a4,d1
+            move.l      a5,d2
+            move.l      a6,d3
+            and.l       d6,d0
+            add.l       d0,d0
+            and.l       d6,d1
+            add.l       d1,d0
+            and.l       d6,d2
+            ror.l       #$1,d2
+            add.l       d2,d0
+            and.l       d6,d3
+            ror.l       #$2,d3
+            add.l       d3,d0
+            add.l       d6,d6
+            move.l      d0,(a2)+
+            move.l      a3,d0
+            move.l      a4,d1
+            move.l      a5,d2
+            move.l      a6,d3
+            and.l       d6,d0
+            and.l       d6,d1
+            ror.l       #$1,d1
+            add.l       d1,d0
+            and.l       d6,d2
+            ror.l       #$2,d2
+            add.l       d2,d0
+            and.l       d6,d3
+            ror.l       #$3,d3
+            add.l       d3,d0
+            rol.l       #$1,d6
+            move.l      d0,(a2)+
+        ENDR
         dbf         d7,.L0000fc8c
     swap        d7
-    movem.l     d5/d7/a0/a2,DAT_00ffc4ca
-L0000feba:
+    movem.l     d5/d7/a0/a2,d5_d7_a0_a2 ; save new value for next time
+.exit:
     movem.l     (SP)+,d0-d7/a0-a6
     rts
-
-L0000fec0:  ; d7=?, a0=src, a2=dst
-    movem.l     DAT_00ffc4ca,d5/d7/a0/a2
-    move.w      #$3,d0  ; d0=3
-    subq.w      #$4,d7  ; d7=d7-4
+.copy_n_tiles:  ;
+    movem.l     d5_d7_a0_a2,d5/d7/a0/a2
+    move.w      #$0003,d0  ; d0=3
+    subq.w      #$0004,d7  ; d7=d7-4
     bhi.b       .L0     ; jump if >0
     addq.w      #$4,d7  ; else add 4
-    clr.w       (DAT_00ff04ca)
+    clr.w       (tile_action_code)
     move.w      d7,d0   ; d0 can be 1 to 4
     subq.w      #$1,d0  ; d0 will be 0 to 3
     .L0:
@@ -18809,59 +17455,60 @@ L0000fec0:  ; d7=?, a0=src, a2=dst
             move.b      (a0)+,(a2)+
         ENDR
         dbf         d0,.L0
-    movem.l     d5/d7/a0/a2,DAT_00ffc4ca
-    bra.b       L0000feba
+    movem.l     d5/d7/a0/a2,d5_d7_a0_a2
+    bra.b       .exit      ; stack + rts
 
-; d1=VRAM addr, ,d2=cfg/src, d3=length
-L0000ff2a:
+; d1=VRAM addr, d2=src addr, d3=length
+dma_tiles_to_vram:
     jsr         add_item_to_dma_data_array
-    jmp         L00003406
+    jmp         dma_copied_or_decompressed_tiles
 
-L0000ff36:
+L0000ff36:  ; a0 contains n byte structure (dl length, dl address offset 1, dl address offset 2
+; a1=dst_addr
     movem.l     a6-a0/d7-d0,-(SP)
-    move.l      (a0),d7
+    move.l      (a0),d7         ; d7=length
     movea.l     a1,a6
-    adda.l      d7,a6
+    adda.l      d7,a6           ; a6 becomes the last addr that will be use in cmp at the end of the loop
     movea.l     ($4,a0),a2
-    adda.l      a0,a2
+    adda.l      a0,a2           ; apply offset 1 to a2
     movea.l     ($8,a0),a3
-    adda.l      a0,a3
-    movea.l     a0,a4
-    adda.l      #$c,a4
-    movea.l     a0,a5
-    adda.l      #$20a,a5
-L0000ff5c:
-    moveq       #$0,d0
-    move.b      (a2)+,d0
-    beq.b       .L0000ff6c
-    subq.w      #$1,d0
-    lsl.w       #$1,d0
-    move.w      ($0,a4,d0*$1),(a1)+
-    bra.b       .L0000ff9c
-.L0000ff6c:
-    move.b      (a2)+,d0
-    beq.b       .L0000ff94
-    subq.w      #$1,d0
-    lsl.w       #$2,d0
-    move.l      ($0,a5,d0*$1),d1
-    move.l      d1,d2
-    rol.l       #$8,d2
-    andi.l      #$7,d2
-    movea.l     a3,a0
-    andi.l      #$ffffff,d1
-    adda.l      d1,a0
-    .L0000ff8c:
-        move.w      (a0)+,(a1)+
-        dbf         d2,.L0000ff8c
-    bra.b       .L0000ff9c
-.L0000ff94:
-    move.b      (a2)+,d0
-    lsl.w       #$8,d0
-    move.b      (a2)+,d0
-    move.w      d0,(a1)+
-.L0000ff9c:
-    cmpa.l      a6,a1
-    bcs.b       L0000ff5c
+    adda.l      a0,a3           ; apply offset 2 to a2
+    movea.l     a0,a4           ; save current base address to a4
+    adda.l      #$c,a4          ; add constant offset to a4
+    movea.l     a0,a5           ; save current base address to a5 too
+    adda.l      #$20a,a5        ; add constant offset to a5
+    .L0000ff5c:
+        moveq       #$0,d0
+        move.b      (a2)+,d0
+        beq.b       .L0000ff6c
+        subq.w      #$1,d0
+        lsl.w       #$1,d0
+        move.w      ($0,a4,d0.w),(a1)+  ; d0 will be 0 to 508
+        bra.b       .next
+    .L0000ff6c:
+        move.b      (a2)+,d0
+        beq.b       .L0000ff94
+        subq.w      #$1,d0
+        lsl.w       #$2,d0
+        move.l      ($0,a5,d0.w),d1
+        move.l      d1,d2
+        rol.l       #$8,d2
+        andi.l      #$7,d2
+        movea.l     a3,a0
+        andi.l      #$ffffff,d1
+        adda.l      d1,a0
+        .L0000ff8c:
+            move.w      (a0)+,(a1)+
+            dbf         d2,.L0000ff8c
+        bra.b       .next
+    .L0000ff94:
+        move.b      (a2)+,d0
+        lsl.w       #$8,d0
+        move.b      (a2)+,d0
+        move.w      d0,(a1)+
+    .next:
+        cmpa.l      a6,a1
+        bcs.b       .L0000ff5c
     movem.l     (SP)+,d0-d7/a0-a6
     rts
 
@@ -18871,7 +17518,7 @@ play_intro_credits:  ; (0000ffa6)
     move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
     move.w      #$0,(a1)    ; no v scrolling
     move.w      #$0,(a1)    ; no v scrolling
-    move.l      SP,(DAT_00ff05bc)   ; pull from stack
+    move.l      SP,(stack_pointer_during_intro)   ; pull from stack
     jsr         jp_read
     btst.b      #$7,(jp1_result)    ; PAD_START
     bne.w       start_button_pressed
@@ -18890,7 +17537,7 @@ play_intro_credits:  ; (0000ffa6)
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       intro_credit_scrolling
             dbf         d6,.L0
-        lea         (L000115bc),a3
+        lea         (target_title_screen_palette),a3
         lea         (palettes_0),a2
         bsr.w       increment_palette_if_palette_target_gt_d7
         bsr.w       wait_for_vblank_and_check_pad_start
@@ -18906,7 +17553,7 @@ play_intro_credits:  ; (0000ffa6)
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       intro_credit_scrolling
             dbf         d6,.L2
-        lea         (L000115bc),a3  ; nout used?
+        lea         (target_title_screen_palette),a3  ; not used?
         lea         (palettes_3),a2
         bsr.w       decrement_palette
         bsr.w       wait_for_vblank_and_check_pad_start
@@ -18915,8 +17562,8 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       intro_credit_scrolling
         dbf         d7,.L3
     move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites)
-    move.w      #$0,(a1)    ; no h scroll?
-    move.w      #$0,(a1)    ; no h scroll?
+    move.w      #$0,(a1)    ; no sprites
+    move.w      #$0,(a1)    ; no sprites
     bsr.w       play_intro_credits_for_142_frames   ; start intro credits?
     clr.b       (alt_intro_credits_sound_flag)
     tst.b       (jp2_en_flag)
@@ -18946,7 +17593,7 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       intro_credit_scrolling
         move.w      (start_options_index),d0    ; check counter
-        cmpi.w      #$fce8,d0
+        cmpi.w      #$fce8,d0 ; 792 vblanks or 12 seconds?
         beq.b       .intro_counter_match
         bra.b       .dec_intro_counter
 .intro_counter_match:
@@ -18974,7 +17621,7 @@ play_intro_credits:  ; (0000ffa6)
             dbf         d6,.L00010150
         lea         (L0001163c),a3
         lea         (palettes_0),a2
-        bsr.w       L000111d0
+        bsr.w       increment_half_palette_if_palette_target_gt_d7    ; only called once
         bsr.w       update_cram_with_palettes_0
         addq.w      #$1,d7
         cmpi.w      #$7,d7
@@ -19008,7 +17655,7 @@ play_intro_credits:  ; (0000ffa6)
             bsr.w       update_cram_blue_col1_8_with_d7
             dbf         d6,.L000101b8
         lea         (palettes_0),a2
-        bsr.w       increment_palette
+        bsr.w       drecrement_half_palette
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_with_palettes_0
         bsr.w       wait_for_vblank_and_check_pad_start
@@ -19037,12 +17684,12 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       update_psb_msg
         jsr         jp_read
         btst.b      #$7,(jp1_result)    ; PAD_START
-        bne.b       psb_start_pressed           ; branch if start pressed
+        bne.b       .psb_start_pressed           ; branch if start pressed
         move.l      (SP)+,d7
         dbf         d7,psb_phase
     bsr.w       write_z80_reg6_with_c8h
     moveq       #$7,d7
-    .L0001026c:
+    .dec_palettes:
         lea         (palettes_3),a2
         bsr.w       decrement_palette
         lea         (palettes_2),a2
@@ -19054,47 +17701,46 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_with_palettes_0
-        dbf         d7,.L0001026c
+        dbf         d7,.dec_palettes
     jsr         disable_display
     moveq       #$0,d0
     rts
-
-psb_start_pressed:
-    move.l      #(VDP_VRAM_WADDR+$2c900003),(VDP_CTRL) ; $ec90 VRAM WADDR
-    moveq       #$18,d0
-    .clear_bg1_line1_char:
-        move.w      #$0,(a1)
-        dbf         d0,.clear_bg1_line1_char
-    move.l      #(VDP_VRAM_WADDR+$2d100003),(VDP_CTRL) ; $ed10 VRAM WADDR
-    moveq       #$18,d0
-    .clear_bg1_line2_char:
-        move.w      #$0,(a1)
-        dbf         d0,.clear_bg1_line2_char
-    moveq       #$0,d7  ; row counter reset
-    .set_bg2_tilemap_row:
-        bsr.w       wait_for_vblank_plus_small_delay
-        move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
-        move.w      d7,(VDP_DATA)   ; reset v scrolling
-        move.w      d7,(VDP_DATA)   ; reset v scrolling
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
-        moveq       #$4f,d6
-        lea         (DAT_00ff17c0),a2
-        .L00010304:
-            subq.w      #$1,(a2)
-            move.w      (a2)+,(VDP_DATA)
-            move.w      (a2)+,(VDP_DATA)
-            move.w      (a2)+,(VDP_DATA)
-            move.w      (a2)+,(VDP_DATA)
-            dbf         d6,.L00010304
-        addq.w      #$1,d7  ; row counter++
-        cmpi.w      #$18,d7 ; 24 rows
-        bcs.b       .set_bg2_tilemap_row
-    move.l      #(VDP_VRAM_WADDR+PRESS_START_BUTTON_POS),(VDP_CTRL)
-    moveq       #$1e,d7
-    .erase_psb_msg:
-        move.w      #$0,(VDP_DATA)
-        dbf         d7,.erase_psb_msg
-    bra.w       L00010412
+    .psb_start_pressed:
+        move.l      #(VDP_VRAM_WADDR+$2c900003),(VDP_CTRL) ; $ec90 VRAM WADDR
+        moveq       #$18,d0
+        .clear_bg1_line1_char:
+            move.w      #$0,(a1)
+            dbf         d0,.clear_bg1_line1_char
+        move.l      #(VDP_VRAM_WADDR+$2d100003),(VDP_CTRL) ; $ed10 VRAM WADDR
+        moveq       #$18,d0
+        .clear_bg1_line2_char:
+            move.w      #$0,(a1)
+            dbf         d0,.clear_bg1_line2_char
+        moveq       #$0,d7  ; row counter reset
+        .set_bg2_tilemap_row:
+            bsr.w       wait_for_vblank_plus_small_delay
+            move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
+            move.w      d7,(VDP_DATA)   ; reset v scrolling
+            move.w      d7,(VDP_DATA)   ; reset v scrolling
+            move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites?)
+            moveq       #$4f,d6
+            lea         (sprite_table_data),a2  ; might be scratch memory not only for sprites
+            .transfer_sprite_table_item:
+                subq.w      #$1,(a2)        ; vpos_1 is temp sprite table?
+                move.w      (a2)+,(VDP_DATA)
+                move.w      (a2)+,(VDP_DATA)
+                move.w      (a2)+,(VDP_DATA)
+                move.w      (a2)+,(VDP_DATA)
+                dbf         d6,.transfer_sprite_table_item
+            addq.w      #$1,d7  ; row counter++
+            cmpi.w      #$18,d7 ; 24 rows
+            bcs.b       .set_bg2_tilemap_row
+        move.l      #(VDP_VRAM_WADDR+PRESS_START_BUTTON_POS),(VDP_CTRL)
+        moveq       #$1e,d7     ; message length-1
+        .erase_psb_msg:
+            move.w      #$0,(VDP_DATA)
+            dbf         d7,.erase_psb_msg
+        bra.w       start_options_screen
 
 start_button_pressed:  ;(00010346)
     tst.b       (alt_intro_credits_sound_flag)
@@ -19102,11 +17748,11 @@ start_button_pressed:  ;(00010346)
     moveq       #$9,d0
     bsr.w       write_z80_reg12_alt ; play alternative sound
     move.b      #$1,(jp2_en_flag)
-    bra.w       L00010366
+    bra.w       stop_intro_credits_or_options_music
 .no_sound_flag:
     moveq       #$1c,d0             ; play default sound
     bsr.w       write_z80_reg12_alt
-L00010366:
+stop_intro_credits_or_options_music:
     bsr.w       write_z80_reg6_with_c8h
     moveq       #$7,d7
     .fade_out:
@@ -19146,8 +17792,8 @@ L00010366:
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       update_cram_with_palettes_0
         dbf         d7,.title_screen_fadein
-L00010412:
-    movea.l     (DAT_00ff05bc),SP
+start_options_screen:
+    movea.l     (stack_pointer_during_intro),SP
     bsr.w       write_z80_reg6_with_c8h
     bsr.w       wait_for_vblank_plus_small_delay
     move.w      #CRAM_WHITE,(palettes_3+$1e)   ; white
@@ -19205,7 +17851,7 @@ L00010412:
         dbf         d7,.title_screen_fadeout
     jsr         disable_display
     move.w      (start_options_index),d0
-    bne.w       open_options_menu
+    bne.w       open_options_menu   ; will be stuck here until start is pressed to leave the menu
     moveq       #-$1,d0 ; set flag to start game
     rts
 
@@ -19217,7 +17863,7 @@ wait_no_buttons_pressed:  ; (000104f4)
     rts
 
 display_title_screen_arrow:  ;udate arrow
-    move.l      #(VDP_CRAM_WADDR+$e0000),(VDP_CTRL) ; colour 7?
+    move.l      #(VDP_CRAM_WADDR+$e0000),(VDP_CTRL)     ; colour 7?
     move.w      #$000a,(a1) ; RED 
     move.w      (start_options_index),d0
     bne.b       .select_options
@@ -19259,7 +17905,7 @@ L0001056a:
     move.w      #$6000,d1
     move.l      #(L000754dc),d2
     move.w      #$8200,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.l      #(L00074bba),d0
     move.w      #$7000,d1
     move.w      #$30,d2
@@ -19302,7 +17948,7 @@ L0001065c:
     move.w      #$6000,d1
     move.l      #(L000754dc),d2
     move.w      #$8200,d3
-    jsr         L0000ff2a
+    jsr         dma_tiles_to_vram
     move.l      #(L00074bba),d0
     move.w      #$7000,d1
     move.w      #$30,d2
@@ -19385,11 +18031,11 @@ L0001074e:
             move.w      #$0,(a1)
             dbf         d1,.unused_htiles
         dbf         d0,.vtiles
-    move.l      #(VDP_VRAM_WADDR+$34000003),(VDP_CTRL)   ; $F400 VRAM WADDR
-    move.w      #$0,(a1)
-    move.w      #$0,(a1)
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
-    move.w      #$0,(a1)
+    move.l      #(VDP_VRAM_WADDR+$34000003),(VDP_CTRL)   ; $f400 VRAM WADDR
+    move.w      #$0,(a1)    ; bg1 hscrolling = 0
+    move.w      #$0,(a1)    ; bg2 hscrolling = 0
+    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR window?
+    move.w      #$0,(a1)        ; no sprites as sprite #0 is set to 0
     move.w      #$0,(a1)
     move.w      #$0,(a1)
     move.w      #$0,(a1)
@@ -19411,17 +18057,17 @@ L000107f0:
             dbf         d1,.unused_htiles
         dbf         d0,.vtiles
     bsr.w       wait_for_vblank_plus_small_delay
-    lea         (L0001149e),a2
+    lea         (title_screen_fianl_sprite_table),a2  ; sprite table from ROM
     move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
     moveq       #$4f,d6
-    .L00010830:
+    .save_sprite_object_to_vram:
         move.w      (a2)+,d0
         subi.w      #$17,d0
         move.w      d0,(a1)
         move.w      (a2)+,(a1)
         move.w      (a2)+,(a1)
         move.w      (a2)+,(a1)
-        dbf         d6,.L00010830
+        dbf         d6,.save_sprite_object_to_vram
     bsr.w       update_cram_with_palettes_0
     move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
     move.w      #$17,(VDP_DATA)
@@ -19441,45 +18087,17 @@ L00010862:
         move.w      #CRAM_WHITE,(a3)+
         dbf         d0,.L00010884
     bsr.w       wait_for_vblank_and_check_pad_start
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
-    move.w      #$0,(a1)
-    move.w      #$0,(a1)
-    move.w      #$0,(a1)
-    move.w      #$0,(a1)
+    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR  (sprites)
+    move.w      #$0,(a1)    ; first sprite set to 0
+    move.w      #$0,(a1)    ; first sprite set to 0
+    move.w      #$0,(a1)    ; first sprite set to 0
+    move.w      #$0,(a1)    ; first sprite set to 0
     bsr.w       wait_for_vblank_and_check_pad_start
     jsr         enable_display
     bsr.w       update_cram_with_palettes_0
     moveq       #$0,d3
     .L000108ba:
-        lea         (palettes_0),a3
-        lea         (title_screen_palette_0),a2
-        moveq       #$2f,d4
-        .L000108c8:
-            move.b      (a3),d0
-            cmp.b       (a2)+,d3
-            bcs.b       .L000108d0
-            subq.b      #$2,d0
-        .L000108d0:
-            move.b      d0,(a3)+
-            move.b      (a3),d0
-            move.b      d0,d1
-            andi.b      #$e0,d0
-            andi.b      #$e,d1
-            move.b      (a2),d2
-            lsr.b       #$4,d2
-            cmp.b       d2,d3
-            bcs.b       .L000108ea
-            subi.b      #$20,d0
-        .L000108ea:
-            move.b      (a2)+,d2
-            andi.b      #$e,d2
-            cmp.b       d2,d3
-            bcs.b       .L000108f6
-            subq.b      #$2,d1
-        .L000108f6:
-            or.b        d1,d0
-            move.b      d0,(a3)+
-            dbf         d4,.L000108c8
+        DEC_N_COLOURS_TO_TARGET title_screen_palette_0,palettes_0,$30
         move.l      d3,-(SP)
         REPT 3
             bsr.w       wait_for_vblank_plus_small_delay
@@ -19527,8 +18145,8 @@ L00010862:
     .L000109ba:
         bsr.w       wait_for_vblank_and_check_pad_start
         dbf         d6,.L000109ba
-    lea         (L000113d6),a3  ; more sprites
-    lea         (DAT_00ff17c0),a2
+    lea         (title_screen_initial_sprite_table),a3  ; more sprites
+    lea         (sprite_table_data),a2
     moveq       #$18,d7
     .L000109d0:
         move.l      (a3)+,(a2)+
@@ -19539,7 +18157,7 @@ L00010862:
     moveq       #$13,d7
     .L000109e6:
         bsr.w       wait_for_vblank_and_check_pad_start
-        lea         (DAT_00ff17c0),a2
+        lea         (sprite_table_data),a2
         move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
         moveq       #$4f,d6
         .L000109fc:
@@ -19548,7 +18166,7 @@ L00010862:
             move.w      (a2)+,(a1)
             move.w      (a2)+,(a1)
             dbf         d6,.L000109fc
-        lea         (DAT_00ff17c0),a2
+        lea         (sprite_table_data),a2
         moveq       #$c,d6
         .L00010a10:
             addq.w      #$8,($6,a2)
@@ -19574,8 +18192,8 @@ L00010862:
     .L00010a54:
         bsr.w       wait_for_vblank_plus_small_delay
         dbf         d7,.L00010a54
-    lea         (L0001149e),a3
-    lea         (DAT_00ff17c0),a2
+    lea         (title_screen_fianl_sprite_table),a3
+    lea         (sprite_table_data),a2
     moveq       #$1e,d7
     .L00010a6a:
         move.l      (a3)+,(a2)+
@@ -19584,7 +18202,7 @@ L00010862:
     move.l      #$0,(a2)+
     move.l      #$0,(a2)+
     bsr.w       wait_for_vblank_and_check_pad_start
-    lea         (DAT_00ff17c0),a2
+    lea         (sprite_table_data),a2
     move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
     moveq       #$4f,d6
     .L00010a94:
@@ -19610,35 +18228,8 @@ L00010862:
         dbf         d6,.L00010ac6
     moveq       #$0,d3
     .L00010ad0:
-        lea         (palettes_1),a3
-        lea         (title_screen_palette_1),a2
-        moveq       #$f,d4
-        .L00010ade:
-            move.b      (a3),d0
-            cmp.b       (a2)+,d3
-            bcs.b       .L00010ae6
-            subq.b      #$2,d0
-        .L00010ae6:
-            move.b      d0,(a3)+
-            move.b      (a3),d0
-            move.b      d0,d1
-            andi.b      #$e0,d0
-            andi.b      #$e,d1
-            move.b      (a2),d2
-            lsr.b       #$4,d2
-            cmp.b       d2,d3
-            bcs.b       .L00010b00
-            subi.b      #$20,d0
-        .L00010b00:
-            move.b      (a2)+,d2
-            andi.b      #$e,d2
-            cmp.b       d2,d3
-            bcs.b       .L00010b0c
-            subq.b      #$2,d1
-        .L00010b0c:
-            or.b        d1,d0
-            move.b      d0,(a3)+
-            dbf         d4,.L00010ade
+        ; TODO add macro here
+        DEC_N_COLOURS_TO_TARGET title_screen_palette_1,palettes_1,$10
         move.l      d3,-(SP)
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
@@ -19661,20 +18252,20 @@ L00010b32:
         bsr.w       L00010d98
         move.l      (SP)+,d0
         dbf         d0,.L00010b50
-    moveq       #$45,d7
+    moveq       #$45,d7 ; number of frames - 1 (70-1)
     .L00010b5e:
         move.l      d7,-(SP)
-        bsr.w       L00010e48
-        lea         (DAT_00ff17c0),a2
+        bsr.w       L00010e48   ; update sprite table?
+        lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites)
         moveq       #$4f,d0
-        .L00010b7a:
+        .save_sprite_table_item_to_vram:
             move.w      (a2)+,(a1)
             move.w      (a2)+,(a1)
             move.w      (a2)+,(a1)
             move.w      (a2)+,(a1)
-            dbf         d0,.L00010b7a
+            dbf         d0,.save_sprite_table_item_to_vram
         move.l      (SP)+,d7
         dbf         d7,.L00010b5e
     moveq       #$f,d7
@@ -19691,7 +18282,7 @@ L00010b32:
         move.l      d7,-(SP)
         bsr.w       L00010e48
         move.l      (SP)+,d7
-        lea         (DAT_00ff17c0),a2
+        lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
         move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
         moveq       #$4f,d0
@@ -19707,7 +18298,7 @@ L00010b32:
     .L00010be4:
         bsr.w       L00010d98
         bsr.w       L00010e48
-        lea         (DAT_00ff17c0),a2
+        lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
         move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
         move.w      #$4f,d0
@@ -19730,7 +18321,7 @@ L00010b32:
         bsr.w       L00010d98
         bsr.w       L00010e48
         bsr.b       L00010cac
-        lea         (DAT_00ff17c0),a2
+        lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
         move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
         move.w      #$4f,d0
@@ -19847,62 +18438,63 @@ L00010d98:
     moveq       #$4e,d7
     .L00010da0:
         btst.b      #$7,(a2)
-        beq.b       L00010db2
+        beq.b       .L00010db2
         adda.l      #$10,a2
         dbf         d7,.L00010da0
     rts
+    .L00010db2:
+        lea         (L00011d1c),a3
+        move.w      #$8000,(a2)
+        move.w      #$0000,($6,a2)
+        move.w      #$0000,($8,a2)
+        jsr         update_hv_counter
+        andi.w      #$3f,d0
+        move.w      d0,d1
+        andi.w      #$f,d1
+        lsl.w       #$2,d1
+        move.w      ($0,a3,d1.w),d2
+        move.w      ($2,a3,d1.w),d3
+        move.l      d0,-(SP)    ; save d0
+        jsr         update_hv_counter
+        andi.w      #$3,d0
+        beq.b       .no_shifting
+        asr.w       d0,d2
+        asr.w       d0,d3
+    .no_shifting:
+        move.l      (SP)+,d0    ; restore d0
+        btst.l      #$5,d0
+        beq.b       .L00010dfe
+        neg.w       d2
+    .L00010dfe:
+        btst.l      #$4,d0
+        beq.b       .L00010e06
+        neg.w       d3
+    .L00010e06:
+        move.w      d2,($a,a2)
+        move.w      d3,($c,a2)
+        move.w      #$120,d1
+        jsr         update_hv_counter
+        andi.w      #$00ff,d0
+        addi.w      #$7f,d0
+        muls.w      d2,d0
+        asr.w       #$7,d0
+        add.w       d0,d1
+        move.w      d1,($2,a2)
+        move.w      #$e0,d1
+        jsr         update_hv_counter
+        andi.w      #$ff,d0
+        addi.w      #$7f,d0
+        muls.w      d3,d0
+        asr.w       #$7,d0
+        add.w       d0,d1
+        move.w      d1,($4,a2)
+        rts
 
-L00010db2:
-    lea         (L00011d1c),a3
-    move.w      #$8000,(a2)
-    move.w      #$0,($6,a2)
-    move.w      #$0,($8,a2)
-    jsr         L00002c3a
-    andi.w      #$3f,d0
-    move.w      d0,d1
-    andi.w      #$f,d1
-    lsl.w       #$2,d1
-    move.w      ($0,a3,d1*$1),d2
-    move.w      ($2,a3,d1*$1),d3
-    move.l      d0,-(SP)
-    jsr         L00002c3a
-    andi.w      #$3,d0
-    beq.b       .L00010df4
-    asr.w       d0,d2
-    asr.w       d0,d3
-.L00010df4:
-    move.l      (SP)+,d0
-    btst.l      #$5,d0
-    beq.b       .L00010dfe
-    neg.w       d2
-.L00010dfe:
-    btst.l      #$4,d0
-    beq.b       .L00010e06
-    neg.w       d3
-.L00010e06:
-    move.w      d2,($a,a2)
-    move.w      d3,($c,a2)
-    move.w      #$120,d1
-    jsr         L00002c3a
-    andi.w      #$ff,d0
-    addi.w      #$7f,d0
-    muls.w      d2,d0
-    asr.w       #$7,d0
-    add.w       d0,d1
-    move.w      d1,($2,a2)
-    move.w      #$e0,d1
-    jsr         L00002c3a
-    andi.w      #$ff,d0
-    addi.w      #$7f,d0
-    muls.w      d3,d0
-    asr.w       #$7,d0
-    add.w       d0,d1
-    move.w      d1,($4,a2)
-    rts
-
+; (DAT_00ff655c) contain 80 x 16 bytes (byte 0 = flag, byte 1=?, byte3-2= byte5-4=?, byte7-6=?
+; byte9-8=?, byteb-a=?, byted-c=?, bytef-e not used
 L00010e48:
     lea         (L00011d60),a4
-    lea         (DAT_00ff17c0),a3
+    lea         (sprite_table_data),a3
     lea         (DAT_00ff655c),a2
     moveq       #$1,d6
     moveq       #$4e,d7
@@ -19922,8 +18514,8 @@ L00010e48:
         moveq       #-$8,d5
     .L00010e84:
         lsl.w       #$2,d0
-        move.w      ($0,a4,d0*$1),d1
-        move.w      ($2,a4,d0*$1),d2
+        move.w      ($0,a4,d0.w),d1
+        move.w      ($2,a4,d0.w),d2
         move.w      ($4,a2),d0
         add.w       d5,d0
         move.w      d0,(a3)+
@@ -19976,7 +18568,7 @@ process_intro_credits_text_and_graphics:  ; (00010f18)
     bsr.w       display_intro_text_and_graphics_sprites
     moveq       #$6,d7  ; max possible value
     .L00010f1e:
-        lea         (L0001161c),a3          ; clear text tilemap?
+        lea         (grey_text_palette),a3          ; clear text tilemap?
         lea         (palettes_3),a2
         bsr.w       increment_palette_if_palette_target_gt_d7
         bsr.w       wait_for_vblank_and_check_pad_start
@@ -20041,24 +18633,24 @@ check_alt_intro_credits_sound_pad_key:  ; compare to intro_credits_pad_key
 display_intro_text_and_graphics_sprites:
     move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites?)
     moveq       #$0,d5          ; reset index
-print_intro_text_char:
-    addq.w      #$1,d5
-    moveq       #$0,d0          ; clear d0.l
-    move.b      (a3)+,d0        ; d0 = char
-    beq.b       end_of_string   ; end of string
-    move.w      d1,(a1)         ; write sprite vpos to vdp data
-    move.w      d5,(a1)         ; write sprite next to vdp data
-    subi.b      #$40,d0         ; remove ascii offset
-    bcc.b       .valid_char     ; valid char
-    move.w      #$1ff,d0        ; default value
-.valid_char:
-    addi.w      #$600,d0        ; vram ascii tile index
-    ori.w       #$6000,d0       ; palette 3
-    move.w      d0,(a1)         ; write tile id+palette to vdp data
-    move.w      d6,(a1)         ; write sprite hpos to vdp data
-    addq.w      #$8,d6          ; d6=d6+$8 for the next sprite position
-    bra.b       print_intro_text_char
-end_of_string:
+    .print_intro_text_char:
+        addq.w      #$1,d5
+        moveq       #$0,d0          ; clear d0.l
+        move.b      (a3)+,d0        ; d0 = char
+        beq.b       .end_of_string   ; end of string
+        move.w      d1,(a1)         ; write sprite vpos to vdp data
+        move.w      d5,(a1)         ; write sprite next to vdp data
+        subi.b      #$40,d0         ; remove ascii offset
+        bcc.b       .valid_char     ; valid char
+        move.w      #$1ff,d0        ; default value
+    .valid_char:
+        addi.w      #$600,d0        ; vram ascii tile index
+        ori.w       #$6000,d0       ; palette 3
+        move.w      d0,(a1)         ; write tile id+palette to vdp data
+        move.w      d6,(a1)         ; write sprite hpos to vdp data
+        addq.w      #$8,d6          ; d6=d6+$8 for the next sprite position
+        bra.b       .print_intro_text_char
+.end_of_string:
     move.w      (a4)+,d1        ; tilemap data length
     .display_text_graphics:     ; reads 4 words for each iteration
         move.w      (a4)+,(a1)  ; write to vdp data
@@ -20113,28 +18705,28 @@ wait_for_vblank_plus_small_delay:
 intro_credit_scrolling:  ; (000110b4) a1=?,  intro credit horizontal scrolling
     move.w      (start_options_index),d0
     subq.w      #$1,d0
-    move.w      d0,(start_options_index)   ; dec start_options_index
-    move.l      #(VDP_VRAM_WADDR+$34000003),(VDP_CTRL)   ; $F400 VRAM WADDR
-    move.w      d0,(a1)
-    move.w      d0,(a1)
+    move.w      d0,(start_options_index)   ; dec and save start_options_index
+    move.l      #(VDP_VRAM_WADDR+$34000003),(VDP_CTRL)   ; $f400 VRAM WADDR
+    move.w      d0,(a1) ; update bg1 h scrolling
+    move.w      d0,(a1) ; update bg2 h scrolling
     move.w      d0,d1
     andi.w      #$7,d0
     bne.b       .exit
-    move.w      #VDP_REG_AUTOINC+$80,(a0)   ; update horizontal scrolling registers?
-    move.w      d1,d0
-    neg.w       d0
-    lsr.w       #$2,d0  ; x4
-    subq.w      #$2,d0
-    lea         (L000881b8),a3  ; scrolling values stored here
+    move.w      #VDP_REG_AUTOINC+$80,(a0)   ; +$80 to update 1 column per row
+    move.w      d1,d0   ; load scrolling value again into d0
+    neg.w       d0      ; ~ to make it positive
+    lsr.w       #$2,d0  ; /4 - 3fffh max
+    subq.w      #$2,d0  ; d0=d0-2
+    lea         (intro_credits_bg2_tilemap),a3  ; scrolling values stored here
     adda.l      d0,a3
-    adda.l      #$80,a3
+    adda.l      #$80,a3         ; original offset
     andi.w      #$007e,d0
     addi.w      #$e200,d0
     SET_VRAM_WADDR d0,d1,a0
     moveq       #$13,d5  ; scrolling for each visible tile row
     .L0:
         move.w      (a3),(a1)
-        adda.l      #$140,a3    ; next row in VRAM address
+        adda.l      #$140,a3    ; next row in tapestry style tilemap in ROM
         dbf         d5,.L0
     move.w      #VDP_REG_AUTOINC+$2,(a0)
 .exit:
@@ -20170,7 +18762,7 @@ update_cram_col1_8_with_d7:
         dbf         d0,.L0001116a
     rts
 
-; increment_palette_if_palette_target_gt_d7 (00011176) TODO
+; increment_palette_if_palette_target_gt_d7 (00011176) 
 ; d7=colour level, a2=palette addr, a3=palette target addr
 increment_palette_if_palette_target_gt_d7:
     move.l      d7,-(SP)
@@ -20181,7 +18773,7 @@ increment_palette_if_palette_target_gt_d7:
         move.b      (a2),d0
         cmp.b       (a3)+,d7
         bhi.b       .L0
-        cmpi.b      #$e,d0
+        cmpi.b      #$0e,d0
         bcc.b       .L0
         addq.w      #$2,d0
     .L0:
@@ -20214,97 +18806,57 @@ increment_palette_if_palette_target_gt_d7:
     move.l      (SP)+,d7
     rts
 
-L000111d0:
+increment_half_palette_if_palette_target_gt_d7:
     movem.l     d7-d6,-(SP)
     addq.w      #$1,d7
     lsl.w       #$1,d7
     moveq       #$7,d6
-.L000111da:
-    move.b      (a2),d0
-    cmp.b       (a3)+,d7
-    bhi.b       .L000111e8
-    cmpi.b      #$e,d0
-    bcc.b       .L000111e8
-    addq.w      #$2,d0
-.L000111e8:
-    move.b      d0,(a2)+
-    move.b      (a3)+,d1
-    move.b      d1,d2
-    andi.b      #$e0,d1
-    lsr.b       #$4,d1
-    move.b      (a2),d0
-    andi.b      #$e0,d0
-    cmp.b       d1,d7
-    bhi.b       .L00011208
-    cmpi.b      #$e0,d0
-    bcc.b       .L00011208
-    addi.b      #$20,d0
-.L00011208:
-    move.b      d0,d1
-    andi.b      #$e,d2
-    move.b      (a2),d0
-    andi.b      #$e,d0
-    cmp.b       d2,d7
-    bhi.b       .L00011220
-    cmpi.b      #$e,d0
-    bcc.b       .L00011220
-    addq.b      #$2,d0
-.L00011220:
-    or.b        d0,d1
-    move.b      d1,(a2)+
-    dbf         d6,.L000111da
+    .loops_8_times:
+        move.b      (a2),d0
+        cmp.b       (a3)+,d7
+        bhi.b       .L000111e8
+        cmpi.b      #$0e,d0
+        bcc.b       .L000111e8
+        addq.w      #$2,d0
+    .L000111e8:
+        move.b      d0,(a2)+
+        move.b      (a3)+,d1
+        move.b      d1,d2
+        andi.b      #$e0,d1
+        lsr.b       #$4,d1
+        move.b      (a2),d0
+        andi.b      #$e0,d0
+        cmp.b       d1,d7
+        bhi.b       .L1
+        cmpi.b      #$e0,d0
+        bcc.b       .L1
+        addi.b      #$20,d0
+    .L1:
+        move.b      d0,d1
+        andi.b      #$0e,d2
+        move.b      (a2),d0
+        andi.b      #$0e,d0
+        cmp.b       d2,d7
+        bhi.b       .L00011220
+        cmpi.b      #$0e,d0
+        bcc.b       .L00011220
+        addq.b      #$2,d0
+    .L00011220:
+        or.b        d0,d1
+        move.b      d1,(a2)+
+        dbf         d6,.loops_8_times
     movem.l     (SP)+,d6-d7
     rts
 
 decrement_palette:      ; (0001122e) + 1 to each colour up to 7
     move.l      a2,-(SP)    ; save current A2 value
-    moveq       #$f,d6      ; will loop 16 times (32 bytes modified in total)
-    .loop_16_times:
-        move.b      (a2),d0
-        beq.b       .L0
-        subq.b      #$2,d0      ; d0=d0-2
-    .L0:
-        move.b      d0,(a2)+    ; save it back
-        move.b      (a2),d0
-        move.b      d0,d1
-        andi.b      #$e,d1      ; d1=d0&$0e
-        andi.b      #$e0,d0     ; d0=d0&$e0
-        beq.b       .L1
-        subi.b      #$20,d0     ; d0=d0-$20
-    .L1:
-        tst.b       d1
-        beq.b       .L2
-        subq.w      #$2,d1      ; d1=d1-2
-    .L2:
-        or.b        d1,d0       ; put 2 nibbles into d0
-        move.b      d0,(a2)+    ; and save back
-        dbf         d6,.loop_16_times
+    DEC_N_COLOURS a2,d6,$10
     movea.l     (SP)+,a2    ; restore initial A2 value
     rts
 
-increment_palette:      ; (0001125e) - 1 to each colour down to 0
+drecrement_half_palette:      ; (0001125e) - 1 to each colour down to 0
     move.l      a2,-(SP)
-    moveq       #$7,d5
-    .L00011262:
-        move.b      (a2),d0
-        beq.b       .L00011268
-        subq.b      #$2,d0
-    .L00011268:
-        move.b      d0,(a2)+
-        move.b      (a2),d0
-        move.b      d0,d1
-        andi.b      #$e,d1
-        andi.b      #$e0,d0
-        beq.b       .L0001127c
-        subi.b      #$20,d0
-    .L0001127c:
-        tst.b       d1
-        beq.b       .L00011282
-        subq.w      #$2,d1
-    .L00011282:
-        or.b        d1,d0
-        move.b      d0,(a2)+
-        dbf         d5,.L00011262
+    DEC_N_COLOURS a2,d5,$8
     movea.l     (SP)+,a2
     rts
 
@@ -20340,23 +18892,23 @@ load_intro_credits_graphics:  ; load intro credits gfx
     bsr.w       update_cram_with_palettes_0
     ; planeA=$e000, window=$0000, planeB=$e000, spritetable=$f000, HSRAM=$f400
     lea         (L0001171c),a3
-    move.l      #(VDP_VRAM_WADDR+$38000003),(VDP_CTRL)   ; $f800 VRAM WADDR H SCROLLLING
+    move.l      #(VDP_VRAM_WADDR+$38000003),(VDP_CTRL)   ; $f800 VRAM WADDR sprite tiles
     move.w      #$2ff,d0
     .L0:
         move.w      (a3)+,(a1)
         dbf         d0,.L0
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR sprite table
     lea         (intro_credits_sprites),a4
     moveq       #$11,d0
     .L1:
         move.w      (a4)+,(a1)
         dbf         d0,.L1
-    move.l      #(VDP_VRAM_WADDR+$3f000003),(VDP_CTRL)   ; $ff00 VRAM WADDR
+    move.l      #(VDP_VRAM_WADDR+$3f000003),(VDP_CTRL)   ; $ff00 VRAM WADDR - blank BG2 tiles
     move.w      #$7f,d0
     .L2:
         move.w      #$0,(a1)
         dbf         d0,.L2
-    move.l      #(VDP_VRAM_WADDR+$20000003),(VDP_CTRL) ; BG2 tilemap VRAM addr $e000
+    move.l      #(VDP_VRAM_WADDR+$20000003),(VDP_CTRL) ; BG2 tilemap VRAM addr $e000 set with blank values
     move.w      #$7ff,d0
     .L3:
         move.w      #$07ff,(a1)
@@ -20364,28 +18916,28 @@ load_intro_credits_graphics:  ; load intro credits gfx
     lea         Rom_header.w,a0 ; $0
     adda.l      #$0007ace2,a0   ; from $0007ace2 - TODO are these constants part of the US port
     moveq       #$1,d1
-    moveq       #$0,d2          ; VRAM addr
+    moveq       #$0,d2          ; VRAM dst addr
     bsr.w       write_tileset
     lea         $434a.w,a0      ; why this hardcoded value?
     adda.l      #$0007ace2,a0   ; from $0007f02c
     moveq       #$1,d1
-    move.w      #$6000,d2       ; VRAM addr
+    move.w      #$6000,d2       ; VRAM dst addr
     bsr.w       write_tileset
     lea         ($000083f8),a0
     adda.l      #$0007ace2,a0   ; from $000830da
     moveq       #$1,d1
-    move.w      #$c000,d2       ; VRAM addr
+    move.w      #$c000,d2       ; VRAM dst addr
     bsr.w       write_tileset
-    move.l      #(VDP_VRAM_WADDR+$22000003),(VDP_CTRL)
-    lea         (L000881b8),a3
-    moveq       #$13,d1
-    .L00011398:
+    move.l      #(VDP_VRAM_WADDR+$22000003),(VDP_CTRL)  ; $e200 VRAM WADDR for bg2
+    lea         (intro_credits_bg2_tilemap),a3  ; ($40+$c0/2)*$13 tile sin total (160x24)
+    moveq       #$13,d1 ; 20 rows
+    .v_tiles:
         moveq       #$3f,d0
-        .L0001139a:
+        .h_tiles:   ; 64 columns to include 24 columns not yet visible on screen
             move.w      (a3)+,(a1)
-            dbf         d0,.L0001139a
-        adda.l      #$c0,a3
-        dbf         d1,.L00011398
+            dbf         d0,.h_tiles
+        adda.l      #$c0,a3 ; skip horizontal tiles that will be displayed later when scrollng starts
+        dbf         d1,.v_tiles
     rts
 
 write_z80_reg12_alt:  ; (000113ac) d0 is value written to Z80 reg12 - PSG sound
@@ -20395,137 +18947,83 @@ write_z80_reg12_alt:  ; (000113ac) d0 is value written to Z80 reg12 - PSG sound
     movea.l     (SP)+,a0
     rts
 
-intro_credits_sprites:  ; 12 words
-    dw $00E0, $0F01, $67C0, $00F0, $00E0, $0F02, $67d0, $0110, $00E0, $0F00, $67E0, $0130
+intro_credits_sprites:  ; 3 sprites
+    dw $00e0, $0f01, $67c0, $00f0   ; vpos=$e0, hpos=$f0, 32x32/next=#1, pal 3/tile=$7c
+    dw $00e0, $0f02, $67d0, $0110   ; vpos=$e0, hpos=$110, 32x32/next=#1, pal 3/tile=$7d
+    dw $00e0, $0f00, $67e0, $0130   ; vpos=$e0, hpos=$130, 32x32/next=#1, pal 3/tile=$7e
 
-L000113d6:  ; 50 long words
-    dl $00b00401
-    dl $01000036
-    dl $00b80802
-    dl $0102002e
-    dl $00c00f03
-    dl $01050026
-    dl $00c80004
-    dl $0115001e
-    dl $00d00905
-    dl $0116000e
-    dl $00b00706
-    dl $011c0046
-    dl $00b00007
-    dl $01240056
-    dl $00d00108
-    dl $01250046
-    dl $00d00d09
-    dl $0127004e
-    dl $00b0070a
-    dl $011c0068
-    dl $00b0000b
-    dl $01240078
-    dl $00d0010c
-    dl $01250068
-    dl $00d0050d
-    dl $012f0070
-    dl $00d0070e
-    dl $091c01e1
-    dl $00d0000f
-    dl $092401d9
-    dl $00f00110
-    dl $092501e9
-    dl $00f00511
-    dl $092f01d9
-    dl $00d00412
-    dl $090001f1
-    dl $00d80813
-    dl $090201f1
-    dl $00e00f14
-    dl $090501f1
-    dl $00e80015
-    dl $09150211
-    dl $00f00916
-    dl $09160211
-    dl $017e0d17
-    dl $213300f0
-    dl $017e0d18
-    dl $213b0110
-    dl $017e0d19
-    dl $21430130
+title_screen_initial_sprite_table:  ; $19 sprites
+    dw $00b0, $0401, $0100, $0036
+    dw $00b8, $0802, $0102, $002e
+    dw $00c0, $0f03, $0105, $0026
+    dw $00c8, $0004, $0115, $001e
+    dw $00d0, $0905, $0116, $000e
+    dw $00b0, $0706, $011c, $0046
+    dw $00b0, $0007, $0124, $0056
+    dw $00d0, $0108, $0125, $0046
+    dw $00d0, $0d09, $0127, $004e
+    dw $00b0, $070a, $011c, $0068
+    dw $00b0, $000b, $0124, $0078
+    dw $00d0, $010c, $0125, $0068
+    dw $00d0, $050d, $012f, $0070
+    dw $00d0, $070e, $091c, $01e1
+    dw $00d0, $000f, $0924, $01d9
+    dw $00f0, $0110, $0925, $01e9
+    dw $00f0, $0511, $092f, $01d9
+    dw $00d0, $0412, $0900, $01f1
+    dw $00d8, $0813, $0902, $01f1
+    dw $00e0, $0f14, $0905, $01f1
+    dw $00e8, $0015, $0915, $0211
+    dw $00f0, $0916, $0916, $0211
+    dw $017e, $0d17, $2133, $00f0
+    dw $017e, $0d18, $213b, $0110
+    dw $017e, $0d19, $2143, $0130
 
-L0001149e:  ; 62 long words
-    dl $00b00401
-    dl $010000ce
-    dl $00b80802
-    dl $010200c6
-    dl $00c00f03
-    dl $010500be
-    dl $00c80004
-    dl $011500b6
-    dl $00d00905
-    dl $011600a6
-    dl $00b00706
-    dl $011c00de
-    dl $00b00007
-    dl $012400ee
-    dl $00d00108
-    dl $012500de
-    dl $00d00d09
-    dl $012700e6
-    dl $00b0070a
-    dl $011c0100
-    dl $00b0000b
-    dl $01240110
-    dl $00d0010c
-    dl $01250100
-    dl $00d0050d
-    dl $012f0108
-    dl $00d0070e
-    dl $091c0149
-    dl $00d0000f
-    dl $09240141
-    dl $00f00110
-    dl $09250151
-    dl $00f00511
-    dl $092f0141
-    dl $00d00412
-    dl $09000159
-    dl $00d80813
-    dl $09020159
-    dl $00e00f14
-    dl $09050159
-    dl $00e80015
-    dl $09150179
-    dl $00f00916
-    dl $09160179
-    dl $010c0d17
-    dl $213300f0
-    dl $010c0d18
-    dl $213b0110
-    dl $010c0d19
-    dl $21430130
-    dl $00f8041a
-    dl $214b0100
-    dl $0100041b
-    dl $214d00f8
-    dl $0108081c
-    dl $214f00f0
-    dl $0110041d
-    dl $215200f0
-    dl $0118081e
-    dl $215400e8
-    dl $0120041f
-    dl $215700e0
+title_screen_fianl_sprite_table:  ; $20 sprite objects on title screen
+    dw $00b0, $0401, $0100, $00ce
+    dw $00b8, $0802, $0102, $00c6
+    dw $00c0, $0f03, $0105, $00be
+    dw $00c8, $0004, $0115, $00b6
+    dw $00d0, $0905, $0116, $00a6
+    dw $00b0, $0706, $011c, $00de
+    dw $00b0, $0007, $0124, $00ee
+    dw $00d0, $0108, $0125, $00de
+    dw $00d0, $0d09, $0127, $00e6
+    dw $00b0, $070a, $011c, $0100
+    dw $00b0, $000b, $0124, $0110
+    dw $00d0, $010c, $0125, $0100
+    dw $00d0, $050d, $012f, $0108
+    dw $00d0, $070e, $091c, $0149
+    dw $00d0, $000f, $0924, $0141
+    dw $00f0, $0110, $0925, $0151
+    dw $00f0, $0511, $092f, $0141
+    dw $00d0, $0412, $0900, $0159
+    dw $00d8, $0813, $0902, $0159
+    dw $00e0, $0f14, $0905, $0159
+    dw $00e8, $0015, $0915, $0179
+    dw $00f0, $0916, $0916, $0179
+    dw $010c, $0d17, $2133, $00f0
+    dw $010c, $0d18, $213b, $0110
+    dw $010c, $0d19, $2143, $0130
+    dw $00f8, $041a, $214b, $0100
+    dw $0100, $041b, $214d, $00f8
+    dw $0108, $081c, $214f, $00f0
+    dw $0110, $041d, $2152, $00f0
+    dw $0118, $081e, $2154, $00e8
+    dw $0120, $041f, $2157, $00e0
 
 intro_credits_and_title_screen_vdp_values:  ; vdp reg values during intro and title screen
-; enable display & vint, planeA=$e000, window=$0000, planeB=$e000, spritetable=$f000, fullscreen scrolling, 320p
+; enable display & vint, planeA=$e000, window=$0000, planeB=$e000, spritetable=$f000, fullscreen hv scrolling, 320p
 ; HSRAM=$f400, +2 autoinc, 512x256
     dw $8004, $8164, $8238, $8300, $8407, $8578, $8600, $8700
     dw $8800, $8900, $8A00, $8b00, $8C81, $8d3D, $8E00, $8F02
     dw $9001, $9100, $9200
 
-L000115bc:
+target_title_screen_palette:
     dw $0000, $0466, $0688, $0000, $0000, $0000, $0000, $0000, $0020, $0000, $0000, $0022, $0244, $0466, $0688, $08AA
     dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
     dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-L0001161c:
+grey_text_palette:
     dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0CCC, $0AAA, $0EEE
 L0001163c:
     dw $0000, $0ECC, $0ECC, $0ECC, $0ECC, $0ECC, $0ECC, $0ECC, $0020, $0000, $0000, $0022, $0244, $0466, $0688, $08AA
@@ -20545,12 +19043,10 @@ L000116fc:
 L0001171c:  ;   $600 bytes
     incbin "include/graphics/block1.bin"
 
-L00011d1c:  ;   2 words
-    dw $0000, $0010, $0001, $0010
-    db $00, $03, $00, $10, $00, $04, $00, $10, $00, $06, $00, $0F, $00, $08, $00, $0E
-    db $00, $09, $00, $0E, $00, $0A, $00, $0D, $00, $0C, $00, $0C, $00, $0D, $00, $0A
-    db $00, $0E, $00, $09, $00, $0E, $00, $08, $00, $0F, $00, $06, $00, $10, $00, $04
-    db $00, $10, $00, $03, $00, $10, $00, $01, $00, $10, $00, $00
+L00011d1c:  ;   34 words
+    dw $0000, $0010, $0001, $0010, $0003, $0010, $0004, $0010, $0006, $000F, $0008, $000E, $0009, $000E, $000A, $000D
+    dw $000C, $000C, $000D, $000A, $000E, $0009, $000E, $0008, $000F, $0006, $0010, $0004, $0010, $0003, $0010, $0001
+    dw $0010, $0000     ; what are these 2 words for?
 
 L00011d60:  ;158 words
    dw $0000, $66C4, $0000, $66C5, $0000, $66C6, $0000, $66C7
@@ -20646,217 +19142,216 @@ open_options_menu:  ; (00011f36)
         jsr         jp_read
         move.w      (SP)+,(jp1_mode)
         btst.b      #$7,(jp1_result)    ; PRESS START
-        bne.w       exit_options_menu
+        bne.w       .exit_options_menu
         move.b      (jp1_result),d0
         beq.b       .check_options_inputs
-    move.w      (options_index),d2  ; load current options slection index
-    move.b      d0,d1   ; save jp result to d1
-    andi.b      #PAD_UP,d0  ; PAD_UP
-    beq.b       .check_pad_down
-    subq.w      #$1,d2
-    cmpi.w      #$3,d2
-    bcs.b       .options_index_valid
-    moveq       #$2,d2
-.options_index_valid:
-    move.w      d2,(options_index)
-    bra.w       .play_options_navigation_sound
-.check_pad_down:
-    move.b      d1,d0
-    andi.b      #$2,d0  ; PAD_DOWN
-    beq.b       .pad_down_not_pressed
-    addq.w      #$1,d2
-    cmpi.w      #$3,d2
-    bcs.b       .update_options_index
-    moveq       #$0,d2
-.update_options_index:
-    move.w      d2,(options_index)
-    bra.w       .play_options_navigation_sound
-.pad_down_not_pressed:
-    move.b      d1,d0
-    andi.b      #$4,d0  ; PAD_LEFT
-    beq.b       .pad_left_not_pressed
-    move.w      (options_index),d7
-    bne.b       .not_L0
-    move.w      (options_normal_hard),d0
-    addq.w      #$1,d0
-    andi.w      #$1,d0
-    move.w      d0,(options_normal_hard)
-    bra.w       .play_options_navigation_sound
-.not_L0:
-    cmpi.w      #$1,d7
-    bne.b       .not_L1
-    move.w      (options_jp1_mode),d0
-    subq.w      #$1,d0
-    andi.w      #$3,d0
-    move.w      d0,(options_jp1_mode)
-    bra.w       .play_options_navigation_sound
-.not_L1:
-    cmpi.w      #$2,d7
-    bne.w       .update_options_menu
-    move.w      (sound_test_index),d0
-    beq.w       .index_rollunder
-    subq.w      #$1,d0
-    move.w      d0,(sound_test_index)
-    bra.w       .play_sound_index
-.index_rollunder:
-    move.w      #$b6,(sound_test_index)
-    bra.w       .play_sound_index
-.pad_left_not_pressed:
-    move.b      d1,d0
-    andi.b      #$8,d0  ; PAD_RIGHT
-    beq.b       .pad_right_not_pressed
-    move.w      (options_index),d7
-    bne.b       .not_R0
-    move.w      (options_normal_hard),d0
-    addq.w      #$1,d0
-    andi.w      #$1,d0
-    move.w      d0,(options_normal_hard)
-    bra.w       .play_options_navigation_sound
-.not_R0:
-    cmpi.w      #$1,d7
-    bne.b       .not_R1
-    move.w      (options_jp1_mode),d0
-    addq.w      #$1,d0
-    andi.w      #$3,d0
-    move.w      d0,(options_jp1_mode)
-    bra.w       .play_options_navigation_sound
-.not_R1:
-    cmpi.w      #$2,d7
-    bne.w       .update_options_menu
-    move.w      (sound_test_index),d0
-    cmpi.w      #$b6,d0
-    beq.w       .index_rollover
-    addq.w      #$1,d0
-    move.w      d0,(sound_test_index)
-    bra.w       .play_sound_index
-.index_rollover:
-    move.w      #$0,(sound_test_index)
-    bra.w       .play_sound_index
-.pad_right_not_pressed:
-    andi.b      #$70,d1  ; PAD_A|PAD_C|PAD_B
-    beq.w       .update_options_menu
-    move.w      (options_index),d0
-    cmpi.w      #$2,d0
-    bne.w       .update_options_menu
-    btst.l      #$4,d1  ; PAD_B - will stop music by fading it out
-    beq.b       .pad_b_not_pressed
-    ; fade out music by writing to Z80 reg $6 and $7
-    REQUEST_Z80_BUS
-    move.b      #$0b,(Z80_RAM+$6)
-    move.b      #$07,(Z80_RAM+$7)
-    move.w      #Z80_BUS_RELEASE,(Z80_BUS_REQ)
-    bra.w       .update_options_menu
-.pad_b_not_pressed:
-    btst.l      #$6,d1          ; PAD_A
-    beq.b       .pad_a_not_pressed
-    REQUEST_Z80_BUS
-    move.b      #$01,(Z80_RAM+$b)   ; might turn sound effects off?
-    move.w      #Z80_BUS_RELEASE,(Z80_BUS_REQ)
-    bra.w       .update_options_menu
-.pad_a_not_pressed:
-    lea         (sound_test_table),a4
-    move.w      (sound_test_index),d2   ; audio index
-    add.w       d2,d2                   ; d2=d2*2 to point at words
-    move.b      ($1,a4,d2*$1),d1    ; get audio sound index from table
-    move.b      ($0,a4,d2*$1),d0    ; get audio sound type from table
-    bmi.w       .L0001217e           ; type >$80 is sound rather than music
-    jsr         write_z80_reg4_reg5 ; play music
-    bra.w       .update_options_menu
-.L0001217e:
-    andi.b      #$7f,d0             ; clear sound flag
-    beq.b       .L000121a6           ; branch sound type is 0
-    movem.l     A6-A0/d7-d0,-(SP)
-    move.b      (level_id),-(SP)    ; push previous sound to stack
-    subq.b      #$1,d0              ; base 0 index
-    move.b      d0,(level_id)       ; save sound index
-    jsr         L000043fe           ; play sound sample
-    move.b      (SP)+,(level_id)    ; restore previous sound
-    movem.l     (SP)+,d0-d7/a0-a6
-.L000121a6:  ; PSG sound
-    move.b      d1,d0
-    move.l      a0,-(SP)
-    lea         (Z80_RAM+$12),a0
-    jsr         write_z80_reg
-    movea.l     (SP)+,a0
-    bra.w       .update_options_menu
-.play_sound_index:
-    tst.b       (jp2_en_flag)
-    beq.b       .no_jp2
-    bsr.w       display_2digit_sound_test_number
-    lea         (sound_test_table),a4
-    move.w      (sound_test_index),d2
-    add.w       d2,d2
-    move.b      ($1,a4,d2*$1),d1    ; sound index
-    move.b      ($0,a4,d2*$1),d0    ; sound type
-    bmi.w       .play_sound_effect
-.no_jp2:
-    lea         (sound_test_number_string),a2
-    move.b      #$20,(a2)
-    move.b      #$20,($1,a2)
-    move.b      #$20,($2,a2)
-    move.b      #$0,($3,a2)     ; "   " string
-    move.w      #$ca30,d0       ; VRAM address
-    bsr.w       print_selected_string
-    bra.w       .update_options_menu
-.play_sound_effect:
-    lea         (sound_test_number_string),a2
-    andi.b      #$0f,d0
-    cmpi.b      #$0a,d0
-    bcs.b       .L0001221e
-    addi.b      #$7,d0
-.L0001221e:
-    addi.b      #$30,d0         ; ascii conversion
-    move.b      d0,(a2)
-    move.b      d1,d0
-    lsr.b       #$4,d0
-    cmpi.b      #$0a,d0
-    bcs.b       .L00012232
-    addi.b      #$7,d0
-.L00012232:
-    addi.b      #$30,d0         ; ascii conversion
-    move.b      d0,($1,a2)
-    andi.b      #$0f,d1
-    cmpi.b      #$0a,d1
-    bcs.b       .L00012248
-    addi.b      #$7,d1
-.L00012248:
-    addi.b      #$30,d1         ; ascii conversion
-    move.b      d1,($2,a2)
-    move.b      #$0,($3,a2)
-    move.w      #$ca30,d0
-    bsr.w       print_selected_string
-    bra.w       .update_options_menu
-.play_options_navigation_sound:
-    moveq       #$1d,d0             ; sound when press arrows options menu
-    bsr.w       write_z80_reg12_alt ; play sound
-.update_options_menu:
-    bsr.b       display_options_arrow
-    bsr.w       display_options_level
-    bsr.w       display_options_type
-    bsr.w       display_sound_test_number
-    bsr.w       wait_until_no_key_pressed
-    bra.w       .check_options_inputs
-
-exit_options_menu:
-    moveq       #$1c,d0             ; play exit sound $1c
-    bsr.w       write_z80_reg12_alt
-    moveq       #$7,d7
-    .options_menu_fadeout:
-        lea         (palettes_3),a2
-        bsr.w       decrement_palette
-        lea         (palettes_2),a2
-        bsr.w       decrement_palette
-        lea         (palettes_1),a2
-        bsr.w       decrement_palette
-        lea         (palettes_0),a2
-        bsr.w       decrement_palette
-        bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       update_cram_with_palettes_0
-        dbf         d7,.options_menu_fadeout
-    move.w      (options_normal_hard),(normal_hard)
-    move.w      (options_jp1_mode),(jp1_mode)
-    bra.w       L00010366
+        move.w      (options_index),d2  ; load current options slection index
+        move.b      d0,d1   ; save jp result to d1
+        andi.b      #PAD_UP,d0  ; PAD_UP
+        beq.b       .check_pad_down
+        subq.w      #$1,d2
+        cmpi.w      #$3,d2
+        bcs.b       .options_index_valid
+        moveq       #$2,d2
+    .options_index_valid:
+        move.w      d2,(options_index)
+        bra.w       .play_options_navigation_sound
+    .check_pad_down:
+        move.b      d1,d0
+        andi.b      #$2,d0  ; PAD_DOWN
+        beq.b       .pad_down_not_pressed
+        addq.w      #$1,d2
+        cmpi.w      #$3,d2
+        bcs.b       .update_options_index
+        moveq       #$0,d2
+    .update_options_index:
+        move.w      d2,(options_index)
+        bra.w       .play_options_navigation_sound
+    .pad_down_not_pressed:
+        move.b      d1,d0
+        andi.b      #$4,d0  ; PAD_LEFT
+        beq.b       .pad_left_not_pressed
+        move.w      (options_index),d7
+        bne.b       .not_L0
+        move.w      (options_normal_hard),d0
+        addq.w      #$1,d0
+        andi.w      #$1,d0
+        move.w      d0,(options_normal_hard)
+        bra.w       .play_options_navigation_sound
+    .not_L0:
+        cmpi.w      #$1,d7
+        bne.b       .not_L1
+        move.w      (options_jp1_mode),d0
+        subq.w      #$1,d0
+        andi.w      #$3,d0
+        move.w      d0,(options_jp1_mode)
+        bra.w       .play_options_navigation_sound
+    .not_L1:
+        cmpi.w      #$2,d7
+        bne.w       .update_options_menu
+        move.w      (sound_test_index),d0
+        beq.w       .index_rollunder
+        subq.w      #$1,d0
+        move.w      d0,(sound_test_index)
+        bra.w       .play_sound_index
+    .index_rollunder:
+        move.w      #$b6,(sound_test_index)
+        bra.w       .play_sound_index
+    .pad_left_not_pressed:
+        move.b      d1,d0
+        andi.b      #$8,d0  ; PAD_RIGHT
+        beq.b       .pad_right_not_pressed
+        move.w      (options_index),d7
+        bne.b       .not_R0
+        move.w      (options_normal_hard),d0
+        addq.w      #$1,d0
+        andi.w      #$1,d0
+        move.w      d0,(options_normal_hard)
+        bra.w       .play_options_navigation_sound
+    .not_R0:
+        cmpi.w      #$1,d7
+        bne.b       .not_R1
+        move.w      (options_jp1_mode),d0
+        addq.w      #$1,d0
+        andi.w      #$3,d0
+        move.w      d0,(options_jp1_mode)
+        bra.w       .play_options_navigation_sound
+    .not_R1:
+        cmpi.w      #$2,d7
+        bne.w       .update_options_menu
+        move.w      (sound_test_index),d0
+        cmpi.w      #$b6,d0
+        beq.w       .index_rollover
+        addq.w      #$1,d0
+        move.w      d0,(sound_test_index)
+        bra.w       .play_sound_index
+    .index_rollover:
+        move.w      #$0,(sound_test_index)
+        bra.w       .play_sound_index
+    .pad_right_not_pressed:
+        andi.b      #$70,d1  ; PAD_A|PAD_C|PAD_B
+        beq.w       .update_options_menu
+        move.w      (options_index),d0
+        cmpi.w      #$2,d0
+        bne.w       .update_options_menu
+        btst.l      #$4,d1  ; PAD_B - will stop music by fading it out
+        beq.b       .pad_b_not_pressed
+        ; fade out music by writing to Z80 reg $6 and $7
+        REQUEST_Z80_BUS
+        move.b      #$0b,(Z80_RAM+$6)
+        move.b      #$07,(Z80_RAM+$7)
+        move.w      #Z80_BUS_RELEASE,(Z80_BUS_REQ)
+        bra.w       .update_options_menu
+    .pad_b_not_pressed:
+        btst.l      #$6,d1          ; PAD_A
+        beq.b       .pad_a_not_pressed
+        REQUEST_Z80_BUS
+        move.b      #$01,(Z80_RAM+$b)   ; might turn sound effects off?
+        move.w      #Z80_BUS_RELEASE,(Z80_BUS_REQ)
+        bra.w       .update_options_menu
+    .pad_a_not_pressed:
+        lea         (sound_test_table),a4
+        move.w      (sound_test_index),d2   ; audio index
+        add.w       d2,d2                   ; d2=d2*2 to point at words
+        move.b      ($1,a4,d2.w),d1    ; get audio sound index from table
+        move.b      ($0,a4,d2.w),d0    ; get audio sound type from table
+        bmi.w       .is_sound_fx           ; type >$80 is sound rather than music
+        jsr         write_z80_reg4_reg5 ; play music
+        bra.w       .update_options_menu
+    .is_sound_fx:
+        andi.b      #$7f,d0             ; clear sound flag
+        beq.b       .L000121a6           ; branch sound type is 0
+        movem.l     A6-A0/d7-d0,-(SP)
+        move.b      (level_id),-(SP)    ; push previous sound to stack
+        subq.b      #$1,d0              ; base 0 index
+        move.b      d0,(level_id)       ; save sound index
+        jsr         L000043fe           ; play sound sample
+        move.b      (SP)+,(level_id)    ; restore previous sound
+        movem.l     (SP)+,d0-d7/a0-a6
+    .L000121a6:  ; PSG sound
+        move.b      d1,d0
+        move.l      a0,-(SP)
+        lea         (Z80_RAM+$12),a0
+        jsr         write_z80_reg
+        movea.l     (SP)+,a0
+        bra.w       .update_options_menu
+    .play_sound_index:
+        tst.b       (jp2_en_flag)
+        beq.b       .no_jp2
+        bsr.w       display_2digit_sound_test_number
+        lea         (sound_test_table),a4
+        move.w      (sound_test_index),d2
+        add.w       d2,d2
+        move.b      ($1,a4,d2.w),d1    ; sound index
+        move.b      ($0,a4,d2.w),d0    ; sound type
+        bmi.w       .play_sound_effect
+    .no_jp2:
+        lea         (sound_test_number_string),a2
+        move.b      #$20,(a2)
+        move.b      #$20,($1,a2)
+        move.b      #$20,($2,a2)
+        move.b      #$0,($3,a2)     ; "   " string
+        move.w      #$ca30,d0       ; VRAM address
+        bsr.w       print_selected_string
+        bra.w       .update_options_menu
+    .play_sound_effect:
+        lea         (sound_test_number_string),a2
+        andi.b      #$0f,d0
+        cmpi.b      #$0a,d0         ; h bcd conversion
+        bcs.b       .h_valid
+        addi.b      #$7,d0
+    .h_valid:
+        addi.b      #$30,d0         ; h ascii conversion
+        move.b      d0,(a2)
+        move.b      d1,d0
+        lsr.b       #$4,d0
+        cmpi.b      #$0a,d0         ; d bcd conversion
+        bcs.b       .d_valid
+        addi.b      #$7,d0
+    .d_valid:
+        addi.b      #$30,d0         ; d ascii conversion
+        move.b      d0,($1,a2)
+        andi.b      #$0f,d1
+        cmpi.b      #$0a,d1         ; u bcd conversion
+        bcs.b       .u_valid
+        addi.b      #$7,d1
+    .u_valid:
+        addi.b      #$30,d1         ; u ascii conversion
+        move.b      d1,($2,a2)
+        move.b      #$0,($3,a2)
+        move.w      #$ca30,d0
+        bsr.w       print_selected_string
+        bra.w       .update_options_menu
+    .play_options_navigation_sound:
+        moveq       #$1d,d0             ; sound when press arrows options menu
+        bsr.w       write_z80_reg12_alt ; play sound
+    .update_options_menu:
+        bsr.b       display_options_arrow
+        bsr.w       display_options_level
+        bsr.w       display_options_type
+        bsr.w       display_sound_test_number
+        bsr.w       wait_until_no_key_pressed
+        bra.w       .check_options_inputs
+    .exit_options_menu:
+        moveq       #$1c,d0             ; play exit sound $1c
+        bsr.w       write_z80_reg12_alt
+        moveq       #$7,d7
+        .options_menu_fadeout:
+            lea         (palettes_3),a2
+            bsr.w       decrement_palette
+            lea         (palettes_2),a2
+            bsr.w       decrement_palette
+            lea         (palettes_1),a2
+            bsr.w       decrement_palette
+            lea         (palettes_0),a2
+            bsr.w       decrement_palette
+            bsr.w       wait_for_vblank_plus_small_delay
+            bsr.w       wait_for_vblank_plus_small_delay
+            bsr.w       update_cram_with_palettes_0
+            dbf         d7,.options_menu_fadeout
+        move.w      (options_normal_hard),(normal_hard)
+        move.w      (options_jp1_mode),(jp1_mode)
+        bra.w       stop_intro_credits_or_options_music
 
 display_options_arrow:  ; (000122d6) clear allow arrow locations and draw the correct one based on index
     move.l      #(VDP_VRAM_WADDR+$50e0003),(VDP_CTRL)   ; $c50e
@@ -20922,23 +19417,25 @@ init_optiopns_menu_phase_1:
         bne.b       .wait_for_vblank
     bsr.w       set_options_vdp_regs
     jsr         disable_display
+    ; vint, planeA=$c000, window=$0000, planeB=$e000, spritetable=$f000
+    ; fullscreen scrolling, 320p, HSRAM=$f400, +2 autoinc, 512x256
     move.l      #VDP_VRAM_WADDR+$3,(VDP_CTRL)   ; VRAM addr $c000
     move.w      #$17ff,d0   ; $c000-$efff will be set to $07ff 
-    .L0:
+    .clear_tilemaps:
         move.w      #$07ff,(a1)
-        dbf         d0,.L0
-    move.w      #$7ff,d0   ; $f000-$ffff will be set to $0
-    .L1:
-        move.w      #$0,(a1)
-        dbf         d0,.L1
+        dbf         d0,.clear_tilemaps
+    move.w      #$07ff,d0   ; $f000-$ffff will be set to $0
+    .clear_sat:
+        move.w      #$0000,(a1)
+        dbf         d0,.clear_sat
     move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
     move.w      #$0,(a1)    ; no v scrolling
     move.w      #$0,(a1)    ; no v scrolling
     bsr.w       wait_for_vblank_plus_small_delay
     bsr.w       wait_for_vblank_plus_small_delay
-    lea         (options_tilseset_a000),a0
+    lea         (options_tilseset),a0
     moveq       #$1,d1
-    move.w      #$a000,d2
+    move.w      #$0a000,d2
     bsr.w       write_tileset
     lea         (VDP_CTRL),a0
     lea         (VDP_DATA),a1
@@ -20954,10 +19451,10 @@ set_options_vdp_regs:
     rts
 
 init_optiopns_menu_phase_2:  ; display options screen
-    bsr.w       write_options_tilseset
+    bsr.w       write_options_tileset
     lea         (options_bg2_tilemap),a2      ; tilemap
     move.w      #$1b,d0
-    move.l      #VDP_VRAM_WADDR+$20000003,(VDP_CTRL) ; BG2 tilemap VRAM addr $E000
+    move.l      #VDP_VRAM_WADDR+$20000003,(VDP_CTRL) ; BG2 tilemap VRAM addr $e000
     ; copy bg2 tilemap for options menu - 40x28 words or 2240 bytes
     .vtiles:
         moveq       #(SCREEN_H_TILES-1),d1
@@ -21041,20 +19538,20 @@ display_options_type:
     bsr.w       print_selected_string
     lea         (TYPES_STRING_POINTERS),a3
     move.w      (options_jp1_mode),d0
-    andi.w      #$3,d0
+    andi.w      #$0003,d0
     lsl.w       #$2,d0  ; d0*4 to point at addresses?
     move.w      d0,d1
     lsl.w       #$1,d0  ; d0*2
     add.w       d1,d0   ; d0= index*12
     move.w      d0,d6   ; multiples of 12 (0, 12, 24, 36)
-    movea.l     ($0,a3,d6*$1),a2    ; button A
+    movea.l     ($0,a3,d6.w),a2    ; button A
     move.w      #$c820,d0           ; VRAM addr for button A function
     bsr.w       print_selected_string           ; print text
     move.w      #$c8a0,d0           ; VRAM addr for button B function
-    movea.l     ($4,a3,d6*$1),a2    ; button B
+    movea.l     ($4,a3,d6.w),a2    ; button B
     bsr.w       print_selected_string           ;
     move.w      #$c920,d0           ; VRAM addr for button C function
-    movea.l     ($8,a3,d6*$1),a2    ; button C
+    movea.l     ($8,a3,d6.w),a2    ; button C
     bra.w       print_selected_string           ;
 
 build_sound_test_number_string:  ; hex2dec conversion; a3=dest address
@@ -21081,7 +19578,7 @@ build_sound_test_number_string:  ; hex2dec conversion; a3=dest address
     move.b      d3,(a3)+    ; push result to ram
     rts
 
-write_options_tilseset:
+write_options_tileset:
     lea         (options_tilseset_0000),a0  ;
     moveq       #$1,d1
     moveq       #$0,d2
@@ -21122,16 +19619,16 @@ print_options_string:  ; (0001264a) d0=VRAM address, A2=string src
 print_options_char:
     moveq       #$0,d2
     move.b      (a2)+,d2
-    beq.b       end_of_options_string
+    beq.b       .end_of_options_string
     cmpi.b      #$20,d2
     bne.b       .L00012660
-    move.w      #$7ee,d2
+    move.w      #$07ee,d2
     bra.b       .L00012678
 .L00012660:
     subi.w      #$41,d2
     move.w      d2,d3
-    andi.w      #$7,d2
-    andi.w      #$f8,d3
+    andi.w      #$0007,d2
+    andi.w      #$00f8,d3
     lsl.w       #$1,d3
     add.w       d3,d2
     lsl.w       #$1,d2
@@ -21149,7 +19646,7 @@ print_options_char:
     move.w      d2,(a1)
     subi.w      #$7c,d0
     bra.b       print_options_char
-end_of_options_string:
+.end_of_options_string:
     movem.l     (SP)+,d1-d7
     rts
 
@@ -21246,128 +19743,152 @@ S_START_TO_EXIT:
     db "PRESS START BUTTON TO EXIT", $00
 
     org $129ce
-L000129ce:
-	dl L000d5aa0
-	dl L000d8060
-	dl L000d7aa0
-	dl L000f6860
-	dl L000d7ca0
-	dl L000fb480
-
-L000129e6:
-    db $04, $06, $08, $0a, $0c, $0e, $10, $12
-level_config_data:  ; this contains level info each block is 42 bytes long for 21 levels
     include 'include/level_data.asm'
-    ;incbin "include/graphics/block2.bin"
-
-L00012d60:
-    db $00, $02, $00, $0A, $00, $08, $00, $0C, $00, $04, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $0C, $00, $00, $00, $0C, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $01, $00, $00, $00, $00, $64, $00, $00, $00, $0C, $00, $00, $00, $0C
-    db $00, $02, $00, $0A, $00, $04, $00, $08, $00, $06, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $0C, $00, $00, $00, $0C, $00, $02, $00, $08, $00, $04, $00, $06
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $0C, $00, $00, $00, $0C
 
 L00012dc0:
     incbin "include/graphics/block3.bin"
 
 L000133c0:
-    db $00, $00, $FF, $F8, $00, $04, $FF, $F8, $00, $04, $FF, $F8, $00, $00, $FF, $F8
-    db $00, $04, $FF, $F8, $00, $04, $FF, $F8, $00, $08, $FF, $F8, $00, $04, $FF, $F8
-    db $00, $08, $FF, $F8, $00, $08, $FF, $F8, $00, $08, $FF, $FE, $00, $08, $FF, $F8
-    db $00, $08, $FF, $FC, $00, $08, $FF, $FA, $00, $08, $FF, $FC, $00, $08, $00, $00
-    db $00, $08, $FF, $FC, $00, $08, $00, $00, $00, $08, $00, $04, $00, $08, $00, $02
-    db $00, $08, $00, $04, $00, $08, $00, $06, $00, $08, $00, $08, $00, $08, $00, $02
-    db $00, $08, $00, $08, $00, $08, $00, $08, $00, $08, $00, $08, $00, $04, $00, $08
-    db $00, $04, $00, $08, $00, $04, $00, $08, $00, $06, $00, $08, $00, $00, $00, $08
-    db $00, $00, $00, $08, $00, $04, $00, $08, $FF, $FA, $00, $08, $00, $00, $00, $08
-    db $FF, $FC, $00, $08, $FF, $FC, $00, $08, $FF, $F8, $00, $08, $FF, $FC, $00, $08
-    db $FF, $F8, $00, $08, $FF, $F8, $00, $08, $FF, $F8, $00, $08, $FF, $F8, $00, $02
-    db $FF, $F8, $00, $04, $FF, $F8, $00, $06, $FF, $F8, $00, $04, $FF, $F8, $00, $02
-    db $FF, $F8, $FF, $FC, $FF, $F8, $00, $00, $FF, $F8, $FF, $FC, $FF, $F8, $00, $00
-    db $FF, $F8, $FF, $FC, $FF, $F8, $FF, $FA, $FF, $F8, $FF, $FE, $FF, $F8, $FF, $F8
-    db $FF, $F8, $FF, $F8, $FF, $F8, $FF, $F8, $FF, $F8, $FF, $F8, $FF, $FC, $FF, $F8
-    db $FF, $FC, $FF, $F8, $FF, $FC, $FF, $F8, $FF, $FC, $FF, $F8, $00, $00, $FF, $F8
+    dw $0000, $FFF8, $0004, $FFF8, $0004, $FFF8, $0000, $FFF8
+    dw $0004, $FFF8, $0004, $FFF8, $0008, $FFF8, $0004, $FFF8
+    dw $0008, $FFF8, $0008, $FFF8, $0008, $FFFE, $0008, $FFF8
+    dw $0008, $FFFC, $0008, $FFFA, $0008, $FFFC, $0008, $0000
+    dw $0008, $FFFC, $0008, $0000, $0008, $0004, $0008, $0002
+    dw $0008, $0004, $0008, $0006, $0008, $0008, $0008, $0002
+    dw $0008, $0008, $0008, $0008, $0008, $0008, $0004, $0008
+    dw $0004, $0008, $0004, $0008, $0006, $0008, $0000, $0008
+    dw $0000, $0008, $0004, $0008, $FFFA, $0008, $0000, $0008
+    dw $FFFC, $0008, $FFFC, $0008, $FFF8, $0008, $FFFC, $0008
+    dw $FFF8, $0008, $FFF8, $0008, $FFF8, $0008, $FFF8, $0002
+    dw $FFF8, $0004, $FFF8, $0006, $FFF8, $0004, $FFF8, $0002
+    dw $FFF8, $FFFC, $FFF8, $0000, $FFF8, $FFFC, $FFF8, $0000
+    dw $FFF8, $FFFC, $FFF8, $FFFA, $FFF8, $FFFE, $FFF8, $FFF8
+    dw $FFF8, $FFF8, $FFF8, $FFF8, $FFF8, $FFF8, $FFFC, $FFF8
+    dw $FFFC, $FFF8, $FFFC, $FFF8, $FFFC, $FFF8, $0000, $FFF8
 
 L000134c0:
     incbin "include/graphics/block4.bin"
 
 L00013cc0:
-    db $00, $00, $FF, $00, $00, $31, $FF, $04, $00, $61, $FF, $13, $00, $8E, $FF, $2B
-    db $00, $B5, $FF, $4A, $00, $d4, $FF, $71, $00, $EC, $FF, $9E, $00, $FB, $FF, $CE
-    db $00, $FF, $00, $00, $00, $FB, $00, $31, $00, $EC, $00, $61, $00, $d4, $00, $8E
-    db $00, $B5, $00, $B5, $00, $8E, $00, $d4, $00, $61, $00, $EC, $00, $31, $00, $FB
-    db $00, $00, $00, $FF, $FF, $CE, $00, $FB, $FF, $9E, $00, $EC, $FF, $71, $00, $d4
-    db $FF, $4A, $00, $B5, $FF, $2B, $00, $8E, $FF, $13, $00, $61, $FF, $04, $00, $31
-    db $FF, $00, $00, $00, $FF, $04, $FF, $CE, $FF, $13, $FF, $9E, $FF, $2B, $FF, $71
-    db $FF, $4A, $FF, $4A, $FF, $71, $FF, $2B, $FF, $9E, $FF, $13, $FF, $CE, $FF, $04
-L00013d40:
+    dw $0000, $FF00, $0031, $FF04, $0061, $FF13, $008E, $FF2B
+    dw $00B5, $FF4A, $00d4, $FF71, $00EC, $FF9E, $00FB, $FFCE
+    dw $00FF, $0000, $00FB, $0031, $00EC, $0061, $00d4, $008E
+    dw $00B5, $00B5, $008E, $00d4, $0061, $00EC, $0031, $00FB
+    dw $0000, $00FF, $FFCE, $00FB, $FF9E, $00EC, $FF71, $00d4
+    dw $FF4A, $00B5, $FF2B, $008E, $FF13, $0061, $FF04, $0031
+    dw $FF00, $0000, $FF04, $FFCE, $FF13, $FF9E, $FF2B, $FF71
+    dw $FF4A, $FF4A, $FF71, $FF2B, $FF9E, $FF13, $FFCE, $FF04
+
+L00013d40:  ; sine wave?
     db $32, $32, $31, $2F, $2E, $2B, $29, $25, $22, $1D, $1A, $16, $10, $0C, $07, $02
     db $FE, $F9, $F4, $F0, $EA, $E6, $E3, $DE, $DB, $d7, $d5, $d2, $d1, $CF, $CE, $CE
     db $CE, $CE, $CF, $d1, $d2, $d5, $d7, $DB, $DE, $E3, $E6, $EA, $F0, $F4, $F9, $FE
     db $02, $07, $0C, $10, $16, $1A, $1D, $22, $25, $29, $2B, $2E, $2F, $31, $32, $32
-L00013d80:
+
+L00013d80:  ; smaller sine wave?
     db $03, $03, $04, $04, $05, $06, $07, $08, $09, $F8, $F9, $FA, $FB, $FC, $FC, $FD
     db $FD, $FD, $FC, $FC, $FB, $FA, $F9, $F8, $F7, $08, $07, $06, $05, $04, $04, $03
+
 L00013da0:
-    dw $0000, $fffa
-    incbin "include/graphics/block5.bin"    ; $276 bytes
+    dw $0000, $FFFA, $0001, $0002, $0004, $FFFC, $FFF8, $0001
+    dw $0002, $0004, $FFF8, $FFF6, $0001, $0002, $0004, $FFF4
+    dw $FFF5, $0001, $0002, $0004, $FFF1, $FFF4, $0001, $0002
+    dw $0004, $FFED, $FFF2, $0001, $0002, $0004, $FFEA, $FFF1
+    dw $0001, $0002, $0004, $FFE7, $FFF0, $0001, $0002, $0004
+    dw $FFE4, $FFEF, $0001, $0002, $0004, $FFE2, $FFEF, $0001
+    dw $0002, $0004, $FFE0, $FFEE, $0001, $0002, $0004, $FFDE
+    dw $FFEE, $0001, $0002, $0004, $FFDC, $FFEE, $0002, $0003
+    dw $8005, $FFDB, $FFEE, $0002, $0003, $0005, $FFDA, $FFEE
+    dw $0002, $0003, $0005, $FFDA, $FFEE, $0002, $0003, $0005
+    dw $FFDA, $FFEF, $0002, $0003, $0005, $FFDA, $FFEF, $0002
+    dw $0003, $0005, $FFDA, $FFF0, $0002, $0003, $0005, $FFDC
+    dw $FFF1, $0002, $0003, $0005, $FFDD, $FFF2, $0002, $0003
+    dw $0005, $FFDF, $FFF4, $0002, $0003, $0005, $FFE1, $FFF5
+    dw $0002, $0003, $0005, $FFE3, $FFF7, $0002, $0003, $0005
+    dw $FFE6, $FFF8, $0003, $0004, $0006, $FFE9, $FFFA, $0003
+    dw $0004, $0006, $FFEC, $FFFC, $0003, $0004, $0006, $FFEF
+    dw $FFFD, $0003, $0004, $0006, $FFF3, $FFFF, $0003, $0004
+    dw $0006, $FFF6, $0001, $0003, $0004, $0006, $FFFA, $0003
+    dw $0003, $0004, $0006, $FFFE, $0005, $0003, $0004, $0006
+    dw $0002, $0006, $0003, $0004, $0006, $0005, $0008, $0003
+    dw $0004, $0006, $0009, $0009, $0003, $0004, $0006, $000D
+    dw $000B, $0003, $0004, $0006, $0010, $000C, $0003, $0004
+    dw $0006, $0014, $000D, $0003, $0004, $0006, $0017, $000E
+    dw $0003, $0004, $0006, $001A, $000F, $0003, $0004, $0006
+    dw $001C, $0010, $0002, $0003, $0005, $001F, $0011, $0002
+    dw $0003, $0005, $0021, $0011, $0002, $0003, $0005, $0022
+    dw $0011, $0002, $0003, $8005, $0024, $0011, $0002, $0003
+    dw $0005, $0025, $0011, $0002, $0003, $0005, $0025, $0011
+    dw $0002, $0003, $0005, $0025, $0011, $0002, $0003, $0005
+    dw $0025, $0010, $0002, $0003, $0005, $0025, $000F, $0002
+    dw $0003, $0005, $0024, $000E, $0002, $0003, $0005, $0023
+    dw $000D, $0002, $0003, $0005, $0021, $000C, $0001, $0002
+    dw $0004, $001F, $000B, $0001, $0002, $0004, $001D, $0009
+    dw $0001, $0002, $0004, $001A, $0007, $0001, $0002, $0004
+    dw $0017, $0006, $0001, $0002, $0004, $0014, $0004, $0001
+    dw $0002, $0004, $0011, $0002, $0001, $0002, $0004, $000E
+    dw $0001, $0001, $0002, $0004, $000A, $FFFF, $0001, $0002
+    dw $0004, $0006, $FFFD, $0001, $0002, $0004, $0003, $FFFB
+    dw $0001, $0002, $0004, $0000, $0000
 
-L0001401a:
+alisia_power_tilemap:
     dw $86AF, $86AF, $86AF, $86AF
-L00014022:
-    db $86, $AF, $86, $AF, $86, $AF, $87, $F6, $87, $F6, $87, $F6, $00, $00, $00, $00
-    db $86, $AE, $86, $AF, $86, $AF, $86, $AF, $86, $AF, $86, $AF, $86, $AF, $87, $F6
-    db $87, $F6, $87, $F6, $00, $00, $00, $00, $86, $AE, $86, $AE, $86, $AF, $86, $AF
-    db $86, $AF, $86, $AF, $86, $AF, $87, $F6, $87, $F6, $87, $F6, $00, $00, $00, $00
-    db $86, $AE, $86, $AE, $86, $AE, $86, $AF, $86, $AF, $86, $AF, $86, $AF, $87, $F6
-    db $87, $F6, $87, $F6, $00, $00, $00, $00, $86, $AE, $86, $AE, $86, $AE, $86, $AE
-    db $86, $AF, $86, $AF, $86, $AF, $87, $F6, $87, $F6, $87, $F6, $00, $00, $00, $00
-    db $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AF, $86, $AF, $87, $F6
-    db $87, $F6, $87, $F6, $00, $00, $00, $00, $86, $AE, $86, $AE, $86, $AE, $86, $AE
-    db $86, $AE, $86, $AE, $86, $AF, $87, $F6, $87, $F6, $87, $F6, $00, $00, $00, $00
-    db $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $87, $F6
-    db $87, $F6, $87, $F6, $00, $00, $00, $00, $86, $AE, $86, $AE, $86, $AE, $86, $AE
-    db $86, $AE, $86, $AE, $86, $AE, $87, $F7, $87, $F6, $87, $F6, $00, $00, $00, $00
-    db $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $86, $AE, $87, $F7
-    db $87, $F7, $87, $F6, $00, $00, $00, $00, $A7, $F8, $A7, $F8, $A7, $F8, $A7, $F8
-    db $A7, $F8, $A7, $F8, $A7, $F8, $A7, $F8, $A7, $F8, $A7, $F8, $00, $00, $00, $00
-L00014122:
-    db $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B7, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B7, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B7, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B8, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B7, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B8, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B7, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B8, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B7, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B8, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B7, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B8
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B7
-    db $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6, $86, $B6
+    dw $86AF, $86AF, $86AF, $87F6, $87F6, $87F6, $0000, $0000
+    dw $86AE, $86AF, $86AF, $86AF, $86AF, $86AF, $86AF, $87F6
+    dw $87F6, $87F6, $0000, $0000, $86AE, $86AE, $86AF, $86AF
+    dw $86AF, $86AF, $86AF, $87F6, $87F6, $87F6, $0000, $0000
+    dw $86AE, $86AE, $86AE, $86AF, $86AF, $86AF, $86AF, $87F6
+    dw $87F6, $87F6, $0000, $0000, $86AE, $86AE, $86AE, $86AE
+    dw $86AF, $86AF, $86AF, $87F6, $87F6, $87F6, $0000, $0000
+    dw $86AE, $86AE, $86AE, $86AE, $86AE, $86AF, $86AF, $87F6
+    dw $87F6, $87F6, $0000, $0000, $86AE, $86AE, $86AE, $86AE
+    dw $86AE, $86AE, $86AF, $87F6, $87F6, $87F6, $0000, $0000
+    dw $86AE, $86AE, $86AE, $86AE, $86AE, $86AE, $86AE, $87F6
+    dw $87F6, $87F6, $0000, $0000, $86AE, $86AE, $86AE, $86AE
+    dw $86AE, $86AE, $86AE, $87F7, $87F6, $87F6, $0000, $0000
+    dw $86AE, $86AE, $86AE, $86AE, $86AE, $86AE, $86AE, $87F7
+    dw $87F7, $87F6, $0000, $0000, $A7F8, $A7F8, $A7F8, $A7F8
+    dw $A7F8, $A7F8, $A7F8, $A7F8, $A7F8, $A7F8, $0000, $0000
+monster_power_tilemap:
+    dw $86B8, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B7, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B7, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B8, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B7, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B8, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B7, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B8, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B7, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B8, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B7, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B8, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B7, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B8
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B7
+    dw $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B6, $86B6
 
-L00014232:  ; 50 long words
+default_monster_data:  ; default monster data, 64 bytes for each one
     db $86, $C8, $86, $C9, $86, $91, $86, $99, $86, $EF, $86, $BF, $8E, $BF, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
     db $86, $D8, $86, $D9, $86, $E0, $86, $E1, $86, $E2, $86, $81, $86, $a6, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
+
     db $86, $CA, $86, $CB, $86, $91, $86, $99, $86, $EF, $86, $BF, $8E, $BF, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
     db $86, $DA, $86, $DB, $86, $E0, $86, $E1, $86, $E2, $86, $81, $86, $a6, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
+
     db $86, $CC, $86, $CD, $86, $91, $86, $99, $86, $EF, $86, $BF, $8E, $BF, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
     db $86, $DC, $86, $DD, $86, $E0, $86, $E1, $86, $E2, $86, $81, $86, $a6, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
+
     db $86, $CE, $86, $CF, $86, $91, $86, $99, $86, $EF, $86, $BF, $8E, $BF, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
     db $86, $DE, $86, $DF, $86, $E0, $86, $E1, $86, $E2, $86, $81, $86, $a6, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
+
     db $8E, $BF, $86, $97, $86, $98, $86, $97, $86, $8E, $86, $BF, $86, $9C, $86, $8E
     db $86, $95, $86, $8E, $86, $8C, $86, $9D, $86, $8E, $86, $8D, $8E, $BF, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
@@ -21379,6 +19900,7 @@ L00014372:
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
     db $8E, $BF, $86, $BF, $8E, $BF, $86, $BF
 
+    org $143aa
 L000143aa:
     db $0A, $60, $0E, $80, $0C, $AA, $0E, $CC, $0A, $60, $0E, $80, $0C, $AA, $0E, $CC
     db $04, $46, $06, $6E, $08, $AC, $0A, $AE, $04, $46, $06, $6E, $08, $AC, $0A, $AE
@@ -21448,7 +19970,7 @@ L000145fe:
     db $18, $19, $16, $1B, $14, $1D, $12, $1F, $10, $01, $0E, $03, $0C, $05, $0A, $07
     db $FF, $4E
 
-L00014620:
+L00014620:  ; in unused code
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $04, $22, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $04, $22, $06, $44, $00, $00, $00, $00
     db $00, $00, $00, $00, $04, $22, $06, $44, $08, $66, $00, $00, $00, $00, $00, $00
@@ -21464,7 +19986,7 @@ L000146a2:
 palette_all_white:
     dw $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee, $0eee
 
-    org $000146e2
+    org $146e2
 sega_jump_routine_table:
 	jmp L00001668
 	jmp L0000169c
@@ -21491,14 +20013,14 @@ sega_jump_routine_table:
 	jmp L00001a32
 	jmp L00001a4a
 	jmp L00001a62
-	jmp L00001a7a
-	jmp L00001a92
+	jmp set_bg1_tile_attributes
+	jmp set_bg2_tile_attributes
 
     dcb.b 526, $00; blank area
 
-	jmp L00003358
+	jmp add_palette_to_dma_data_array
 	jmp L00001aaa
-	jmp L00003732
+	jmp load_lv1_graphics
 	jmp L00003756
 	jmp L0000375c
 	jmp L00003768
@@ -21521,12 +20043,12 @@ sega_jump_routine_table_END:
 sega_jump_routine_table_SIZE equ (sega_jump_routine_table_END-sega_jump_routine_table)    ; $328
 
     org $14a0a
-L00014a0a:
+lv1_demo_alisia_movement:
     dw $0008, $0230, $8008, $0088, $0002, $003C, $0012, $003C
     dw $8008, $0050, $0012, $00B4, $8008, $0078, $0002, $00B4
     dw $0012, $003C, $8008, $0068, $0020, $0002, $0002, $00F0
     dw $0008, $0060, $0048, $0078, $0000, $FFFF
-L00014a46:
+lv2_demo_alisia_movement:
     dw $8108, $0028, $8110, $001E, $8104, $0001, $8110, $001E
     dw $8148, $003C, $8102, $003C, $8108, $0046, $8102, $00B4
     dw $8110, $0001, $8100, $0078, $8120, $0004, $8108, $0028
@@ -21534,13 +20056,13 @@ L00014a46:
     dw $8104, $000A, $8108, $003C, $8102, $0078, $8108, $003C
     dw $8104, $0001, $8102, $003C, $8104, $000A, $8102, $003C
     dw $8104, $003C, $0000, $FFFF
-L00014aae:
+lv3_demo_alisia_movement:
     dw $8008, $0038, $0008, $0168, $8020, $0004, $8008, $00E0
     dw $0008, $0040, $0004, $0180, $0040, $00B4, $0008, $0020
     dw $8148, $0030, $0008, $0050, $8148, $0030, $8108, $0050
     dw $8020, $0002, $8000, $0078, $0008, $00D8, $0010, $001E
     dw $0008, $00D8, $8004, $0020, $0000, $FFFF
-L00014afa:
+lv4_demo_alisia_movement:
     dw $8108, $0010, $8110, $001E, $8148, $0014, $8108, $0014
     dw $8110, $0014, $8148, $0014, $8108, $0014, $8108, $0010
     dw $8148, $0014, $8108, $0014, $8110, $0014, $8148, $0014
@@ -21577,7 +20099,7 @@ L00014c1e:
     dw $0000, $e58f, $0000, $E597, $0000, $E5AF, $0000, $E5CF, $E58F, $E59F, $E597, $E5A7, $E5AF, $E5BF, $E5B7, $E5C7
     dw $0000, $0000, $0000, $E58F, $0000, $E597, $0000, $E5AF, $0000, $e5CF, $e58F, $e59F, $e597, $e5A7, $e5AF, $e5BF
 
-L00014c5e:
+dialogue_strings_1:
     db "0ou`have`done`well`to`come`so`far{", $00, $00
     db "````````but`you`are`too`late|", $00, $00
     db "```1ur`leader`has`returned`to`us|", $00, $00
@@ -21585,7 +20107,7 @@ L00014c5e:
     db "```2o`you`dare`to`challenge`us~", $00, $00
     db "`3ravel`to`our`palace{if`you`think", $00, $00
     db "````you`can`survive`the`journey}", $00, $00, $ff
-L00014d52:
+dialogue_strings_2:
     db "```4o`6lisia{`you`have`survived", $00, $00
     db "``this`long`against`our`loyal`army", $00, $00
     db "`and`reached`our`palace`in`the`sky|", $00, $00
@@ -21602,21 +20124,74 @@ L00014d52:
     org $14ed8
 L00014ed8:
     incbin "include/graphics/block6.bin"
-
 L0001509a:
     dcb.b 870, $ff
 
     org $15400
 L00015400:
-    incbin "include/graphics/block7.bin"
+    incbin "include/graphics/level1/bg1_tilemap.bin"
+L00016dd8:
+    incbin "include/graphics/level1/bg2_tilemap.bin"
+L0001753e:
+    incbin "include/graphics/level3/bg1_tilemap.bin"
+L00019278:
+    incbin "include/graphics/level3/bg2_tilemap.bin"
+L000199a0:
+    incbin "include/graphics/level2/bg1_tilemap.bin"
 L0001b856:
-    incbin "include/graphics/block8.bin"
+    incbin "include/graphics/level2/tbc1.bin"
+L0001c058:
+    incbin "include/graphics/level2/bg2_tilemap.bin"
 L0001caee:
-    incbin "include/graphics/block9.bin"
-L0002b230:
-    incbin "include/graphics/block10.bin"
+    incbin "include/graphics/level2/tbc2.bin"
+L0001cec0:
+    incbin "include/graphics/level4/bg1_tilemap.bin"
+L0001e82e:
+    incbin "include/graphics/level4/bg2_tilemap.bin"
+L0001f792:
+    incbin "include/graphics/level5/bg1_tilemap.bin"
+L00021304:
+    incbin "include/graphics/level5/bg2_tilemap.bin"
+L000216bc:
+    incbin "include/graphics/level6/bg1_tilemap.bin"
+L000235fa:
+    incbin "include/graphics/level6/bg2_tilemap.bin"
+L00024184:
+    incbin "include/graphics/level7/bg1_tilemap.bin"
+L0002700c:
+    incbin "include/graphics/level7/bg2_tilemap.bin"
+L00027bfa:
+    incbin "include/graphics/level8/bg1_tilemap.bin"
+L0002a6f0:
+    incbin "include/graphics/level8/bg2_tilemap.bin"
+L0002b230:  ; in unused code
+    incbin "include/graphics/level8/tbc2.bin"
+L0002b6d0:
+    incbin "include/graphics/level9/bg1_tilemap.bin"
+L0002d2bc:
+    incbin "include/graphics/level9/bg2_tilemap.bin"
+L0002f118:
+    incbin "include/graphics/level10/bg1_tilemap.bin"
+L000313fa:
+    incbin "include/graphics/level10/bg2_tilemap.bin"
+L0003348c:
+    incbin "include/graphics/level13/bg1_tilemap.bin"
+L000341e4:
+    incbin "include/graphics/level14/bg1_tilemap.bin"
+L000344b4:
+    incbin "include/graphics/level13/bg2_tilemap.bin"
+L00034cbe:
+    incbin "include/graphics/level14/bg2_tilemap.bin"
+L00035418:
+    incbin "include/graphics/level11/bg1_tilemap.bin"
+L000377E8:
+    incbin "include/graphics/level11/bg2_tilemap.bin"
+L00037f20:
+    incbin "include/graphics/level12/bg1_tilemap.bin"
+L000386ea:
+    incbin "include/graphics/level12/bg2_tilemap.bin"
 L00038b98:
-    incbin "include/graphics/block11.bin"
+    incbin "include/graphics/level12/tbc2.bin"
 L00039040:
     incbin "include/graphics/block12.bin"
 L00039578:
@@ -21635,54 +20210,129 @@ L0003b3e6:
     incbin "include/graphics/block19.bin"
 L0003b964:
     incbin "include/graphics/block20.bin"
-L0004abb8:
-    incbin "include/graphics/block21.bin"
-L000541c4:  ; was 87k but now 72.7k
-    incbin "include/graphics/block22.bin"
-L00065dc8:  ; followed by remaing 13k
-    incbin "include/graphics/block22_bis.bin"
-
+L0003bcd4:
+    incbin "include/graphics/level15/bg1_tilemap.bin"
+L0003c03e:
+    incbin "include/graphics/bg1_tilesets.bin"
+level1_tileset:
+    incbin "include/graphics/level1/tileset1.bin"
+L0003fc28:
+    incbin "include/graphics/level3/tileset1.bin"
+L00042220:
+    incbin "include/graphics/level2/tileset1.bin"
+L00043bb6:
+    incbin "include/graphics/level2/tileset2.bin"
+L00045806:  ; bg2 tiles saved to $a000 in VRAM
+    incbin "include/graphics/level2/bg2_tileset1.bin"
+L00047806:
+    incbin "include/graphics/level4/tileset1.bin"
+L0004abb8:  ; lv4 and 5
+    incbin "include/graphics/level5/bg2_tileset2.bin"
+L0004cbb8:  ; LV5 ts2
+    incbin "include/graphics/level5/tileset2.bin"
+L0004e22a:
+    incbin "include/graphics/level6/tileset1.bin"
+L0004f654:  ; LV7 TS1
+    incbin "include/graphics/level7/tileset1.bin"
+L000510d8:  ; LV7 TS2
+    incbin "include/graphics/level7/tileset2.bin"
+L0005291a:  ; LV8 TS1
+    incbin "include/graphics/level8/tileset1.bin"
+L000541c4:  ; in unused code
+    incbin "include/graphics/unused/tileset1.bin"
+L000553ba:  ; LV9 TS1
+    incbin "include/graphics/level9/tileset1.bin"
+L00056cc8:  ; LV9 TS2
+    incbin "include/graphics/level9/tileset2.bin"
+L000586be:  ; LV13 TS1
+    incbin "include/graphics/level13/tileset1.bin"
+L00059124:  ; LV11 TS1
+    incbin "include/graphics/level11/tileset1.bin"
+L0005bda4:  ; LV12 TS1  - End cinematic?
+    incbin "include/graphics/level12/tileset1.bin"
+L0005f088:  ; LV1 SP
+    incbin "include/graphics/level1/sprites.bin"
+L0005ff20:  ; LV3 SP
+    incbin "include/graphics/level3/sprites.bin"
+L00060d40:  ; LV2 SP
+    incbin "include/graphics/level2/sprites.bin"
+L000617b0:  ; LV4 SP
+    incbin "include/graphics/level4/sprites.bin"
+L00062360:  ; LV5 SP
+    incbin "include/graphics/level5/sprites.bin"
+L00063218:  ; LV6 SP
+    incbin "include/graphics/level6/sprites.bin"
+L00063ea0:  ; LV7 SP
+    incbin "include/graphics/level7/sprites.bin"
+L00064e10:  ; LV8 SP
+    incbin "include/graphics/level8/sprites.bin"
+L00065dc8:  ; in unused code
+    incbin "include/graphics/unused/sprites.bin"
+L00065f80:  ; LV9 SP
+    incbin "include/graphics/level9/sprites.bin"
+L00066a18:  ; LV10 SP
+    incbin "include/graphics/level10/sprites.bin"
+L000677f0:  ; LV13 SP
+    incbin "include/graphics/level13/sprites.bin"
+L00067d10:  ; LV11 SP
+    incbin "include/graphics/level11/sprites.bin"
+L00068a80:  ; LV12 SP
+    incbin "include/graphics/level12/sprites.bin"
+; palettes
+L00069050:
+    dw $062A, $0002, $0024, $0444, $0888, $0CCC, $0200, $0820
+    dw $0E40, $0E80, $0E20, $0040, $0280, $04C0, $0000, $0EEE
 L00069070:
-    db $02, $42, $00, $02, $00, $22, $00, $24, $02, $44, $04, $66, $06, $88, $02, $22
-    db $04, $44, $0A, $AA, $00, $20, $00, $60, $02, $80, $02, $a0, $00, $00, $08, $CC
+    dw $0242, $0002, $0022, $0024, $0244, $0466, $0688, $0222
+    dw $0444, $0AAA, $0020, $0060, $0280, $02a0, $0000, $08CC
 L00069090:
-    db $00, $40, $00, $02, $00, $22, $02, $42, $04, $44, $06, $66, $08, $88, $04, $20
-    db $08, $42, $08, $64, $02, $20, $02, $88, $08, $44, $06, $CC, $00, $00, $0C, $CC
-    db $04, $24, $00, $02, $00, $0E, $02, $22, $04, $44, $06, $66, $08, $88, $04, $00
-    db $06, $00, $08, $00, $00, $22, $02, $44, $04, $66, $06, $88, $00, $00, $0C, $CC
-    db $00, $66, $02, $42, $04, $64, $06, $86, $04, $20, $06, $20, $08, $20, $00, $24
-    db $02, $46, $04, $6C, $04, $44, $06, $66, $08, $88, $0A, $AA, $00, $00, $0C, $CC
+    dw $0040, $0002, $0022, $0242, $0444, $0666, $0888, $0420
+    dw $0842, $0864, $0220, $0288, $0844, $06CC, $0000, $0CCC
+L000690b0:
+    dw $0424, $0002, $000E, $0222, $0444, $0666, $0888, $0400
+    dw $0600, $0800, $0022, $0244, $0466, $0688, $0000, $0CCC
+L000690d0:
+    dw $0066, $0242, $0464, $0686, $0420, $0620, $0820, $0024
+    dw $0246, $046C, $0444, $0666, $0888, $0AAA, $0000, $0CCC
 L000690f0:
-    db $06, $44, $08, $20, $0A, $40, $0A, $64, $0C, $86, $00, $04, $00, $08, $04, $02
-    db $06, $04, $02, $22, $04, $44, $06, $66, $08, $88, $0A, $AA, $00, $00, $0C, $CC
-    db $06, $44, $02, $22, $04, $44, $06, $86, $00, $02, $00, $04, $00, $08, $00, $68
-    db $00, $CC, $04, $02, $06, $24, $08, $46, $0A, $68, $0C, $8A, $00, $00, $0C, $CC
-    db $04, $64, $06, $04, $04, $22, $06, $44, $08, $66, $00, $04, $00, $28, $00, $4C
-    db $08, $88, $00, $22, $02, $22, $04, $46, $06, $66, $0A, $AA, $00, $00, $0E, $EE
-    db $02, $44, $06, $20, $08, $40, $0A, $62, $0C, $84, $04, $00, $08, $20, $00, $02
-    db $04, $66, $00, $22, $02, $24, $04, $46, $06, $68, $08, $8A, $00, $00, $0C, $CC
-    db $02, $44, $00, $22, $00, $44, $00, $66, $00, $AA, $00, $68, $00, $CC, $00, $02
-    db $04, $2A, $00, $06, $02, $22, $04, $44, $06, $66, $0A, $AA, $00, $00, $0C, $CC
-L00069190:
-    db $00, $20, $00, $00, $08, $20, $08, $40, $00, $00, $00, $48, $00, $CC, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $02
-    db $00, $20, $04, $00, $08, $20, $08, $40, $00, $26, $00, $8A, $00, $EE, $04, $22
-    db $06, $44, $08, $66, $0A, $88, $0C, $AA, $0E, $CC, $0E, $EE, $00, $00, $00, $02
-L000691d0:
-    db $02, $44, $00, $00, $08, $20, $08, $40, $00, $00, $00, $48, $00, $CC, $00, $02
-    db $04, $2A, $00, $06, $02, $22, $04, $44, $06, $66, $0A, $AA, $00, $00, $0C, $CC
-    db $02, $44, $04, $22, $08, $00, $08, $40, $0E, $60, $00, $68, $00, $CC, $00, $02
-    db $00, $04, $00, $24, $04, $44, $06, $66, $08, $88, $0C, $CC, $00, $00, $0E, $EE
-    db $00, $20, $02, $00, $04, $00, $06, $00, $08, $00, $0A, $00, $08, $40, $00, $EE
-    db $04, $00, $06, $00, $08, $20, $0A, $42, $0C, $64, $0E, $A8, $00, $00, $0E, $EE
-    db $00, $20, $08, $40, $0E, $80, $0E, $a2, $0E, $C0, $0E, $a0, $0E, $a6, $00, $EE
-    db $0A, $62, $0C, $84, $0E, $a6, $0E, $C8, $0E, $EA, $0E, $EC, $00, $00, $0E, $EE
-    db $02, $44, $02, $00, $08, $00, $08, $40, $0E, $60, $00, $68, $00, $CC, $00, $02
-    db $00, $04, $00, $24, $02, $22, $04, $44, $06, $66, $0A, $AA, $00, $00, $0C, $CC
-
-L00069270:  ; palette
+    dw $0644, $0820, $0A40, $0A64, $0C86, $0004, $0008, $0402
+    dw $0604, $0222, $0444, $0666, $0888, $0AAA, $0000, $0CCC
+L00069110:
+    dw $0644, $0222, $0444, $0686, $0002, $0004, $0008, $0068
+    dw $00CC, $0402, $0624, $0846, $0A68, $0C8A, $0000, $0CCC
+L00069130:
+    dw $0464, $0604, $0422, $0644, $0866, $0004, $0028, $004C
+    dw $0888, $0022, $0222, $0446, $0666, $0AAA, $0000, $0EEE
+L00069150:
+    dw $0244, $0620, $0840, $0A62, $0C84, $0400, $0820, $0002
+    dw $0466, $0022, $0224, $0446, $0668, $088A, $0000, $0CCC
+L00069170:
+    dw $0244, $0022, $0044, $0066, $00AA, $0068, $00CC, $0002
+    dw $042A, $0006, $0222, $0444, $0666, $0AAA, $0000, $0CCC
+L00069190:  ; in unused code
+    dw $0020, $0000, $0820, $0840, $0000, $0048, $00CC, $0000
+    dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0002
+    dw $0020, $0400, $0820, $0840, $0026, $008A, $00EE, $0422
+    dw $0644, $0866, $0A88, $0CAA, $0ECC, $0EEE, $0000, $0002
+L000691d0:  ; in unused code
+    dw $0244, $0000, $0820, $0840, $0000, $0048, $00CC, $0002
+    dw $042A, $0006, $0222, $0444, $0666, $0AAA, $0000, $0CCC
+L000691f0:
+    dw $0244, $0422, $0800, $0840, $0E60, $0068, $00CC, $0002
+    dw $0004, $0024, $0444, $0666, $0888, $0CCC, $0000, $0EEE
+L00069210:
+    dw $0020, $0200, $0400, $0600, $0800, $0A00, $0840, $00EE
+    dw $0400, $0600, $0820, $0A42, $0C64, $0EA8, $0000, $0EEE
+L00069230:
+    dw $0020, $0840, $0E80, $0Ea2, $0EC0, $0Ea0, $0Ea6, $00EE
+    dw $0A62, $0C84, $0Ea6, $0EC8, $0EEA, $0EEC, $0000, $0EEE
+L00069250:
+    dw $0244, $0200, $0800, $0840, $0E60, $0068, $00CC, $0002
+    dw $0004, $0024, $0222, $0444, $0666, $0AAA, $0000, $0CCC
+L00069270:
     dw $0242, $0200, $0800, $0840, $0044, $0088, $00EE, $0002 
     dw $0004, $0024, $0222, $0444, $0666, $0AAA, $0000, $0EEE 
+
 L00069290:  ;
     incbin "include/graphics/block27.bin"
 L0006a658:
@@ -21694,27 +20344,32 @@ L0006ba22:
 L0006c5f2:  ; tileset
     incbin "include/graphics/block31.bin"
     org $6d28c
-L0006d28c:
-    db $00, $69, $10, $29, $10, $2A, $10, $2B, $00, $69, $00, $30, $00, $31, $00, $32
-    db $00, $30, $00, $32, $00, $67, $00, $69, $00, $67, $00, $30, $00, $32, $00, $30
-    db $00, $31, $00, $32, $00, $69, $10, $29, $10, $2A, $10, $2B, $00, $69, $00, $30
-    db $00, $31, $00, $32, $00, $30, $00, $32, $00, $6A, $00, $6B, $00, $30, $00, $32
-    db $00, $30, $00, $31, $00, $32, $00, $69, $10, $29, $10, $2A, $10, $2B, $00, $69
-    db $08, $2D, $08, $2D, $10, $2C, $00, $24, $00, $25, $00, $11, $00, $19, $00, $6F
-    db $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F
-    db $08, $3F, $00, $3F, $08, $3F, $00, $3F, $10, $2C, $08, $3F, $00, $3F, $08, $3F
-    db $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F
-    db $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $10, $2C, $00, $2D, $00, $2D
-    db $18, $2D, $18, $2D, $00, $2C, $00, $34, $00, $35, $00, $60, $00, $61, $00, $62
-    db $08, $3F, $00, $27, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F
-    db $08, $3F, $00, $3F, $08, $3F, $00, $3F, $00, $2C, $08, $3F, $00, $3F, $08, $3F
-    db $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $08, $3F
-    db $00, $3F, $08, $3F, $00, $3F, $08, $3F, $00, $3F, $00, $2C, $10, $2D, $10, $2D
-    db $00, $68, $00, $29, $00, $2A, $00, $2B, $00, $68, $00, $30, $00, $31, $00, $32
-    db $00, $30, $00, $32, $00, $67, $00, $68, $00, $67, $00, $30, $00, $32, $00, $30
-    db $00, $31, $00, $32, $00, $68, $00, $29, $00, $2A, $00, $2B, $00, $68, $00, $30
-    db $00, $31, $00, $32, $00, $30, $00, $32, $00, $6C, $00, $6D, $00, $30, $00, $32
-    db $00, $30, $00, $31, $00, $32, $00, $68, $00, $29, $00, $2A, $00, $2B, $00, $68
+hud_tilemap:   ; 40(W)x4(H) tiles
+    ; row 0
+    dw $0069, $1029, $102A, $102B, $0069, $0030, $0031, $0032
+    dw $0030, $0032, $0067, $0069, $0067, $0030, $0032, $0030
+    dw $0031, $0032, $0069, $1029, $102A, $102B, $0069, $0030
+    dw $0031, $0032, $0030, $0032, $006A, $006B, $0030, $0032
+    dw $0030, $0031, $0032, $0069, $1029, $102A, $102B, $0069
+    ;row 1
+    dw $082D, $082D, $102C, $0024, $0025, $0011, $0019, $006F
+    dw $083F, $003F, $083F, $003F, $083F, $003F, $083F, $003F
+    dw $083F, $003F, $083F, $003F, $102C, $083F, $003F, $083F
+    dw $003F, $083F, $003F, $083F, $003F, $083F, $003F, $083F
+    dw $003F, $083F, $003F, $083F, $003F, $102C, $002D, $002D
+    ; row 2
+    dw $182D, $182D, $002C, $0034, $0035, $0060, $0061, $0062
+    dw $083F, $0027, $083F, $003F, $083F, $003F, $083F, $003F
+    dw $083F, $003F, $083F, $003F, $002C, $083F, $003F, $083F
+    dw $003F, $083F, $003F, $083F, $003F, $083F, $003F, $083F
+    dw $003F, $083F, $003F, $083F, $003F, $002C, $102D, $102D
+    ; row 3
+    dw $0068, $0029, $002A, $002B, $0068, $0030, $0031, $0032
+    dw $0030, $0032, $0067, $0068, $0067, $0030, $0032, $0030
+    dw $0031, $0032, $0068, $0029, $002A, $002B, $0068, $0030
+    dw $0031, $0032, $0030, $0032, $006C, $006D, $0030, $0032
+    dw $0030, $0031, $0032, $0068, $0029, $002A, $002B, $0068
+    
 L0006d3cc:
     db $EE, $EE, $EE, $EE, $EE, $EE, $AE, $EE, $EE, $EA, $AE, $EA, $EE, $AA, $BE, $AA
     db $AA, $AE, $BA, $AE, $EA, $EE, $AA, $EE, $EE, $EE, $AE, $EE, $EE, $EE, $EE, $EE
@@ -21877,7 +20532,7 @@ L0006ee30:
 default_palette:    ;  default palettes?
     dw $0000, $0444, $0888, $0AAA, $0CCC, $0244, $046C, $068C
     dw $08AE, $0006, $002A, $00CE, $0600, $0E20, $0000, $0EEE ; last is white
-L0006efac:
+L0006efac:  ; HUD related?
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $00, $08, $00, $09
     db $00, $02, $00, $03, $00, $0A, $00, $0B, $00, $04, $00, $05, $00, $0C, $00, $0D
     db $00, $06, $00, $07, $00, $0E, $00, $0F, $00, $00, $00, $00, $00, $19, $00, $1A
@@ -22168,9 +20823,9 @@ L000760ee:
 L000762a8:
     incbin "include/graphics/block36.bin"
     org $77854
-L00077854:
-    db $04, $44, $00, $AA, $00, $EE, $08, $EE, $0E, $EE, $04, $44, $06, $66, $08, $88
-    db $0A, $AA, $0C, $CC, $00, $AA, $04, $EE, $08, $EE, $0C, $EE, $04, $44, $0E, $EE
+default_palette_5:  ; palette
+    dw $0444, $00AA, $00EE, $08EE, $0EEE, $0444, $0666, $0888
+    dw $0AAA, $0CCC, $00AA, $04EE, $08EE, $0CEE, $0444, $0EEE
 
     org $77874
 L00077874:
@@ -22238,8 +20893,7 @@ L00077b58:
 
     org $77baa
 L00077baa:
-    db $00, $34
-    org $77bac
+    dw $0034
 L00077bac:
     db           $00, $02, $00, $00, $00, $02, $00, $01, $00, $02, $00, $02, $00, $02
     db $00, $00, $00, $02, $00, $03, $00, $02, $00, $01, $00, $02, $00, $04, $00, $02
@@ -22369,8 +21023,14 @@ L00078b22:
 
     org $7acc2
 L0007acc2:
-    db $00, $00, $00, $00, $0D, $60, $20, $00, $00, $00, $0A, $56, $0D, $00, $20, $01
-    db $00, $00, $14, $7D, $0C, $40, $20, $02, $00, $00, $1C, $28, $08, $40, $20, $03
+    dl $00000000        ; offset in L00078b22
+    dw $0D60, $2000     ; len -
+    dl $00000A56        ; offset in L00078b22
+    dw $0D00, $2001     ; len -
+    dl $0000147D        ; offset in L00078b22
+    dw $0C40, $2002     ; len -
+    dl $00001C28        ; offset in L00078b22
+    dw $0840, $2003     ; len -
 
     org $7ace2
 L0007ace2:
@@ -22382,14 +21042,14 @@ L0007f02c:
 L000830da:
     incbin "include/graphics/block41.bin"
     org $8426a
-options_tilseset_a000:     ; $0008544c
-    incbin "include/graphics/block42.bin"
+options_tilseset:       ; check $0008544c
+    incbin "include/graphics/options_tilseset.bin"
     org $86650
-options_tilseset_0000:    ; $00087bc4
+options_tilseset_0000:
     incbin "include/graphics/block43.bin"
     org $881b8
-L000881b8:
-    incbin "include/graphics/block44.bin"
+intro_credits_bg2_tilemap:
+    incbin "include/graphics/intro_credits_bg2_tilemap.bin"
     org $89abc
 options_bg2_tilemap:
     incbin "include/graphics/options_bg2_tilemap.bin
@@ -22447,7 +21107,7 @@ L0008e8fc equ (z80_sound_driver_and_samples+$3178)
     org $8ea00
     db $3c
     dcb.b $cdf, $ff; ; fill data with $ff - $8ea01-$8f6df
-; although named blocks and stored in grpahics, these could be audio tracks
+
     org $8f6e0
 L0008f6e0:
     incbin "include/graphics/block47.bin"
@@ -22534,116 +21194,114 @@ L000cfd00:
     db $00, $02, $69, $C7, $02, $20, $00, $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 
     org $cff90
-L000cff90:
-    db $00, $00, $05, $9C, $0A, $90, $11, $6A, $1B, $6C, $22, $E0, $2A, $1C, $33, $F4
-    db $3E, $CC, $45, $B2, $4B, $7C, $52, $36, $52, $38, $52, $3A, $52, $3C, $52, $3E
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+L000cff90:  ; only used at the start of a new level index by level id
+    dw $0000, $059C, $0A90, $116A, $1B6C, $22E0, $2A1C, $33F4
+    dw $3ECC, $45B2, $4B7C, $5236, $5238, $523A, $523C, $523E
+
+    dcb.w 40, $FFFF
 
     org $d0000
 L000d0000:
     incbin "include/graphics/block53.bin"
 L000d5300:
     incbin "include/graphics/block54.bin"
+
 L000d5aa0:
     incbin "include/graphics/block55.bin"
 L000d7aa0:
-    db $00, $00, $00, $00, $00, $00, $00, $68, $00, $00, $01, $2E, $00, $00, $01, $84
-    db $00, $00, $02, $52, $00, $00, $03, $3C, $00, $00, $03, $84, $00, $00, $04, $B2
-    db $00, $00, $05, $1C, $00, $00, $06, $62, $00, $00, $07, $4E, $00, $00, $07, $62
-    db $00, $00, $07, $E2, $00, $00, $08, $78, $00, $00, $09, $30, $00, $00, $09, $6E
-    db $00, $00, $0A, $1A, $00, $00, $0A, $70, $00, $00, $0A, $B4, $00, $00, $0B, $18
-    db $00, $00, $0B, $BE, $00, $00, $0C, $40, $00, $00, $0C, $5A, $00, $00, $0D, $02
-    db $00, $00, $0D, $1C, $00, $00, $0D, $36, $00, $00, $0D, $50, $00, $00, $0D, $90
-    db $00, $00, $0D, $AC, $00, $00, $0D, $D2, $00, $00, $0D, $FE, $00, $00, $0E, $9A
-    db $00, $00, $0E, $F0, $00, $00, $0F, $AE, $00, $00, $10, $08, $00, $00, $10, $62
-    db $00, $00, $10, $BC, $00, $00, $11, $16, $00, $00, $11, $70, $00, $00, $11, $CA
-    db $00, $00, $12, $24, $00, $00, $12, $58, $00, $00, $12, $8C, $00, $00, $12, $C0
-    db $00, $00, $12, $F4, $00, $00, $13, $88, $00, $00, $15, $64, $00, $00, $15, $98
-    db $00, $00, $15, $CC, $00, $00, $16, $2E, $00, $00, $16, $42, $00, $00, $17, $94
-    db $00, $00, $19, $06, $00, $00, $19, $28, $00, $00, $1A, $EA, $00, $00, $1B, $BE
-    db $00, $00, $1C, $4E, $00, $00, $1C, $E0, $00, $00, $1D, $4A, $00, $00, $1D, $B4
-    db $00, $00, $1E, $24, $00, $00, $1E, $78, $00, $00, $1E, $E2, $00, $00, $1F, $62
-    db $00, $00, $1F, $8A, $00, $00, $20, $5C, $00, $00, $20, $CE, $00, $00, $24, $AC
-    db $00, $00, $25, $0E, $00, $00, $25, $68, $00, $00, $25, $DE, $00, $00, $27, $66
-    db $00, $00, $27, $8C, $00, $00, $28, $68, $00, $00, $28, $DE, $00, $00, $29, $98
-    db $00, $00, $29, $C6, $00, $00, $29, $D8, $00, $00, $2A, $AE, $00, $00, $2C, $10
-    db $00, $00, $2C, $A4, $00, $00, $2D, $C2, $00, $00, $2E, $C0, $00, $00, $2F, $DE
-    db $00, $00, $30, $DC, $00, $00, $31, $BE, $00, $00, $32, $A0, $00, $00, $33, $82
-    db $00, $00, $34, $64, $00, $00, $36, $1C, $00, $00, $36, $C4, $00, $00, $37, $28
-    db $00, $00, $37, $EE, $00, $00, $38, $08, $00, $00, $38, $76, $00, $00, $39, $36
-    db $00, $00, $39, $5C, $00, $00, $39, $7E, $00, $00, $3A, $2A, $00, $00, $3A, $5A
-    db $00, $00, $3A, $8A, $00, $00, $3B, $36, $00, $00, $3B, $6C, $00, $00, $3B, $A2
-    db $00, $00, $3B, $D8, $00, $00, $3C, $0E, $00, $00, $3C, $B8, $00, $00, $3C, $E6
-    db $00, $00, $3D, $36, $00, $00, $3D, $64, $00, $00, $3D, $A0, $00, $00, $3D, $D8
-    db $00, $00, $3F, $30, $00, $00, $3F, $EA, $00, $00, $40, $92, $00, $00, $41, $06
-    db $00, $00, $41, $50, $00, $00, $41, $9A, $00, $00, $44, $3E, $00, $00, $44, $66
-    db $00, $00, $44, $90, $00, $00, $44, $E6, $00, $00, $45, $7E, $00, $00, $45, $C2
-    db $00, $00, $46, $50, $00, $00, $48, $30, $00, $00, $49, $12, $00, $00, $4A, $5C
+    dl $00000000, $00000068, $0000012E, $00000184
+    dl $00000252, $0000033C, $00000384, $000004B2
+    dl $0000051C, $00000662, $0000074E, $00000762
+    dl $000007E2, $00000878, $00000930, $0000096E
+    dl $00000A1A, $00000A70, $00000AB4, $00000B18
+    dl $00000BBE, $00000C40, $00000C5A, $00000D02
+    dl $00000D1C, $00000D36, $00000D50, $00000D90
+    dl $00000DAC, $00000DD2, $00000DFE, $00000E9A
+    dl $00000EF0, $00000FAE, $00001008, $00001062
+    dl $000010BC, $00001116, $00001170, $000011CA
+    dl $00001224, $00001258, $0000128C, $000012C0
+    dl $000012F4, $00001388, $00001564, $00001598
+    dl $000015CC, $0000162E, $00001642, $00001794
+    dl $00001906, $00001928, $00001AEA, $00001BBE
+    dl $00001C4E, $00001CE0, $00001D4A, $00001DB4
+    dl $00001E24, $00001E78, $00001EE2, $00001F62
+    dl $00001F8A, $0000205C, $000020CE, $000024AC
+    dl $0000250E, $00002568, $000025DE, $00002766
+    dl $0000278C, $00002868, $000028DE, $00002998
+    dl $000029C6, $000029D8, $00002AAE, $00002C10
+    dl $00002CA4, $00002DC2, $00002EC0, $00002FDE
+    dl $000030DC, $000031BE, $000032A0, $00003382
+    dl $00003464, $0000361C, $000036C4, $00003728
+    dl $000037EE, $00003808, $00003876, $00003936
+    dl $0000395C, $0000397E, $00003A2A, $00003A5A
+    dl $00003A8A, $00003B36, $00003B6C, $00003BA2
+    dl $00003BD8, $00003C0E, $00003CB8, $00003CE6
+    dl $00003D36, $00003D64, $00003DA0, $00003DD8
+    dl $00003F30, $00003FEA, $00004092, $00004106
+    dl $00004150, $0000419A, $0000443E, $00004466
+    dl $00004490, $000044E6, $0000457E, $000045C2
+    dl $00004650, $00004830, $00004912, $00004A5C
 L000d7ca0:
-    db $00, $00, $00, $00, $00, $00, $00, $2A, $00, $00, $00, $54, $00, $00, $00, $B8
-    db $00, $00, $00, $F4, $00, $00, $01, $1E, $00, $00, $01, $40, $00, $00, $02, $02
-    db $00, $00, $02, $80, $00, $00, $03, $3A, $00, $00, $03, $9A, $00, $00, $03, $A6
-    db $00, $00, $03, $B2, $00, $00, $03, $BE, $00, $00, $03, $CA, $00, $00, $03, $DE
-    db $00, $00, $04, $2A, $00, $00, $04, $82, $00, $00, $04, $C2, $00, $00, $05, $2E
-    db $00, $00, $05, $66, $00, $00, $05, $F8, $00, $00, $06, $14, $00, $00, $06, $54
-    db $00, $00, $06, $B4, $00, $00, $06, $CA, $00, $00, $07, $60, $00, $00, $07, $86
-    db $00, $00, $07, $92, $00, $00, $07, $E0, $00, $00, $08, $62, $00, $00, $09, $56
-    db $00, $00, $09, $C8, $00, $00, $0A, $5C, $00, $00, $0A, $C8, $00, $00, $0B, $5E
-    db $00, $00, $0B, $A0, $00, $00, $0B, $C6, $00, $00, $0B, $EC, $00, $00, $0C, $16
-    db $00, $00, $0C, $46, $00, $00, $0C, $76, $00, $00, $0C, $A6, $00, $00, $0C, $D6
-    db $00, $00, $0D, $06, $00, $00, $0D, $52, $00, $00, $0D, $C4, $00, $00, $0E, $4A
-    db $00, $00, $0E, $80, $00, $00, $0F, $7A, $00, $00, $10, $08, $00, $00, $10, $28
-    db $00, $00, $10, $98, $00, $00, $10, $D4, $00, $00, $10, $E6, $00, $00, $10, $F8
-    db $00, $00, $11, $34, $00, $00, $11, $62, $00, $00, $11, $EA, $00, $00, $12, $34
-    db $00, $00, $12, $88, $00, $00, $12, $F8, $00, $00, $13, $08, $00, $00, $13, $18
-    db $00, $00, $13, $28, $00, $00, $13, $8A, $00, $00, $14, $96, $00, $00, $15, $32
-    db $00, $00, $15, $82, $00, $00, $15, $8E, $00, $00, $15, $9A, $00, $00, $16, $5E
-    db $00, $00, $16, $A0, $00, $00, $16, $AA, $00, $00, $17, $1A, $00, $00, $17, $BC
-    db $00, $00, $18, $DE, $00, $00, $19, $30, $00, $00, $19, $88, $00, $00, $19, $BE
-    db $00, $00, $1A, $04, $00, $00, $1A, $9A, $00, $00, $1A, $D0, $00, $00, $1A, $F0
-    db $00, $00, $1B, $34, $00, $00, $1B, $86, $00, $00, $1C, $3C, $00, $00, $1C, $78
-    db $00, $00, $1C, $C4, $00, $00, $1D, $4E, $00, $00, $1D, $F4, $00, $00, $1E, $A8
-    db $00, $00, $1E, $E4, $00, $00, $1F, $20, $00, $00, $1F, $5C, $00, $00, $1F, $98
-    db $00, $00, $1F, $D4, $00, $00, $20, $10, $00, $00, $20, $52, $00, $00, $20, $AC
-    db $00, $00, $20, $F6, $00, $00, $21, $2C, $00, $00, $21, $D6, $00, $00, $22, $26
-    db $00, $00, $22, $30, $00, $00, $23, $70, $00, $00, $24, $90, $00, $00, $24, $9C
-    db $00, $00, $24, $A8, $00, $00, $24, $F2, $00, $00, $25, $28, $00, $00, $25, $28
-    db $00, $00, $25, $68, $00, $00, $26, $2E, $00, $00, $27, $28, $00, $00, $28, $8E
-    db $00, $00, $29, $72, $00, $00, $29, $90, $00, $00, $29, $B0, $00, $00, $2A, $0E
-    db $00, $00, $2A, $5A, $00, $00, $2A, $A6, $00, $00, $2A, $F2, $00, $00, $2A, $FE
-    db $00, $00, $2B, $92, $00, $00, $2B, $A0, $00, $00, $2B, $AE, $00, $00, $2C, $82
-    db $00, $00, $2C, $AC, $00, $00, $2C, $B2, $00, $00, $2D, $08, $00, $00, $2D, $A6
-    db $00, $00, $2D, $B8, $00, $00, $2D, $C4, $00, $00, $2E, $24, $00, $00, $2E, $78
-    db $00, $00, $2E, $96, $00, $00, $2F, $54, $00, $00, $30, $16, $00, $00, $30, $98
-    db $00, $00, $30, $A8, $00, $00, $30, $B8, $00, $00, $30, $C2, $00, $00, $30, $EA
-    db $00, $00, $31, $80, $00, $00, $31, $9C, $00, $00, $32, $0E, $00, $00, $33, $6C
-    db $00, $00, $33, $7A, $00, $00, $34, $7E, $00, $00, $34, $F2, $00, $00, $36, $02
-    db $00, $00, $36, $22, $00, $00, $36, $54, $00, $00, $36, $D6, $00, $00, $37, $C4
-    db $00, $00, $38, $B6, $00, $00, $39, $72, $00, $00, $39, $A8, $00, $00, $3A, $50
-    db $00, $00, $3A, $F0, $00, $00, $3B, $04, $00, $00, $3B, $18, $00, $00, $3B, $2C
-    db $00, $00, $3B, $40, $00, $00, $3B, $54, $00, $00, $3B, $68, $00, $00, $3B, $68
-    db $00, $00, $3B, $FE, $00, $00, $3C, $4E, $00, $00, $3C, $58, $00, $00, $3C, $EE
-    db $00, $00, $3D, $2A, $00, $00, $3D, $56, $00, $00, $3D, $AC, $00, $00, $3D, $E4
-    db $00, $00, $3E, $14, $00, $00, $3E, $60, $00, $00, $3E, $C6, $00, $00, $3F, $0A
-    db $00, $00, $3F, $3E, $00, $00, $3F, $74, $00, $00, $3F, $92, $00, $00, $40, $28
-    db $00, $00, $40, $9E, $00, $00, $41, $02, $00, $00, $41, $22, $00, $00, $41, $2E
-    db $00, $00, $41, $D2, $00, $00, $41, $E0, $00, $00, $41, $EC, $00, $00, $41, $F8
-    db $00, $00, $42, $68, $00, $00, $42, $86, $00, $00, $42, $F4, $00, $00, $43, $86
-    db $00, $00, $43, $86, $00, $00, $44, $20, $00, $00, $44, $84, $00, $00, $45, $0C
-    db $00, $00, $45, $74, $00, $00, $45, $88, $00, $00, $46, $0A, $00, $00, $46, $1A
-    db $00, $00, $46, $2E, $00, $00, $46, $7A, $00, $00, $46, $8E, $00, $00, $46, $DA
-    db $00, $00, $46, $DA, $00, $00, $47, $3C, $00, $00, $47, $6E, $00, $00, $47, $90
-    db $00, $00, $47, $AC, $00, $00, $47, $F4, $00, $00, $48, $8C, $00, $00, $49, $1C
-    db $00, $00, $49, $8E, $00, $00, $4A, $0A, $00, $00, $4A, $20, $00, $00, $4A, $74
-    db $00, $00, $4A, $F2, $00, $00, $4B, $0A, $00, $00, $4B, $0A, $00, $00, $4B, $0A
-    db $00, $00, $4B, $0A, $00, $00, $4B, $26, $00, $00, $4B, $42, $00, $00, $4B, $42
-    db $00, $00, $4B, $42, $00, $00, $4B, $42, $00, $00, $4B, $42, $00, $00, $4B, $42
-    db $00, $00, $4B, $42, $00, $00, $4B, $42, $00, $00, $4B, $42, $00, $00, $4B, $42
-    db $00, $00, $4B, $42, $00, $00, $4B, $42, $00, $00, $4B, $42, $00, $00, $4B, $42
+    dl $00000000, $0000002A, $00000054, $000000B8
+    dl $000000F4, $0000011E, $00000140, $00000202
+    dl $00000280, $0000033A, $0000039A, $000003A6
+    dl $000003B2, $000003BE, $000003CA, $000003DE
+    dl $0000042A, $00000482, $000004C2, $0000052E
+    dl $00000566, $000005F8, $00000614, $00000654
+    dl $000006B4, $000006CA, $00000760, $00000786
+    dl $00000792, $000007E0, $00000862, $00000956
+    dl $000009C8, $00000A5C, $00000AC8, $00000B5E
+    dl $00000BA0, $00000BC6, $00000BEC, $00000C16
+    dl $00000C46, $00000C76, $00000CA6, $00000CD6
+    dl $00000D06, $00000D52, $00000DC4, $00000E4A
+    dl $00000E80, $00000F7A, $00001008, $00001028
+    dl $00001098, $000010D4, $000010E6, $000010F8
+    dl $00001134, $00001162, $000011EA, $00001234
+    dl $00001288, $000012F8, $00001308, $00001318
+    dl $00001328, $0000138A, $00001496, $00001532
+    dl $00001582, $0000158E, $0000159A, $0000165E
+    dl $000016A0, $000016AA, $0000171A, $000017BC
+    dl $000018DE, $00001930, $00001988, $000019BE
+    dl $00001A04, $00001A9A, $00001AD0, $00001AF0
+    dl $00001B34, $00001B86, $00001C3C, $00001C78
+    dl $00001CC4, $00001D4E, $00001DF4, $00001EA8
+    dl $00001EE4, $00001F20, $00001F5C, $00001F98
+    dl $00001FD4, $00002010, $00002052, $000020AC
+    dl $000020F6, $0000212C, $000021D6, $00002226
+    dl $00002230, $00002370, $00002490, $0000249C
+    dl $000024A8, $000024F2, $00002528, $00002528
+    dl $00002568, $0000262E, $00002728, $0000288E
+    dl $00002972, $00002990, $000029B0, $00002A0E
+    dl $00002A5A, $00002AA6, $00002AF2, $00002AFE
+    dl $00002B92, $00002BA0, $00002BAE, $00002C82
+    dl $00002CAC, $00002CB2, $00002D08, $00002DA6
+    dl $00002DB8, $00002DC4, $00002E24, $00002E78
+    dl $00002E96, $00002F54, $00003016, $00003098
+    dl $000030A8, $000030B8, $000030C2, $000030EA
+    dl $00003180, $0000319C, $0000320E, $0000336C
+    dl $0000337A, $0000347E, $000034F2, $00003602
+    dl $00003622, $00003654, $000036D6, $000037C4
+    dl $000038B6, $00003972, $000039A8, $00003A50
+    dl $00003AF0, $00003B04, $00003B18, $00003B2C
+    dl $00003B40, $00003B54, $00003B68, $00003B68
+    dl $00003BFE, $00003C4E, $00003C58, $00003CEE
+    dl $00003D2A, $00003D56, $00003DAC, $00003DE4
+    dl $00003E14, $00003E60, $00003EC6, $00003F0A
+    dl $00003F3E, $00003F74, $00003F92, $00004028
+    dl $0000409E, $00004102, $00004122, $0000412E
+    dl $000041D2, $000041E0, $000041EC, $000041F8
+    dl $00004268, $00004286, $000042F4, $00004386
+    dl $00004386, $00004420, $00004484, $0000450C
+    dl $00004574, $00004588, $0000460A, $0000461A
+    dl $0000462E, $0000467A, $0000468E, $000046DA
+    dl $000046DA, $0000473C, $0000476E, $00004790
+    dl $000047AC, $000047F4, $0000488C, $0000491C
+    dl $0000498E, $00004A0A, $00004A20, $00004A74
+    dl $00004AF2, $00004B0A, $00004B0A, $00004B0A
+    dl $00004B0A, $00004B26, $00004B42, $00004B42
+    dl $00004B42, $00004B42, $00004B42, $00004B42
+    dl $00004B42, $00004B42, $00004B42, $00004B42
+    dl $00004B42, $00004B42, $00004B42, $00004B42
 
 L000d8060:
     incbin "include/graphics/block56.bin"
