@@ -1,0 +1,118 @@
+MD DAC (YM2612 channel 6):
+  - Raw PCM samples written directly to register $2A
+  - Z80 streams raw 8-bit unsigned PCM bytes at timed intervals
+  - Sample rate controlled entirely by Z80 loop timing
+  - No dedicated hardware — just a DAC register in the YM2612
+
+X68000 MSM6258:
+  - Dedicated ADPCM codec chip
+  - Uses OKI ADPCM format (4-bit compressed, not raw PCM)
+  - Hardware handles playback timing automatically
+  - Separate clock input controls sample rate
+  - DMA capable — can stream without CPU intervention
+  
+Startup conversion pipeline:
+  MD raw 8-bit PCM samples
+        ↓
+  Convert to OKI ADPCM 4-bit at load time
+        ↓
+  Store in RAM sample pool
+
+Playback:
+  Game triggers via snd_sample/$0010
+        ↓
+  MSM6258 started with pointer + length
+        ↓
+  Hardware streams autonomously
+  CPU only checks completion flag  
+  
+The two distinct areas
+Instrument channel blocks — base $111A
+
+4 blocks × 36 bytes ($24) each
+Processed by sub_0dbeh each timer B tick
+Triggered by $0012 instrument register
+ix+$1b here = status flags (bit 0=active, bit 1=vibrato, bits 7-6=panning)
+sub_0b3fh is NOT called from these — IY is loaded differently here
+
+Music channel state blocks — base $11AA
+
+9 blocks × 54 bytes ($36) each (6 FM + 3 PSG)
+Processed by sub_03d1h each sequencer tick
+Driven by track data loaded via $0005
+ix+$1b here = preset pointer low byte
+ix+$1c here = preset pointer high byte
+sub_0b3fh IS called from these to load IY with preset address
+
+snd_timer_irq:
+    ; Check timer B flag (already our interrupt source)
+    bsr     sub_01c9h_equiv     ; timer B handler
+    bsr     sub_0137h_equiv     ; channel silence/reload if sample active
+    tst.b   (snd_instrument)
+    beq.b   .no_inst
+    bsr     snd_load_instrument
+.no_inst:
+    rte
+    
+snd_duration_table:
+    dc.b    $10,$10,$10,$10,$30,$70,$70,$F0
+    dc.b    $04,$04,$04,$04,$05,$05,$05,$05
+    
+YM2151 registers
+01 	%TTTTTTTT 	TEST 	Test 	- 	not used for XM
+08 	%-SSSSCCC 	SN,CN 	Slot Number, Channel Number 	- 	Send Note-on or Note-off
+0F 	%E--FFFFF 	NE,NFRQ 	Noise Enable, Noise Frequency 	- 	Enable Noise
+10 	%CCCCCCCC 	CLKA1 	Clock A1 	- 	Clock Frequency Determination
+11 	%------CC 	CLKA2 	Clock A2 	- 	Clock Frequency Determination
+12 	%CCCCCCCC 	CLKB 	Clock B 	- 	Clock Frequency Determination
+14 	%C-FFIILL 	CSM,FReset,IRQEN,LOAD 	TBD 	- 	not used for XM
+18 	%LLLLLLLL 	LFRQ 	TBD 	- 	TBD
+19 	%MMMMMMMM 	AMD/PMD 	TBD 	- 	TBD
+1B 	%CC----WW 	CT,W 	MHz, LFO Wave (Saw,Sqr,Tri,Noise) 	- 	Control (not used for XM?), change LFO Wave
+20-27 	%RLFFFCCC 	R-EN,L-EN,FL,CON 	Enable Left/Right, Feedback lvl, Connection algorithm 	R,L,FB,CONECT 	Per channel, operator connectivity
+28-2F 	%-OOONNNN 	OCT,NOTE 	Octave, Note 	KC 	Per channel, octave and note to use when note-on is triggered
+30-37 	%KKKKKK-- 	KF 	Key Fraction 	- 	Per channel, for pitch bend
+40-47 	%-DDDMMMM 	DT1,MUL 	Detune1, Multiply 	- 	Per channel, OP1
+48-4F 	%-DDDMMMM 	DT1,MUL 	Detune1, Multiply 	- 	Per channel, OP3
+50-57 	%-DDDMMMM 	DT1,MUL 	Detune1, Multiply 	- 	Per channel, OP2
+58-5F 	%-DDDMMMM 	DT1,MUL 	Detune1, Multiply 	- 	Per channel, OP4
+60-67 	%-TTTTTTT 	TL 	Total Level (volume) 	- 	Per channel, OP1
+68-6F 	%-TTTTTTT 	TL 	Total Level (volume) 	- 	Per channel, OP3
+70-77 	%-TTTTTTT 	TL 	Total Level (volume) 	- 	Per channel, OP2
+78-7F 	%-TTTTTTT 	TL 	Total Level (volume) 	- 	Per channel, OP4
+80-87 	%KK-AAAAA 	KS,AR 	Keyscale, Atack 	- 	Per channel, OP1
+88-8F 	%KK-AAAAA 	KS,AR 	Keyscale, Atack 	- 	Per channel, OP3
+90-97 	%KK-AAAAA 	KS,AR 	Keyscale, Atack 	- 	Per channel, OP2
+98-9F 	%KK-AAAAA 	KS,AR 	Keyscale, Atack 	- 	Per channel, OP4
+A0-A7 	%A--DDDDD 	AME,D1R 	AMS-enable, Decay D1R 	- 	Per channel, OP1
+A8-AF 	%A--DDDDD 	AME,D1R 	AMS-enable, Decay D1R 	- 	Per channel, OP3
+B0-B7 	%A--DDDDD 	AME,D1R 	AMS-enable, Decay D1R 	- 	Per channel, OP2
+B8-BF 	%A--DDDDD 	AME,D1R 	AMS-enable, Decay D1R 	- 	Per channel, OP4
+C0-C7 	%TT-DDDDD 	dT2,D2R 	Detune dT2, Decay D2R 	- 	Per channel, OP1
+C8-CF 	%TT-DDDDD 	dT2,D2R 	Detune dT2, Decay D2R 	- 	Per channel, OP3
+D0-D7 	%TT-DDDDD 	dT2,D2R 	Detune dT2, Decay D2R 	- 	Per channel, OP2
+D8-DF 	%TT-DDDDD 	dT2,D2R 	Detune dT2, Decay D2R 	- 	Per channel, OP4
+E0-E7 	%DDDDRRRR 	D1L,RR 	Decay D1L, Release Rate 	- 	Per channel, OP1
+E8-EF 	%DDDDRRRR 	D1L,RR 	Decay D1L, Release Rate 	- 	Per channel, OP3
+F0-F7 	%DDDDRRRR 	D1L,RR 	Decay D1L, Release Rate 	- 	Per channel, OP2
+F8-FF 	%DDDDRRRR 	D1L,RR 	Decay D1L, Release Rate 	- 	Per channel, OP4   
+
+https://plutiedev.com/ym2612-registers
+$22: low frequency oscillator
+$24,$25: timer A frequency
+$26: timer B frequency
+$27: channel 3 mode and timer control
+$28: key-on and key-off
+$2A: DAC output
+$2B: DAC enable
+$30+: MUL (multiply) and DT (detune)
+$40+: TL (total level)
+$50+: AR (attack rate) and RS (rate scaling)
+$60+: DR (decay rate) and AM enable
+$70+: SR (sustain rate)
+$80+: RR (release rate) and SL (sustain level)
+$90+: SSG-EG
+$A0+: frequency
+$B0+: algorithm and feedback
+$B4+: panning, PMS, AMS   
+        

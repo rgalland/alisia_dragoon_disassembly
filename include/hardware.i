@@ -177,6 +177,22 @@ MACRO5 MACRO
     adda.l      ($0,a2,\1.w),a3
     ENDM
 
+; =============================================================================
+; Interrupt macros
+; =============================================================================
+
+; DISABLE_INTERRUPTS
+; Set SR to disable all interrupts (IPL 7)
+DISABLE_INTERRUPTS  MACRO
+    move.w  #$2700,SR
+    ENDM
+
+; ENABLE_INTERRUPTS
+; Restore SR to allow interrupts at IPL 4 and below (normal game level)
+ENABLE_INTERRUPTS   MACRO
+    move.w  #$2300,SR
+    ENDM
+
 ; ==========================================================
 ; End of File
 ; ==========================================================

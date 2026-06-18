@@ -112,7 +112,7 @@ LEVEL_DATA_CONSTANTS:
     dl L00016dd8, L00069070, L00069050, L0005f088
     dw $0001, $0000, $0090, $0064, $0009
 
-L00012d60:
+DRAGON_DEFAULT_DATA:
     db $00, $02, $00, $0A, $00, $08, $00, $0C, $00, $04, $00, $00, $00, $00, $00, $00
     dl $0000000c, $0000000c   ; default dragon 1 new_dragon_life_bar_level & length
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $00, $00, $00, $00, $64
@@ -121,3 +121,13 @@ L00012d60:
     dl $0000000c, $0000000c   ; default dragon 3 new_dragon_life_bar_level & length
     db $00, $02, $00, $08, $00, $04, $00, $06, $00, $00, $00, $00, $00, $00, $00, $00
     dl $0000000c, $0000000c   ; default dragon 4 new_dragon_life_bar_level & length
+
+; typefed struct
+; {
+;     long life_bar_level;
+;     long life_bar_length;
+;     byte level
+;     byte power_bar_level
+; } monster_stats_t;
+;
+; monster_stats_t monster_stats[4];     // $$00ffdbfa
