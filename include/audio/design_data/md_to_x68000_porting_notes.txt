@@ -114,5 +114,8 @@ $80+: RR (release rate) and SL (sustain level)
 $90+: SSG-EG
 $A0+: frequency
 $B0+: algorithm and feedback
-$B4+: panning, PMS, AMS   
+$B4+: panning, PMS, AMS 
+
+Conversion:
+  
         
