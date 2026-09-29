@@ -134,6 +134,16 @@ CRAM_BLACK equ $0000
 MY_MACRO macro
     move.w \1,\2
     endm
+
+; VDP_VRAM_WRITE \addr [\dreg]
+VDP_WVRAM_CMD MACRO
+    IFB \2
+        move.l      #((((\1)&$3FFF)<<16)|(((\1)&$C000)>>14)|VDP_VRAM_WADDR),(VDP_CTRL)
+    ELSE
+        move.l      #((((\1)&$3FFF)<<16)|(((\1)&$C000)>>14)|VDP_VRAM_WADDR),\2
+    ENDIF
+    ENDM
+
 ; SET_VRAM_ADDR _d0, _d1, _a0   where _d0 contains data, _d1 is temp register and _a0 is the vdp control port address
 SET_VRAM_WADDR macro
     move.w      \1,\2

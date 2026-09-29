@@ -161,7 +161,7 @@ vdp_reg_81h_value equ $00ff045e  ; vdp reg 81 value
 DAT_00ff0464 equ $00ff0464
 DAT_00ff0466 equ $00ff0466
 DAT_00ff0468 equ $00ff0468
-bg_hscroll_data_index equ $00ff046a
+bg2_vscroll_data_index equ $00ff046a
 bg1_vscroll_value equ $00ff046c
 bg2_vscroll_value equ $00ff046e
 DAT_00ff0470 equ $00ff0470
@@ -170,12 +170,14 @@ DAT_00ff0474 equ $00ff0474
 DAT_00ff0476 equ $00ff0476
 DAT_00ff0478 equ $00ff0478
 DAT_00ff047a equ $00ff047a
-DAT_00ff047c equ $00ff047c
+bg1_vscroll_change equ $00ff047c
 bg2_vscroll_change equ $00ff047e
 DAT_00ff0480 equ $00ff0480
+; 3 DMA structures of 3 words each : src, dst, leng
 DAT_00ff0482 equ $00ff0482
 DAT_00ff0488 equ $00ff0488
 DAT_00ff048e equ $00ff048e
+
 DAT_00ff0494 equ $00ff0494
 DAT_00ff0496 equ $00ff0496
 DAT_00ff0498 equ $00ff0498
@@ -242,16 +244,16 @@ DAT_00ff0514 equ $00ff0514  ; address pointer
 DAT_00ff0518 equ $00ff0518  ; address pointer
 DAT_00ff051c equ $00ff051c  ; address pointer
 DAT_00ff0520 equ $00ff0520  ; address pointer
-DAT_00ff0524 equ $00ff0524  ; address pointer
+bg1_tm_rom_ptr equ $00ff0524  ; address pointer
 DAT_00ff0528 equ $00ff0528  ; address pointer
 DAT_00ff052c equ $00ff052c  ; address pointer
-DAT_00ff0530 equ $00ff0530  ; address pointer
+bg2_tm_rom_ptr equ $00ff0530  ; address pointer
 DAT_00ff0534 equ $00ff0534  ; address pointer
 DAT_00ff0538 equ $00ff0538  ; address pointer
-bg1_tilemap_address equ $00ff053c
+bg1_tm_vram_ptr equ $00ff053c
 DAT_00ff0540 equ $00ff0540
 DAT_00ff0544 equ $00ff0544
-bg2_tilemap_address equ $00ff0548
+bg2_tm_vram_ptr equ $00ff0548
 DAT_00ff054c equ $00ff054c
 DAT_00ff0550 equ $00ff0550
 DAT_00ff0554 equ $00ff0554
@@ -303,13 +305,13 @@ bg_hscroll_data equ $00ff07c0   ; should be $600 bytes long
 DAT_00ff0dc0 equ $00ff0dc0
 _4bpp_stream_pointer equ $00ff13c0
 sprite_table_data equ $00ff17c0  ; sprite data array stored in ram (78 sprites max?)
-bg1_tilemap_data equ $00ff1a4c  ; 2240 bytes
+bg1_tm_data equ $00ff1a4c  ; 2240 bytes
 DAT_00ff1a48 equ $00ff1a48  ; $4b12 bytes up to $00ff655a
 DAT_00ff1ab0 equ $00ff1ab0
 DAT_00ff3a48 equ $00ff3a48
 
 DAT_00ff655c equ $00ff655c  ; $4b12 bytes up to $00ffb06e
-bg2_tilemap_data equ $00ff6560
+bg2_tm_data equ $00ff6560
 
 DAT_00ffb070 equ $00ffb070  ; scratch memory used imn placed for string manipulation
 ;DAT_00ffb072 equ $00ffb072
@@ -444,19 +446,19 @@ Rom_CheckSum:
     org $200
 Sys_Reset:  ;L00000200
 	tst.l       IO_PORT_A_CTRL
-	bne.b       .L0000020e
+	bne.b       .port_present
 	tst.w       IO_PORT_C_CTRL
-.L0000020e:
+.port_present:
 	bne.b       .branch_to_init_game  ;.+126
-	lea         INIT_CONFIG_TABLE(pc),a5
+	lea         (INIT_CONFIG_TABLE,pc),a5
 	movem.w     (a5)+,d5-d7 ; init some D registers from table values
 	movem.l     (a5)+,a0-A4 ; init some A registers from table values
-	move.b      -$10ff(a1),d0   ; Z80_BUS_REQ - $10FF = $A11100 - $10FF = $A10001 = VERSION_REGISTER mirror
+	move.b      (-$10ff,a1),d0   ; Z80_BUS_REQ - $10FF = $A11100 - $10FF = $A10001 = VERSION_REGISTER mirror
 	andi.b      #$0F,d0
-	beq.b       .L0000022e
+	beq.b       .skip
 	move.l      #"SEGA",$2F00(a1); Z80_BUS_REQ + $2F00 = $A11100 - $2F00 = $A14000 = VERSION_REGISTER
-.L0000022e:
-	move.w      (a4),d0 ; warning to be removed as expected behaviour
+.skip:
+	move.w      (a4),d0 ; warning to be removed as expected behaviour (Read VDP)
 	moveq       #0,d0
 	movea.l     d0,a6
 	move.l      a6,USP
@@ -557,7 +559,7 @@ init_game:
         andi.w      #$2,d0
         bne.b       .wait_dma_done
     bsr.w       copy_sega_jump_routines   ; copy logo routines jumps to RAM
-    move.w      #$f880,(hscroll_vram_addr)       ; hv window related variable
+    move.w      #$f880,(hscroll_vram_addr)       ; hscroll vram addr
     clr.w       (vblank_enable_flag)
     clr.b       (vram_to_vram_type)
     clr.b       (palette_update_flags)
@@ -710,7 +712,7 @@ display_sega_logo:  ; (000005b2)
     jsr         fill_bg_hscroll_data
     clr.l       (bg1_vscroll_value)
     DISABLE_INTERRUPTS
-    move.l      #VDP_VRAM_WADDR,(VDP_CTRL)  ; $0000 VRAM WADDR
+    VDP_WVRAM_CMD $0000
     lea         (sega_logo_tiles,PC),a0
     lea         (VDP_DATA),a1
     move.w      #((SEGA_LOGO_SIZE-1)/4),d0  ; copy $620 bytes or $31 (49) 49 tiles 
@@ -721,10 +723,10 @@ display_sega_logo:  ; (000005b2)
     moveq       #$b,d5          ; 12 columns
     moveq       #$3,d6          ; 4 rows
     ; update tilemap in 512x256 mode
-    move.l      #$461c0003,d0   ; sega logo tilemap address location $c61c (columns $0e, row $c)
+    VDP_WVRAM_CMD $c61c,d0      ;; sega logo tilemap address location $c61c (columns $0e, row $c)
     .vtiles:
         move.w      d5,d7       ; reload htiles counter
-        move.l      d0,(VDP_CTRL)
+        move.l      d0,(VDP_CTRL)   ; set WVRAM addr ptr
         .htiles:
             move.w      (a0)+,(VDP_DATA)
             dbf         d7,.htiles
@@ -1015,7 +1017,7 @@ L00000ffc:
     clr.b       (DAT_00ff000e)
     clr.b       (DAT_00ff0449)
     lea         (DAT_00ffb070),a6   ; 128 byte structures
-    move.w      #$001f,d7
+    move.w      #$001f,d7           ; 32 iterations
     L00001052:
         move.w      d7,-(SP)
         tst.b       (a6)
@@ -1102,7 +1104,7 @@ L0000117a:
 L0000117c:
     move.w      ($52,a6),d7
     rol.w       #$1,d7
-    andi.w      #$1,d7
+    andi.w      #$0001,d7
     move.w      ($20,a6),d1
     move.w      ($22,a6),d2
     move.b      (hv_counter_values),d0
@@ -1130,10 +1132,10 @@ L0000117c:
 .L000011e6:
     move.b      d0,d3
     lsr.b       #$4,d3
-    andi.w      #$f,d0
-    add.w       d0,d0
-    andi.w      #$f,d3
-    add.w       d3,d3
+    andi.w      #$000f,d0   ; bits 3-0
+    add.w       d0,d0       ; x2
+    andi.w      #$000f,d3   ; bits 7-4
+    add.w       d3,d3       ; x2
     subi.w      #$10,d0
     subi.w      #$10,d3
     add.w       d0,d1
@@ -1271,7 +1273,7 @@ L00001378:
     addi.w      #$8,d5
     subi.w      #$14,d4
     addi.w      #$14,d6
-    .L000013a8:                 ;XREF[1]:     0000144e(j)
+    .L000013a8:
         move.w      (DAT_00ff0002),d1
         move.w      (DAT_00ff0004),d2
         move.b      ($66,a6),d0
@@ -1296,25 +1298,25 @@ L00001378:
         bgt.w       L00001324   ; rts
         move.l      ($2e,a6),d0
         beq.b       .L0000142c
-        tst.b       (DAT_00ff0019)
+        tst.b       (DAT_00ff0019)  ; invicibility flag?
         bne.b       .L0000142c
         sub.l       d0,(new_alisia_life_bar_level)
-        bpl.b       .L00001408
-        clr.l       (new_alisia_life_bar_level)
-    .L00001408:                 ;XREF[1]:     00001400(j)
+        bpl.b       .skip           ; skip is positive
+        clr.l       (new_alisia_life_bar_level) ; else set to 0
+    .skip:
         bset.b      #$3,(DAT_00ff0000)
         move.b      #$1e,(DAT_00ff0018)
         move.b      #$28,(DAT_00ff0019)
-        moveq       #-$79,d0    ; $87
+        moveq       #-$79,d0    ; $87   - play sound
         bsr.w       write_z80_reg12
         addq.l      #$1,(DAT_00ff05b0)
-    .L0000142c:                 ;XREF[2]:     000013f0(j),
+    .L0000142c:
         move.w      ($7e,a6),d0
         bpl.w       L0000114a
         move.w      ($18,a6),d0
         bpl.w       L0000114a
         rts
-    .L0000143e:                 ;XREF[1]:     00001394(j)
+    .L0000143e:
         subi.w      #$7,d3
         addi.w      #$8,d5
         subi.w      #$14,d4
@@ -1462,33 +1464,35 @@ L000015f8:
     addq.w      #$1,($24,a6)
     move.b      ($6b,a6),($6e,a6)
     bra.w       L00001086
-.L00001612:                 ;XREF[1]:     00001602(j)
+.L00001612:
     subq.w      #$1,($24,a6)
     move.b      ($6b,a6),($6e,a6)
     bra.w       L00001086
-.L00001620:                 ;XREF[1]:     00001600(j)
+.L00001620:
     bclr.b      #$4,($47,a6)
     bra.w       L00001086
 
+; d0=threshold; d3=offset
+; this routine will shift data by 1 word from a given address + d3 + number of iterations
 L0000162a:
     lea         (DAT_00ffc230),a0
-    clr.w       d1
-    .L00001632:
+    clr.w       d1      ; loop counter
+    .loop:
         cmp.b       (a0),d0
-        bcs.b       .L0000163c
+        bcs.b       .break  ; break if d0 > (a0)
         addq.w      #$2,a0
         addq.w      #$1,d1
-        bra.b       .L00001632
-.L0000163c:
-    move.w      (DAT_00ff04be),d2
-    sub.w       d1,d2
-    move.w      d2,d3
-    add.w       d3,d3
+        bra.b       .loop
+.break:
+    move.w      (DAT_00ff04be),d2   ; total number of possible iterations
+    sub.w       d1,d2   ; take away number of iterations done previously
+    move.w      d2,d3   ; save it to d3 to modify it
+    add.w       d3,d3   ; x2 to point at words
     movea.l     a0,a1
-    adda.w      d3,a1
-    movea.l     a1,a2
-    addq.w      #$2,a2
-    subq.w      #$1,d2
+    adda.w      d3,a1   ; add d3 to a1
+    movea.l     a1,a2   ; save a1 to a2
+    addq.w      #$2,a2  ; push a2 by 1 word
+    subq.w      #$1,d2  ; number of iterations
     .L00001652:
         move.w      -(a1),-(a2)
         dbf         d2,.L00001652
@@ -1796,7 +1800,7 @@ L00001a62:
 set_bg1_tile_attributes:  ; set bg1 tile attributes - d2=row, d1=column, d3=new attributes
     mulu.w      (DAT_00ff0470),d2   ; might contain screen width
     add.w       d1,d2
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     adda.w      d2,a0
     andi.w      #$07ff,(a0) ; clear attributes but keep tile id
     or.w        d3,(a0)     ; copy new attributes
@@ -1805,7 +1809,7 @@ set_bg1_tile_attributes:  ; set bg1 tile attributes - d2=row, d1=column, d3=new 
 set_bg2_tile_attributes:  ; set bg2 tile attributes - d2=row, d1=column, d3=new attributes
     mulu.w      (DAT_00ff0470),d2
     add.w       d1,d2
-    lea         (bg2_tilemap_data),a0
+    lea         (bg2_tm_data),a0
     adda.w      d2,a0
     andi.w      #$07ff,(a0)
     or.w        d3,(a0)
@@ -2429,17 +2433,17 @@ init_hud_tilemap:   ; Initialise HUD when game starts
 	rts
 
 reset_vram_bg1_tilemap:
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; BG1 tilemap VRAM addr $C000
+    VDP_WVRAM_CMD $c000,d0
     bra.b       update_vram_tilemap_with_tile_400h
 
 reset_vram_bg2_tilemap: ; not used
-    move.l      #VDP_VRAM_WADDR+$20000003,d0   ; BG2 tilemap VRAM addr $E000
+    VDP_WVRAM_CMD $e000,d0
     bra.b       update_vram_tilemap_with_tile_400h
 
 reset_vram_bg1_and_2_tilemaps:
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; BG1 tilemap VRAM addr $C000
+    VDP_WVRAM_CMD $c000,d0    ; bg1 tm
     bsr.b       update_vram_tilemap_with_tile_400h
-    move.l      #VDP_VRAM_WADDR+$20000003,d0   ; BG2 tilemap VRAM addr $E000
+    VDP_WVRAM_CMD $e000,d0    ; bg2 tm
 update_vram_tilemap_with_tile_400h:
     moveq       #$3f,d5
     moveq       #$1f,d6
@@ -2586,7 +2590,7 @@ jp1_mode3:  ; SACBRLDU -> SBACRLDU
     bra.w       save_jp1_result
 
 write_z80_reg:  ; requires A0 as argument and d0 byte value (L000026fa)
-	movem.l     A1/d1,-(SP)
+	movem.l     a1/d1,-(SP)
 	DISABLE_INTERRUPTS
 	lea         Z80_BUS_REQ,a1
 	moveq       #$0,d1
@@ -2601,7 +2605,7 @@ write_z80_reg:  ; requires A0 as argument and d0 byte value (L000026fa)
 	rts
 
 read_z80_reg:  ; requires A0 as argument and will return d0 (L00002720)
-	movem.l     A1/d1,-(SP)
+	movem.l     a1/d1,-(SP)
 	DISABLE_INTERRUPTS
 	lea         Z80_BUS_REQ,a1
 	moveq       #0,d1
@@ -3098,7 +3102,7 @@ L00002c6a:
 
 set_palette_update_data:   ; d2=update counter, a0=palette 4-7, sets palette_update_flags palette flags, palette_update_data= palette address
     DISABLE_INTERRUPTS
-    movem.l     A1/d1,-(SP)
+    movem.l     a1/d1,-(SP)
     lea         (palette_update_data),a1 ; A1 is base address
     bset.b      d1,(palette_update_flags)
     mulu.w      #$6,d1      ; index * 6
@@ -3734,30 +3738,30 @@ dma_copied_or_decompressed_tiles:
 
 L00003424:
     sub.w       d1,d3
-    beq.w       .L00003574
-    bmi.w       .L000034d0
+    beq.w       .L00003574  ; ret 0
+    bmi.w       .L000034d0  ; d1>d3
     sub.w       d2,d4
-    beq.w       .ret8
-    bmi.b       .L00003482
-    ext.l       d4
+    beq.w       .ret8       ; d2=d4 => ret 0
+    bmi.b       .L00003482  ; d2>d4
+    ext.l       d4          ; extend sign
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
-    cmpi.w      #$6,d0
+    cmpi.w      #$0006,d0
     bcs.w       .ret8
-    cmpi.w      #$13,d0
+    cmpi.w      #$0013,d0
     bcs.w       .ret9
-    cmpi.w      #$22,d0
+    cmpi.w      #$0022,d0
     bcs.w       .ret10
-    cmpi.w      #$35,d0
+    cmpi.w      #$0035,d0
     bcs.w       .ret11
-    cmpi.w      #$4e,d0
+    cmpi.w      #$004e,d0
     bcs.w       .ret12
     cmpi.w      #$0078,d0
     bcs.w       .ret13
-    cmpi.w      #$d3,d0
+    cmpi.w      #$00d3,d0
     bcs.w       .ret14
-    cmpi.w      #$28a,d0
+    cmpi.w      #$028a,d0
     bcs.w       .ret15
     moveq       #$10,d0
     rts
@@ -3767,21 +3771,21 @@ L00003424:
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
-    cmpi.w      #$6,d0
+    cmpi.w      #$0006,d0
     bcs.w       .ret8
-    cmpi.w      #$13,d0
+    cmpi.w      #$0013,d0
     bcs.w       .ret7
-    cmpi.w      #$22,d0
+    cmpi.w      #$0022,d0
     bcs.w       .ret6
-    cmpi.w      #$35,d0
+    cmpi.w      #$0035,d0
     bcs.w       .ret5
-    cmpi.w      #$4e,d0
+    cmpi.w      #$004e,d0
     bcs.w       .ret4
     cmpi.w      #$0078,d0
     bcs.w       .ret3
-    cmpi.w      #$d3,d0
+    cmpi.w      #$00d3,d0
     bcs.w       .ret2
-    cmpi.w      #$28a,d0
+    cmpi.w      #$028a,d0
     bcs.w       .ret1
     moveq       #$0,d0
     rts
@@ -3794,21 +3798,21 @@ L00003424:
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
-    cmpi.w      #$6,d0
+    cmpi.w      #$0006,d0
     bcs.w       .ret24
-    cmpi.w      #$13,d0
+    cmpi.w      #$0013,d0
     bcs.w       .ret23
-    cmpi.w      #$22,d0
+    cmpi.w      #$0022,d0
     bcs.w       .ret22
-    cmpi.w      #$35,d0
+    cmpi.w      #$0035,d0
     bcs.w       .ret21
-    cmpi.w      #$4e,d0
+    cmpi.w      #$004e,d0
     bcs.w       .ret20
     cmpi.w      #$0078,d0
     bcs.w       .ret19
-    cmpi.w      #$d3,d0
+    cmpi.w      #$00d3,d0
     bcs.w       .ret18
-    cmpi.w      #$28a,d0
+    cmpi.w      #$028a,d0
     bcs.w       .ret17
     moveq       #$10,d0
     rts
@@ -3818,21 +3822,21 @@ L00003424:
     lsl.l       #$6,d4
     divu.w      d3,d4
     move.w      d4,d0
-    cmpi.w      #$6,d0
+    cmpi.w      #$0006,d0
     bcs.w       .ret24
-    cmpi.w      #$13,d0
+    cmpi.w      #$0013,d0
     bcs.w       .ret25
-    cmpi.w      #$22,d0
+    cmpi.w      #$0022,d0
     bcs.w       .ret26
-    cmpi.w      #$35,d0
+    cmpi.w      #$0035,d0
     bcs.w       .ret27
-    cmpi.w      #$4e,d0
+    cmpi.w      #$004e,d0
     bcs.w       .ret28
     cmpi.w      #$0078,d0
     bcs.w       .ret29
-    cmpi.w      #$d3,d0
+    cmpi.w      #$00d3,d0
     bcs.w       .ret30
-    cmpi.w      #$28a,d0
+    cmpi.w      #$028a,d0
     bcs.w       .ret31
     moveq       #$0,d0
     rts
@@ -3979,11 +3983,11 @@ L00003642:  ; get tilemap address from rom - d1=row, d2=column, a0=current addre
     movem.w     d2-d1,-(SP)
     lsr.w       #$4,d1              ; d1=d1>>4
     lsr.w       #$4,d2              ; d2=d2>>4
-    lea         (bg1_tilemap_data),a0   ; A0=(bg1_tilemap_data)
+    lea         (bg1_tm_data),a0    ; a0=(bg1_tilemap_data)
     mulu.w      (DAT_00ff0470),d2   ; d2=d2*(DAT_00ff0470)
-    adda.w      d2,a0               ; A0=A0+d2
+    adda.w      d2,a0               ; a0=a0+d2
     add.w       d1,d1               ; d1=d1+d1
-    adda.w      d1,a0               ; A0=A0+d1 - a0=a0+d2*16*(DAT_00ff0470)+d1*32
+    adda.w      d1,a0               ; a0=a0+d1 - a0=a0+d2*16*(DAT_00ff0470)+d1*32
     movem.w     (SP)+,d1-d2
     rts
 
@@ -4013,7 +4017,7 @@ L00003688:
     subq.w      #$1,d3
     clr.b       d0
     rts
-.L0000369e:                 ;XREF[1]:
+.L0000369e:
     move.w      d2,d0
     andi.w      #$000f,d0
     neg.w       d0
@@ -4026,16 +4030,16 @@ L00003688:
     moveq       #-$1,d0
     moveq       #-$1,d3
     rts
-.L000036ba:                 ;XREF[1]:
+.L000036ba:
     neg.w       d3
     addi.w      #$10,d3
     sub.w       d3,d0
-.L000036c2:                 ;XREF[1]:
+.L000036c2:
     move.w      d0,d3
     subq.w      #$1,d3
     clr.b       d0
     rts
-.L000036ca:                 ;XREF[1]:
+.L000036ca:
     move.w      d2,d0
     andi.w      #$000f,d0
     neg.w       d0
@@ -4048,7 +4052,7 @@ L00003688:
     move.b      #$ff,d0
     moveq       #$0,d3
     rts
-.L000036ea:                 ;XREF[1]:
+.L000036ea:
     add.w       d0,d3
     subq.w      #$1,d3
     clr.b       d0
@@ -4991,9 +4995,9 @@ L000045c8:  ; process A pressed on pad 2 PC was previous adddress, otherwise pro
     move.b      #$04,(DAT_00ff0019)
     bsr.w       L00004b9c                   ; play sound or sprite pos?
     bsr.w       wait_for_palette_flags_clear
-    move.w      #$4000,d1
-    move.l      #(L0006b176),d2
-    move.w      #$8610,d3
+    move.w      #$4000,d1                   ; VRAM addr
+    move.l      #(L0006b176),d2             ; src
+    move.w      #$8610,d3                   ; len
     bsr.w       add_item_to_dma_data_array
     move.b      #$04,(monster_selection_index)
     move.b      #$04,(DAT_00ff0019)
@@ -5370,7 +5374,7 @@ L00004ba0:      ; automatic movement at the start of a stage
 .L00004d00:
     btst.b      #$2,(DAT_00ff0430)
     beq.b       .L00004d16
-    move.w      (DAT_00ff047c),-(SP)
+    move.w      (bg1_vscroll_change),-(SP)
     move.w      (bg2_vscroll_change),-(SP)
 .L00004d16:
     btst.b      #$0,(DAT_00ff0430)
@@ -5388,7 +5392,7 @@ L00004ba0:      ; automatic movement at the start of a stage
     btst.b      #$2,(DAT_00ff0430)
     beq.b       .L00004d64
     move.w      (SP)+,(bg2_vscroll_change)
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
 .L00004d64:
     btst.b      #$1,(DAT_00ff0430)
     beq.b       .L00004d7a
@@ -5944,11 +5948,11 @@ L000054d4:
     move.w      #$8990,d3
     jsr         dma_tiles_to_vram
     bsr.w       L0000292c
-    move.l      #VDP_VRAM_WADDR+$3,d0           ; $c000 VRAM WADDR for BG1 tilemap
-    lea         (bg1_tilemap_data),a0
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0
     bsr.w       update_vram_alt_tilemap
-    move.l      #VDP_VRAM_WADDR+$20000003,d0    ; $e000 VRAM WADDR for BG2 tilemap
-    lea         (bg2_tilemap_data),a0
+    VDP_WVRAM_CMD $e000,d0
+    lea         (bg2_tm_data),a0
     bsr.w       update_vram_alt_tilemap
     lea         (L00072278),a0
     moveq       #$0,d0
@@ -6562,31 +6566,31 @@ VBLANK: ; L00005cac
     btst.b      #$0,(vram_to_vram_type)
     beq.b       L00005dbe
     move.w      (DAT_00ff0482),d0           ; src
-    move.w      (DAT_00ff0482+2),d1           ; dst
-    move.w      (DAT_00ff0482+4),d2           ; d2.w = length
+    move.w      (DAT_00ff0482+2),d1         ; dst
+    move.w      (DAT_00ff0482+4),d2         ; d2.w = length
     bsr.w       vram_to_vram_dma
     btst.b      #$1,(vram_to_vram_type)
     beq.b       L00005dbe
     move.w      (DAT_00ff0488),d0           ; src
-    move.w      (DAT_00ff0488+2),d1           ; dst
-    move.w      (DAT_00ff0488+4),d2           ; d2.w = length
+    move.w      (DAT_00ff0488+2),d1         ; dst
+    move.w      (DAT_00ff0488+4),d2         ; d2.w = length
     bsr.w       vram_to_vram_dma
     btst.b      #$2,(vram_to_vram_type)
     beq.b       L00005dbe
     move.w      (DAT_00ff048e),d0           ; src
-    move.w      (DAT_00ff048e+2),d1           ; dst
-    move.w      (DAT_00ff048e+4),d2           ; d2.w = length
+    move.w      (DAT_00ff048e+2),d1         ; dst
+    move.w      (DAT_00ff048e+4),d2         ; d2.w = length
     bsr.w       vram_to_vram_dma
-L00005dbe:                 ;XREF[3]:     00005
+L00005dbe:
     tst.b       (display_enable_flag)
     beq.b       no_display_update
     move.w      (vdp_reg_81h_value),d0
     ori.b       #$40,d0                 ; or the enable fag in register
     move.w      d0,(vdp_reg_81h_value)  ; save updated vdp regsister value
     move.w      d0,(VDP_CTRL)           ; apply new value
-no_display_update:                 ;XREF[2]:     00005
+no_display_update:
     movem.l     (SP)+,d0-d7/a0-a6
-leave_vblank_irq:                 ;XREF[1]:     00005
+leave_vblank_irq:
     clr.b       (wait_for_blank_flag)
     rte
 
@@ -6610,12 +6614,12 @@ L00005e02:
     clr.w       (DAT_00ff04b8)
     bclr.b      #$7,(DAT_00ff0000)
     clr.b       (DAT_00ff043f)
-    bsr.w       L00005eba
+    bsr.w       L00005eba   ; only called once here
     move.w      (DAT_00ff001a),d1
     add.w       d1,d1
     add.w       d1,d1
     jsr         (.jsr_table,PC,d1)
-    bra.w       L00007898
+    bra.w       L00007898   ; only used once here
 
 .jsr_table:
     bra.w       L00005f0a
@@ -7115,7 +7119,7 @@ L0000663a:
     bcc.b       .L00006660
     move.b      #$37,(DAT_00ff0434) ; max value
 .L00006660:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.w      #$1,d0
     beq.w       .L000066ec
 .L0000666e:
@@ -7166,7 +7170,7 @@ L0000670e:
     bcc.b       .L00006734
     move.b      #$37,(DAT_00ff0434)
 .L00006734:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.w      #$1,d0
     beq.w       .L000067c0
 .L00006742:
@@ -7343,7 +7347,7 @@ L000069ac:
     bcc.b       .L000069d2
     move.b      #$37,(DAT_00ff0434)
 .L000069d2:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.w      #$1,d0
     beq.w       .L00006a22
 .L000069e0:
@@ -7383,7 +7387,7 @@ L00006a46:
     bcc.b       .L00006a6c
     move.b      #$37,(DAT_00ff0434)
 .L00006a6c:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.w      #$1,d0
     beq.w       .L00006aea
 .L00006a7a:
@@ -7428,7 +7432,7 @@ L00006af6:
     bcc.b       .L00006b1c
     move.b      #$37,(DAT_00ff0434)
 .L00006b1c:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.w      #$1,d0
     beq.w       .L00006b6c
 .L00006b2a:
@@ -7467,7 +7471,7 @@ L00006b90:
     bcc.b       .L00006bb6
     move.b      #$37,(DAT_00ff0434)
 .L00006bb6:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.w      #$1,d0
     beq.w       .L00006c36
 .L00006bc4:
@@ -7570,7 +7574,7 @@ L00006cd0:
     bmi.w       L000068a6
 .L00006d44:
     clr.b       (DAT_00ff042b)
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.b      #$2,d0
     bls.b       .L00006db6
 .L00006d56:
@@ -7679,7 +7683,7 @@ L00006e58:
     bmi.w       L0000698a
 .L00006ecc:
     move.b      #$1,(DAT_00ff042b)
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     cmpi.b      #$2,d0
     bls.b       .L00006f40
 .L00006ee0:
@@ -7872,10 +7876,10 @@ L0000717c:
     tst.b       (DAT_00ff042c)
     bmi.b       .L0000719e
     beq.b       .L00007198
-    sub.w       (DAT_00ff047c),d2
+    sub.w       (bg1_vscroll_change),d2
     bra.b       .L0000719e
 .L00007198:
-    add.w       (DAT_00ff047c),d2
+    add.w       (bg1_vscroll_change),d2
 .L0000719e:
     moveq       #$2c,d7
     movem.w     d7/d2,-(SP)
@@ -8053,7 +8057,7 @@ L00007350:
     movem.w     d2-d1,-(SP)
     lsr.w       #$4,d1
     lsr.w       #$4,d2
-    lea         (bg2_tilemap_data),a6
+    lea         (bg2_tm_data),a6
     mulu.w      (DAT_00ff0470),d2
     adda.w      d2,a6
     add.w       d1,d1
@@ -8437,7 +8441,7 @@ L0000771a:
     cmpi.w      #$4,d3
     bhi.b       L00007712
     clr.b       (DAT_00ff042c)
-    move.w      d3,(DAT_00ff047c)
+    move.w      d3,(bg1_vscroll_change)
 L00007732:
     moveq       #$1,d0
     rts
@@ -8446,7 +8450,7 @@ L00007736:
     cmpi.w      #$2,d3
     bhi.b       L00007716
     move.b      #$1,(DAT_00ff042c)
-    move.w      d3,(DAT_00ff047c)
+    move.w      d3,(bg1_vscroll_change)
     moveq       #$1,d0
     rts
 
@@ -8468,7 +8472,7 @@ L00007750:  ; d0 is return value: -1 if no change and 0 otherwise
     rts
 .L0000777a:
     add.b       d3,(DAT_00ff0434)   ; add d3
-    move.w      d3,(DAT_00ff047c)   ; save previously added value
+    move.w      d3,(bg1_vscroll_change)   ; save previously added value
     move.b      #$1,(DAT_00ff042c)  ; update flag
     moveq       #$0,d0              ; return value
     rts
@@ -8512,12 +8516,12 @@ L000077f2:
     move.b      (DAT_00ff0435),d0
     lsr.b       #$2,d0
     ext.w       d0
-    move.w      d0,(DAT_00ff047c)
+    move.w      d0,(bg1_vscroll_change)
     rts
 L00007804:
     move.w      (SP)+,d3
 L00007806:
-    move.w      d3,(DAT_00ff047c)
+    move.w      d3,(bg1_vscroll_change)
     moveq       #-$1,d0
     rts
 
@@ -8525,7 +8529,7 @@ L00007810:
     move.w      d3,-(SP)
     move.w      (DAT_00ff0004),d2
     addi.w      #$17,d2
-    add.w       (DAT_00ff047c),d2
+    add.w       (bg1_vscroll_change),d2
     move.w      d2,-(SP)
     bsr.w       L0000737c
     move.w      (SP)+,d2
@@ -8535,7 +8539,7 @@ L00007810:
     tst.w       d3
     bpl.b       L00007842
     move.w      (SP)+,d3
-    move.w      d3,(DAT_00ff047c)
+    move.w      d3,(bg1_vscroll_change)
     moveq       #-$1,d0
     rts
 L00007842:
@@ -8579,37 +8583,37 @@ L00007898:
     move.w      (DAT_00ff04b8),d0
     beq.w       L0000717a   ; rts
     move.b      (DAT_00ff042b),d1
-    bmi.b       L000078f8   ; (DAT_00ff042b)=-1
-    beq.b       L000078d2   ; (DAT_00ff042b)=0
+    bmi.b       .L000078f8   ; (DAT_00ff042b)=-1
+    beq.b       .L000078d2   ; (DAT_00ff042b)=0
     tst.w       d0          ; else (DAT_00ff042b)=1
-    bpl.b       L000078ba
+    bpl.b       .L000078ba
     neg.w       d0
     add.w       d0,(DAT_00ff0478)
     rts
-L000078ba:
+.L000078ba:
     sub.w       d0,(DAT_00ff0478)
     bpl.w       L0000717a   ; rts
     clr.b       (DAT_00ff042b)
     neg.w       (DAT_00ff0478)
     rts
-L000078d2:
+.L000078d2:
     tst.w       d0
-    bmi.b       L000078de
+    bmi.b       .L000078de
     add.w       d0,(DAT_00ff0478)
     rts
-L000078de:
+.L000078de:
     add.w       d0,(DAT_00ff0478)
     bpl.w       L0000717a   ; rts
     move.b      #$1,(DAT_00ff042b)
     neg.w       (DAT_00ff0478)
     rts
-L000078f8:
+.L000078f8:
     tst.w       d0
-    bmi.b       L0000790a
+    bmi.b       .L0000790a
     move.w      d0,(DAT_00ff0478)
     clr.b       (DAT_00ff042b)
     rts
-L0000790a:
+.L0000790a:
     neg.w       d0
     move.w      d0,(DAT_00ff0478)
     move.b      #$1,(DAT_00ff042b)
@@ -9053,7 +9057,7 @@ L000081b4:
     bne.b       .L0000822c
     lsr.w       #$4,d1
     lsr.w       #$4,d2
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     move.w      (DAT_00ff0470),d0
     move.w      d0,d3
     mulu.w      d0,d2
@@ -9093,7 +9097,7 @@ L000081b4:
 .L0000822c:
     lsr.w       #$4,d1
     lsr.w       #$4,d2
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     mulu.w      (DAT_00ff0470),d2
     adda.w      d2,a0
     add.w       d1,d1
@@ -9473,7 +9477,7 @@ play_level1_intro:  ; occurs during intro text
     move.w      (SP)+,(bg1_hscroll_value)
     moveq       #$20,d0
     move.l      d0,(bg1_vscroll_value)  ; set bg1 vscroll to $20
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$1,(bg1_vscroll_change)
     move.w      #$1,(DAT_00ff047a)
     bsr.w       jp_read
     move.b      (jp1_result),d0
@@ -9536,7 +9540,7 @@ L000088d6:
     bne.b       .not_zero
     bsr.w       scroll_right_bg2
     move.w      (DAT_00ff01aa),d2
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$1,(bg1_vscroll_change)
     bsr.w       L0000c3e0
 .not_zero:
     bra.w       update_bg1_bg2_hscroll
@@ -9757,7 +9761,7 @@ L000089ca:  ; called when starting game - level_id contains offset to jump table
         bsr.w       update_bg1_bg2_hscroll
         move.w      (SP)+,d7
         dbf         d7,.L00008bc2
-    move.w      #$10,(DAT_00ff047c)
+    move.w      #$10,(bg1_vscroll_change)
     move.w      #$4,(bg2_vscroll_change)
     moveq       #$1f,d7
     .L00008bf0:
@@ -9771,7 +9775,7 @@ L000089ca:  ; called when starting game - level_id contains offset to jump table
     move.w      #$af,d7
     jsr         L00000faa
     move.w      #$0002,(DAT_00ff0478)
-    move.w      #$0001,(DAT_00ff047c)
+    move.w      #$0001,(bg1_vscroll_change)
     bsr.w       L0000c29c
     move.w      #$00ef,d7
     .L00008c2e:
@@ -9806,7 +9810,7 @@ L000089ca:  ; called when starting game - level_id contains offset to jump table
     addq.w      #$1,(DAT_00ff0004)
     subq.w      #$2,(DAT_00ff0002)
     move.w      #$0002,(DAT_00ff0478)
-    move.w      #$0002,(DAT_00ff047c)
+    move.w      #$0002,(bg1_vscroll_change)
     rts
 
 .L00008cde:
@@ -10189,7 +10193,7 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     bsr.w       prepare_dma_palette_transfer
     move.w      #$e,(DAT_00ff0478)
     move.w      #$e,(DAT_00ff047a)
-    move.w      (DAT_00ff04d6),(DAT_00ff047c)
+    move.w      (DAT_00ff04d6),(bg1_vscroll_change)
     move.w      (DAT_00ff04d6),(bg2_vscroll_change)
     moveq       #$15,d7
     .L0000932a:
@@ -10315,47 +10319,47 @@ L00009202:  ; d0 is 1 to 8  similar to level id or perhaps actually playable lev
     movem.w     (SP)+,d0-d1
     rts
 
-L00009504:
+L00009504:  ; TODO this is where tilemap columns are updated it would seem
     bsr.w       L0000bfae
     bsr.w       L0000bf70
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    movea.l     (DAT_00ff0524),a3
-    move.l      (bg1_tilemap_address),d1
-    move.l      #$00040000,d3
-    move.l      #$00800000,d4
-    moveq       #$f,d7
+    movea.l     (bg1_tm_rom_ptr),a3         ; bg1 tilemap address in ROM stored at $00ff0524
+    move.l      (bg1_tm_vram_ptr),d1        ; bg1 tilemap address in VRAM
+    move.l      #$00040000,d3               ; init d3   - next line?
+    move.l      #$00800000,d4               ; init d4   - next page?
+    moveq       #$f,d7                      ; 16 iterations
     .L00009532:
-        moveq       #$1f,d5
-        movem.l     A3/d1,-(SP)
-        .L00009538:
-            move.w      (a3)+,d0
-            bsr.w       L0000cf9a
-            add.l       d3,d1
-            dbf         d5,.L00009538
-        movem.l     (SP)+,d1/A3
-        adda.w      (DAT_00ff0470),a3
+        moveq       #$1f,d5                 ; 32 iterations
+        movem.l     a3/d1,-(SP)             ; push registers to stack
+        .copy_bg1_column:
+            move.w      (a3)+,d0            ; read word from RAM
+            bsr.w       L0000cf9a           ; check attributes and write to VRAM?
+            add.l       d3,d1               ; next line?
+            dbf         d5,.copy_bg1_column
+        movem.l     (SP)+,d1/a3
+        adda.w      (DAT_00ff0470),a3       ; screen size?
         addi.l      #$01000000,d1
         dbf         d7,.L00009532
-    movea.l     (DAT_00ff0530),a3
-    move.l      (bg2_tilemap_address),d1
+    movea.l     (bg2_tm_rom_ptr),a3         ; bg2 tilemap address in ROM stored at $00ff0530
+    move.l      (bg2_tm_vram_ptr),d1        ;
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     moveq       #$f,d7
     .L00009572:
         moveq       #$1f,d5
         movem.l     a3/d1,-(SP)
-        .L00009578:
+        .copy_bg2_column:
             move.w      (a3)+,d0
             bsr.w       L0000cf9a
             add.l       d3,d1
-            dbf         d5,.L00009578
+            dbf         d5,.copy_bg2_column
         movem.l     (SP)+,d1/a3
-        adda.w      (DAT_00ff0474),a3
+        adda.w      (DAT_00ff0474),a3       ; screen size?
         addi.l      #$01000000,d1
         dbf         d7,.L00009572
     move.w      #$10,(DAT_00ff0478)
-    move.w      #$10,(DAT_00ff047c)
+    move.w      #$10,(bg1_vscroll_change)
     move.w      #$10,(DAT_00ff047a)
     move.w      #$10,(bg2_vscroll_change)
     move.w      #$70,(DAT_00ff0014)
@@ -10364,7 +10368,7 @@ L00009504:
     clr.w       (DAT_00ff01a8)
     clr.w       (DAT_00ff01aa)
     clr.w       (DAT_00ff0468)
-    clr.w       (bg_hscroll_data_index)
+    clr.w       (bg2_vscroll_data_index)
     move.w      #$14,d4
     move.w      #$c,d5
     tst.w       d4
@@ -10495,7 +10499,7 @@ L00009766:
         addq.w      #$2,a1
         dbf         d7,.L0000977c
     clr.w       (DAT_00ff003c)
-    move.l      (bg1_tilemap_address),d1
+    move.l      (bg1_tm_vram_ptr),d1
     addi.l      #$06000000,d1
     addi.l      #$2c0000,d1
     move.l      d1,(DAT_00ff003e)
@@ -10516,7 +10520,7 @@ L00009766:
         bra.w       .L000097ae
 
 .jsr_table1:
-    bra.w       L0000966a   ; rts
+    bra.w       L0000966a    ; rts
     bra.w       .L0000980e   ; stack+4
     bra.w       .L00009812
     bra.w       .L0000982e
@@ -10609,7 +10613,7 @@ L000098fe:
     movem.l     A1-A0/d7/d0,-(SP)
     lea         (DAT_00ff1ab0),a0
     moveq       #$6,d0
-    mulu.w      (DAT_00ff0470),d0
+    mulu.w      (DAT_00ff0470),d0   ; will repeat the 8 word patterns 9 times with this offset between patterns
     adda.w      d0,a0
     moveq       #$8,d7
     .L00009914:
@@ -10740,7 +10744,7 @@ L000099c6:
     move.b      #$ff,(DAT_00ff042b)
     move.b      #$ff,(DAT_00ff042c)
     move.w      #$2,(DAT_00ff0478)
-    move.w      #$2,(DAT_00ff047c)
+    move.w      #$2,(bg1_vscroll_change)
     subi.w      #$72,(DAT_00ff0002)
     bsr.w       L00009038
     move.b      #$1,(DAT_00ff042f)
@@ -10854,7 +10858,7 @@ L000099c6:
         move.w      (DAT_00ff0002),d0
         cmpi.w      #$1800,d0
         bcs.b       .L00009d22
-    lea         (bg2_tilemap_data),a0
+    lea         (bg2_tm_data),a0
     move.w      (DAT_00ff0474),d0
     move.w      d0,d1
     mulu.w      #$c,d0
@@ -10978,7 +10982,7 @@ L000099c6:
     moveq       #-$1,d1
     move.w      #$0200,d2
     jsr         vram_fill_dma
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
+    VDP_WVRAM_CMD $c000,d0
     moveq       #$3f,d5
     moveq       #$1f,d6
     move.w      #$0400,d4
@@ -11268,7 +11272,7 @@ var SET var+2
     jsr         dma_copied_or_decompressed_tiles
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    move.l      (bg1_tilemap_address),d1
+    move.l      (bg1_tm_vram_ptr),d1
     addi.l      #$0,d1
     addi.l      #$280000,d1
     moveq       #$11,d7
@@ -11280,7 +11284,7 @@ var SET var+2
     moveq       #$6,d0
     mulu.w      (DAT_00ff0470),d0
     adda.w      d0,a0
-    moveq       #$8,d7
+    moveq       #$8,d7  ; this is the initialisation here
     .L0000a43e:
         clr.w       (a0)
         clr.w       ($2,a0)
@@ -11760,7 +11764,7 @@ L0000ab08:
     .L0000ab44:
         move.w      #$1,(a0)+
         dbf         d7,.L0000ab44
-    move.w      #$10,(DAT_00ff047c)
+    move.w      #$10,(bg1_vscroll_change)
     clr.w       (dialogue_strings_ptr+2)
     clr.w       (DAT_00ff003c)
     .L0000ab60:
@@ -11792,8 +11796,8 @@ L0000ab08:
 .L0000abd2:
     move.w      (dialogue_strings_ptr),d0
     beq.w       L0000a7e2    ; rts
-    subq.w      #$1,(DAT_00ff047c)
-    move.w      (DAT_00ff047c),d0
+    subq.w      #$1,(bg1_vscroll_change)
+    move.w      (bg1_vscroll_change),d0
     beq.b       .L0000ac04
     cmpi.w      #$c,d0
     bne.w       L0000a7e2    ; rts
@@ -11801,7 +11805,7 @@ L0000ab08:
     move.w      #$6,d2
     jmp         prepare_dma_palette_transfer
 .L0000ac04:
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$1,(bg1_vscroll_change)
     rts
 
 .L0000ac0e:
@@ -11812,16 +11816,16 @@ L0000ab08:
     move.w      (DAT_00ff01aa),d0
     beq.b       .L0000ac5a
     move.w      d0,d1
-    sub.w       (DAT_00ff047c),d1
+    sub.w       (bg1_vscroll_change),d1
     bpl.b       .L0000ac2c
     neg.w       d1
-    move.w      d1,(DAT_00ff047c)
+    move.w      d1,(bg1_vscroll_change)
 .L0000ac2c:
     bsr.w       L0000c2c4
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     lsr.w       #$1,d0
     move.w      d0,(bg2_vscroll_change)
-    move.w      (bg_hscroll_data_index),d1
+    move.w      (bg2_vscroll_data_index),d1
     beq.b       .L0000ac62
     sub.w       (bg2_vscroll_change),d1
     bpl.b       .L0000ac56
@@ -11830,7 +11834,7 @@ L0000ab08:
 .L0000ac56:
     bra.w       scroll_down_bg2
 .L0000ac5a:
-    clr.w       (DAT_00ff047c)
+    clr.w       (bg1_vscroll_change)
     bra.b       .L0000ac2c
 .L0000ac62:
     clr.w       (bg2_vscroll_change)
@@ -11841,14 +11845,14 @@ L0000ab08:
     move.w      (DAT_00ff01aa),d0
     beq.b       .L0000acb4
     move.w      d0,d1
-    sub.w       (DAT_00ff047c),d1
+    sub.w       (bg1_vscroll_change),d1
     bpl.b       .L0000ac8c
     neg.w       d1
-    move.w      d1,(DAT_00ff047c)
+    move.w      d1,(bg1_vscroll_change)
 .L0000ac8c:
     bsr.w       L0000c2c4
     move.w      #$10,(bg2_vscroll_change)
-    move.w      (bg_hscroll_data_index),d1
+    move.w      (bg2_vscroll_data_index),d1
     beq.b       .L0000acbc
     sub.w       (bg2_vscroll_change),d1
     bpl.b       .L0000acb0
@@ -11857,7 +11861,7 @@ L0000ab08:
 .L0000acb0;
     bra.w       scroll_down_bg2
 .L0000acb4:
-    clr.w       (DAT_00ff047c)
+    clr.w       (bg1_vscroll_change)
     bra.b       .L0000ac8c
 .L0000acbc:
     clr.w       (bg2_vscroll_change)
@@ -12043,11 +12047,11 @@ L0000ad44:
     moveq       #$1,d1
     move.w      #$8000,d2
     jsr         write_tileset
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
-    lea         (bg1_tilemap_data),a0
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0
     jsr         update_vram_alt_tilemap
-    move.l      #VDP_VRAM_WADDR+$20000003,d0   ; VRAM addr $E000
-    lea         (bg2_tilemap_data),a0
+    VDP_WVRAM_CMD $e000,d0
+    lea         (bg2_tm_data),a0
     jsr         update_vram_alt_tilemap
     lea         (L00072278),a0
     moveq       #$0,d0
@@ -12120,8 +12124,8 @@ L0000ad44:
     moveq       #$0,d0
     move.l      d0,(bg1_vscroll_value)
     move.w      (DAT_00ff01aa),(DAT_00ff0048)
-    move.w      (bg_hscroll_data_index),(DAT_00ff004a)
-    move.w      #$0010,(DAT_00ff047c)
+    move.w      (bg2_vscroll_data_index),(DAT_00ff004a)
+    move.w      #$0010,(bg1_vscroll_change)
     move.w      #$0008,(bg2_vscroll_change)
     move.w      #$104b,d7
     jsr         L00000faa.l
@@ -12192,34 +12196,34 @@ L0000ad44:
 
 .L0000b248:
     move.w      (DAT_00ff0048),d2
-    cmpi.w      #$ca0,d2
+    cmpi.w      #$0ca0,d2
     bne.b       .L0000b280
     move.w      (DAT_00ff0470),d0
     mulu.w      #$10,d0
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     adda.w      d0,a0
     move.l      a0,(DAT_00ff0528)
-    move.l      a0,(DAT_00ff0524)
+    move.l      a0,(bg1_tm_rom_ptr)
     move.l      a0,(DAT_00ff052c)
     move.w      #$0020,(DAT_00ff0048)
 .L0000b280:
     move.w      (DAT_00ff01aa),d2
     bsr.w       L0000c3e0
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0   ; inc value
     add.w       d0,(DAT_00ff0048)
     move.w      (DAT_00ff004a),d1
     cmpi.w      #$520,d1
     bne.b       .L0000b2ce
     move.w      (DAT_00ff0474),d0
     mulu.w      #$10,d0
-    lea         (bg2_tilemap_data),a0
+    lea         (bg2_tm_data),a0
     adda.w      d0,a0
     move.l      a0,(DAT_00ff0534)
-    move.l      a0,(DAT_00ff0530)
+    move.l      a0,(bg2_tm_rom_ptr)
     move.l      a0,(DAT_00ff0538)
     move.w      #$0020,(DAT_00ff004a)
 .L0000b2ce:
-    move.w      (bg_hscroll_data_index),d1
+    move.w      (bg2_vscroll_data_index),d1
     bsr.w       scroll_up_bg2
     move.w      (bg2_vscroll_change),d0
     add.w       d0,(DAT_00ff004a)
@@ -12301,13 +12305,13 @@ L0000ad44:
 
 .L0000b3fe:
     move.w      #$1,(DAT_00ff0478)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$1,(bg1_vscroll_change)
     move.b      #$1,(DAT_00ff042b)
     rts
 
 .L0000b418:
     move.w      #$1,(DAT_00ff0478)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      #$1,(bg1_vscroll_change)
     clr.b       (DAT_00ff042c)
     rts
 
@@ -12397,8 +12401,8 @@ L0000ad44:
     lea         (L0003a57a),a0
     lea         (DAT_00ff1a48),a1
     jsr         L0000ff36
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
-    lea         (bg1_tilemap_data),a0
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0
     jsr         update_vram_tilemap
     move.w      #$0000,d0
     moveq       #$0,d1
@@ -12446,8 +12450,8 @@ L0000ad44:
     lea         (L0003aa8a),a0
     lea         (DAT_00ff1a48),a1
     jsr         L0000ff36
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
-    lea         (bg1_tilemap_data),a0
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0
     jsr         update_vram_tilemap
     bsr.w       L0000ad0c
     jsr         wait_for_palette_flags_clear
@@ -12479,8 +12483,8 @@ L0000ad44:
     lea         (L0003ae80),a0
     lea         (DAT_00ff1a48),a1
     jsr         L0000ff36
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
-    lea         (bg1_tilemap_data),a0
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0
     jsr         update_vram_tilemap
     bsr.w       L0000ad0c
     jsr         wait_for_palette_flags_clear
@@ -12500,8 +12504,8 @@ L0000ad44:
     lea         (L0003b3e6),a0
     lea         (DAT_00ff1a48),a1
     jsr         L0000ff36
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
-    lea         (bg1_tilemap_data),a0
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0
     jsr         update_vram_tilemap
     move.w      #$01a0,(DAT_00ff0002)
     clr.b       (DAT_00ff0012)
@@ -12525,8 +12529,8 @@ L0000ad44:
     lea         (L0003b964),a0
     lea         (DAT_00ff1a48),a1
     jsr         L0000ff36
-    move.l      #VDP_VRAM_WADDR+$3,d0   ; VRAM addr $C000
-    lea         (bg1_tilemap_data),a0   ; tilemap data  40x28x2= 2240 bytes
+    VDP_WVRAM_CMD $c000,d0
+    lea         (bg1_tm_data),a0   ; tilemap data  40x28x2= 2240 bytes
     jsr         update_vram_tilemap
     bsr.w       L0000ad0c
     jsr         wait_for_palette_flags_clear
@@ -12747,7 +12751,7 @@ load_level_tilesets_and_palettes:  ; saves bg1, bg2 and sprites to VRAM,
     lea         (LEVEL_DATA_CONSTANTS),a2
     adda.w      d0,a2
     move.w      #$0002,(DAT_00ff0478)
-    move.w      #$0002,(DAT_00ff047c)
+    move.w      #$0002,(bg1_vscroll_change)
     move.l      (a2),d0
     beq.b       .nobg1
     movea.l     d0,a0
@@ -12788,9 +12792,9 @@ load_level_tilesets_and_palettes:  ; saves bg1, bg2 and sprites to VRAM,
 
 L0000bbda:
     move.w      (DAT_00ff0470),d3           ; tile offset
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     adda.w      d3,a0
-    lea         (bg2_tilemap_data),a1
+    lea         (bg2_tm_data),a1
     adda.w      d3,a1
     moveq       #$1,d2
     move.w      (DAT_00ff0472),d7
@@ -12839,9 +12843,9 @@ L0000bbda:
 
 L0000bc5e:
     move.w      (DAT_00ff0470),d3
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     adda.w      d3,a0
-    lea         (bg2_tilemap_data),a1
+    lea         (bg2_tm_data),a1
     adda.w      d3,a1
     moveq       #$1,d2
     move.w      (DAT_00ff0472),d7
@@ -12945,7 +12949,7 @@ clear_19218_bytes_from_00ff655c:
 L0000bd82: ; a1=(DAT_00ff1a48)
     bsr.b       clear_19218_bytes_from_00ff1a48
     lea         (DAT_00ff1a48),a1
-    jsr         L0000ff36
+    jsr         L0000ff36   ; populate new data from a1?
     move.w      (a1)+,d0
     move.w      d0,d1
     andi.w      #$3fff,d1
@@ -12988,18 +12992,18 @@ L0000bd82: ; a1=(DAT_00ff1a48)
     clr.w       (DAT_00ff005c)
     rts
 
-L0000be1e:
+L0000be1e:  ; bg2
     bsr.w       clear_19218_bytes_from_00ff655c
-    lea         (DAT_00ff655c),a1
+    lea         (DAT_00ff655c),a1   ; pointer to level bg2 data?
     jsr         L0000ff36
     move.w      (a1)+,d0
     move.w      d0,d1
     andi.w      #$3fff,d1
     andi.w      #$c000,d0
     cmpi.w      #$c000,d0
-    beq.b       .L0000be52
+    beq.b       .L0000be52  ; bg2 screen size?
     add.w       d1,d1
-    move.w      d1,(DAT_00ff0474)
+    move.w      d1,(DAT_00ff0474)   ; set width?
     move.w      (a1)+,d2
     move.w      d2,(DAT_00ff0476)
     rts
@@ -13045,7 +13049,7 @@ L0000be94:  ; one call from here where d4=$10, d5=$14 and (DAT_00ff0014)=$78 dur
     lea         (LEVEL_DATA_CONSTANTS),a2
     adda.w      d0,a2       ; offset is 42 x byte stored at ff01a3 - level?
     move.w      #$0010,(DAT_00ff0478)
-    move.w      #$0010,(DAT_00ff047c)
+    move.w      #$0010,(bg1_vscroll_change)
     move.w      ($20,a2),(DAT_00ff0480)
     movem.w     (SP)+,d4-d5
     move.w      #$00a0,(DAT_00ff0002)
@@ -13053,7 +13057,7 @@ L0000be94:  ; one call from here where d4=$10, d5=$14 and (DAT_00ff0014)=$78 dur
     clr.w       (DAT_00ff01a8)
     clr.w       (DAT_00ff01aa)
     clr.w       (DAT_00ff0468)
-    clr.w       (bg_hscroll_data_index)
+    clr.w       (bg2_vscroll_data_index)
     clr.b       (DAT_00ff042f)
     tst.w       d4
     beq.b       .L0000bf52
@@ -13089,28 +13093,28 @@ L0000be94:  ; one call from here where d4=$10, d5=$14 and (DAT_00ff0014)=$78 dur
     rts
 
 L0000bf70:
-    move.l      #VDP_VRAM_WADDR+$3,(bg1_tilemap_address)        ; $c000 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$3,(bg1_tm_vram_ptr)        ; $c000 VRAM WADDR
     move.l      #VDP_VRAM_WADDR+$500003,(DAT_00ff0544)          ; $c050 VRAM WADDR
     move.l      #VDP_VRAM_WADDR+$e000003,(DAT_00ff0540)         ; $ce00 VRAM WADDR
-    move.l      #VDP_VRAM_WADDR+$20000003,(bg2_tilemap_address) ; $e000 VRAM WADDR
+    move.l      #VDP_VRAM_WADDR+$20000003,(bg2_tm_vram_ptr) ; $e000 VRAM WADDR
     move.l      #VDP_VRAM_WADDR+$20500003,(DAT_00ff0550)        ; $e050 VRAM WADDR
     move.l      #VDP_VRAM_WADDR+$2e000003,(DAT_00ff054c)        ; $ee00 VRAM WADDR
     rts
 
-L0000bfae:
-    lea         (bg1_tilemap_data),a0
+L0000bfae:  ; bg1&2 tm data address update
+    lea         (bg1_tm_data),a0
     movea.l     a0,a1
-    move.w      (DAT_00ff0470),d0
-    move.l      a0,(DAT_00ff0524)
-    adda.w      #$28,a0
-    move.l      a0,(DAT_00ff052c)
-    mulu.w      #$e,d0
-    adda.w      d0,a1
-    move.l      a1,(DAT_00ff0528)
-    lea         (bg2_tilemap_data),a0
+    move.w      (DAT_00ff0470),d0       ; tm width
+    move.l      a0,(bg1_tm_rom_ptr)     ;
+    adda.w      #$28,a0                 ; visible screen width (40x8=320p)
+    move.l      a0,(DAT_00ff052c)       ; save bg1 with offset address
+    mulu.w      #$e,d0                  ; width x 14 (meta tiles are 8x16 so would be a whole height?)
+    adda.w      d0,a1                   ; add to tm data
+    move.l      a1,(DAT_00ff0528)       ; save next bg1 page in tm data address
+    lea         (bg2_tm_data),a0
     movea.l     a0,a1
     move.w      (DAT_00ff0474),d0
-    move.l      a0,(DAT_00ff0530)
+    move.l      a0,(bg2_tm_rom_ptr)
     adda.w      #$28,a0
     move.l      a0,(DAT_00ff0538)
     mulu.w      #$e,d0
@@ -13121,8 +13125,8 @@ L0000bfae:
 L0000c004:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    movea.l     (DAT_00ff0524),a0
-    move.l      (bg1_tilemap_address),d1
+    movea.l     (bg1_tm_rom_ptr),a0
+    move.l      (bg1_tm_vram_ptr),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff01a8),d5
@@ -13130,31 +13134,31 @@ L0000c004:
     andi.w      #$1f,d5 ; index for jump table
     move.w      (DAT_00ff01aa),d6
     lsr.w       #$4,d6
-    andi.w      #$f,d6
-    moveq       #$f,d7
-    .L0000c042:
+    andi.w      #$000f,d6   ; bottom nibble only
+    moveq       #$f,d7      ; 16 iterations
+    .loop:
         movem.l     a0/d7-d1,-(SP)
         bsr.w       L0000cb28
         movem.l     (SP)+,d1-d7/a0
         adda.w      (DAT_00ff0470),a0
         addi.l      #$01000000,d1
         addq.w      #$1,d6
-        cmpi.w      #$10,d6
-        bne.b       .L0000c068
+        cmpi.w      #$10,d6 ; 16 tiles?
+        bne.b       .skip
         subi.l      #$10000000,d1
-    .L0000c068:
-        dbf         d7,.L0000c042
+    .skip:
+        dbf         d7,.loop
 L0000c06c:
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    movea.l     (DAT_00ff0530),a0
-    move.l      (bg2_tilemap_address),d1
+    movea.l     (bg2_tm_rom_ptr),a0
+    move.l      (bg2_tm_vram_ptr),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff0468),d5
     lsr.w       #$4,d5
     andi.w      #$1f,d5
-    move.w      (bg_hscroll_data_index),d6
+    move.w      (bg2_vscroll_data_index),d6
     lsr.w       #$4,d6
     andi.w      #$f,d6
     moveq       #$f,d7
@@ -13186,18 +13190,18 @@ scroll_left_bg1:
     sub.w       (DAT_00ff0478),d0
     andi.b      #$F0,d0
     beq.w       .L0000c194
-    subq.l      #$2,(DAT_00ff0524)
+    subq.l      #$2,(bg1_tm_rom_ptr)
     subq.l      #$2,(DAT_00ff052c)
     subq.l      #$2,(DAT_00ff0528)
     move.w      (DAT_00ff01a8),d2
     lsr.w       #$4,d2
     move.l      #$00040000,d3
     move.l      #$00800000,d4
-    sub.l       d3,(bg1_tilemap_address)
+    sub.l       d3,(bg1_tm_vram_ptr)
     sub.l       d3,(DAT_00ff0540)
     andi.b      #$1f,d2
     bne.b       .L0000c14e
-    add.l       d4,(bg1_tilemap_address)
+    add.l       d4,(bg1_tm_vram_ptr)
     add.l       d4,(DAT_00ff0540)
 .L0000c14e:
     sub.l       d3,(DAT_00ff0544)
@@ -13205,16 +13209,16 @@ scroll_left_bg1:
     bne.b       .L0000c160
     add.l       d4,(DAT_00ff0544)
 .L0000c160:
-    move.l      (bg1_tilemap_address),d1
+    move.l      (bg1_tm_vram_ptr),d1
     move.w      (DAT_00ff0470),d2
     move.l      #$01000000,d3
     move.w      (DAT_00ff01aa),d5
     lsr.w       #$4,d5
     andi.w      #$f,d5
-    movea.l     (DAT_00ff0524),a0
+    movea.l     (bg1_tm_rom_ptr),a0
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    bsr.w       L0000c87c
+    bsr.w       L0000c87c   ; update bg1 hscoll vlaues?
 .L0000c194:
     move.w      (DAT_00ff0478),d0
     sub.w       d0,(DAT_00ff01a8)
@@ -13232,7 +13236,7 @@ scroll_right_bg1:
     add.w       (DAT_00ff0478),d2
     andi.b      #$f0,d2
     beq.w       .L0000c268
-    addq.l      #$2,(DAT_00ff0524)
+    addq.l      #$2,(bg1_tm_rom_ptr)
     addq.l      #$2,(DAT_00ff052c)
     addq.l      #$2,(DAT_00ff0528)
     move.w      (DAT_00ff01a8),d2
@@ -13240,11 +13244,11 @@ scroll_right_bg1:
     andi.b      #$1f,d2
     move.l      #$00040000,d3
     move.l      #$00800000,d4
-    add.l       d3,(bg1_tilemap_address)
+    add.l       d3,(bg1_tm_vram_ptr)
     add.l       d3,(DAT_00ff0540)
     cmpi.b      #$1f,d2
     bne.b       .L0000c21c
-    sub.l       d4,(bg1_tilemap_address)
+    sub.l       d4,(bg1_tm_vram_ptr)
     sub.l       d4,(DAT_00ff0540)
 .L0000c21c:
     add.l       d3,(DAT_00ff0544)
@@ -13292,23 +13296,23 @@ L0000c29c:
     ble.w       L0000c384
 L0000c2c4:
     andi.b      #$0f,d0
-    sub.w       (DAT_00ff047c),d0
+    sub.w       (bg1_vscroll_change),d0
     andi.b      #$f0,d0
     beq.w       .L0000c368
     clr.l       d0
     move.w      (DAT_00ff0470),d0
-    sub.l       d0,(DAT_00ff0524)
+    sub.l       d0,(bg1_tm_rom_ptr)
     sub.l       d0,(DAT_00ff052c)
     sub.l       d0,(DAT_00ff0528)
     move.w      (DAT_00ff01aa),d2
     lsr.w       #$4,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
-    sub.l       d4,(bg1_tilemap_address)
+    sub.l       d4,(bg1_tm_vram_ptr)
     sub.l       d4,(DAT_00ff0544)
     andi.b      #$f,d2
     bne.b       .L0000c322
-    add.l       d3,(bg1_tilemap_address)
+    add.l       d3,(bg1_tm_vram_ptr)
     add.l       d3,(DAT_00ff0544)
 .L0000c322:
     sub.l       d4,(DAT_00ff0540)
@@ -13316,26 +13320,26 @@ L0000c2c4:
     bne.b       .L0000c334
     add.l       d3,(DAT_00ff0540)
 .L0000c334:
-    move.l      (bg1_tilemap_address),d1
+    move.l      (bg1_tm_vram_ptr),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff01a8),d5
     lsr.w       #$4,d5
     andi.w      #$1f,d5
-    movea.l     (DAT_00ff0524),a0
+    movea.l     (bg1_tm_rom_ptr),a0
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000cb28
 .L0000c368:
     lea         (bg1_vscroll_value),a0
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     sub.w       d0,(a0)
     sub.w       d0,(DAT_00ff01aa)
     sub.w       d0,(DAT_00ff0004)
     rts
 
 L0000c384:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     sub.w       d0,(DAT_00ff0004)
     move.b      #$ff,(DAT_00ff042c)
     rts
@@ -13353,21 +13357,21 @@ scroll_up_bg1:
     lsr.w       #$4,d1
     cmp.w       d5,d1
     bge.w       L0000c4a4
-    add.w       (DAT_00ff047c),d4
+    add.w       (bg1_vscroll_change),d4
     lsl.w       #$4,d5
     sub.w       d4,d5
     bpl.b       L0000c3e0
-    add.w       d5,(DAT_00ff047c)
+    add.w       d5,(bg1_vscroll_change)
     neg.w       d5
     add.w       d5,(DAT_00ff0004)
 L0000c3e0:
     andi.b      #$f,d2
-    add.w       (DAT_00ff047c),d2
+    add.w       (bg1_vscroll_change),d2
     andi.b      #$f0,d2
     beq.w       .L0000c488
     clr.l       d0
     move.w      (DAT_00ff0470),d0
-    add.l       d0,(DAT_00ff0524)
+    add.l       d0,(bg1_tm_rom_ptr)
     add.l       d0,(DAT_00ff052c)
     add.l       d0,(DAT_00ff0528)
     move.w      (DAT_00ff01aa),d2
@@ -13375,11 +13379,11 @@ L0000c3e0:
     andi.b      #$f,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
-    add.l       d4,(bg1_tilemap_address)
+    add.l       d4,(bg1_tm_vram_ptr)
     add.l       d4,(DAT_00ff0544)
     cmpi.b      #$f,d2
     bne.b       .L0000c442
-    sub.l       d3,(bg1_tilemap_address)
+    sub.l       d3,(bg1_tm_vram_ptr)
     sub.l       d3,(DAT_00ff0544)
 .L0000c442:
     add.l       d4,(DAT_00ff0540)
@@ -13399,13 +13403,13 @@ L0000c3e0:
     bsr.w       L0000cb28
 .L0000c488:
     lea         (bg1_vscroll_value),a0
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     add.w       d0,(a0)
     add.w       d0,(DAT_00ff01aa)
     add.w       d0,(DAT_00ff0004)
     rts
 L0000c4a4:
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     add.w       d0,(DAT_00ff0004)
     move.b      #$ff,(DAT_00ff042c)
     rts
@@ -13428,18 +13432,18 @@ scroll_left_bg2:
     sub.w       (DAT_00ff047a),d0
     andi.b      #$f0,d0
     beq.w       .L0000c588
-    subq.l      #$2,(DAT_00ff0530)
+    subq.l      #$2,(bg2_tm_rom_ptr)
     subq.l      #$2,(DAT_00ff0538)
     subq.l      #$2,(DAT_00ff0534)
     move.w      (DAT_00ff0468),d2
     lsr.w       #$4,d2
     move.l      #$00040000,d3   ;
     move.l      #$00800000,d4   ; next row in VRAM
-    sub.l       d3,(bg2_tilemap_address)
+    sub.l       d3,(bg2_tm_vram_ptr)
     sub.l       d3,(DAT_00ff054c)
     andi.b      #$1f,d2
     bne.b       .L0000c542
-    add.l       d4,(bg2_tilemap_address)
+    add.l       d4,(bg2_tm_vram_ptr)
     add.l       d4,(DAT_00ff054c)
 .L0000c542:
     sub.l       d3,(DAT_00ff0550)
@@ -13447,16 +13451,16 @@ scroll_left_bg2:
     bne.b       .L0000c554
     add.l       d4,(DAT_00ff0550)
 .L0000c554:
-    move.l      (bg2_tilemap_address),d1
+    move.l      (bg2_tm_vram_ptr),d1
     move.w      (DAT_00ff0474),d2
     move.l      #$01000000,d3
-    move.w      (bg_hscroll_data_index),d5
+    move.w      (bg2_vscroll_data_index),d5
     lsr.w       #$4,d5
     andi.w      #$f,d5
-    movea.l     (DAT_00ff0530),a0
+    movea.l     (bg2_tm_rom_ptr),a0
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
-    bsr.w       L0000c87c
+    bsr.w       L0000c87c   ; update bg2 hscoll vlaues?
 .L0000c588:
     move.w      (DAT_00ff047a),d0
     sub.w       d0,(DAT_00ff0468)
@@ -13471,7 +13475,7 @@ scroll_right_bg2:
     add.w       (DAT_00ff047a),d2
     andi.b      #$f0,d2
     beq.w       .L0000c652
-    addq.l      #$2,(DAT_00ff0530)
+    addq.l      #$2,(bg2_tm_rom_ptr)
     addq.l      #$2,(DAT_00ff0538)
     addq.l      #$2,(DAT_00ff0534)
     move.w      (DAT_00ff0468),d2
@@ -13479,11 +13483,11 @@ scroll_right_bg2:
     andi.b      #$1f,d2
     move.l      #$00040000,d3
     move.l      #$00800000,d4
-    add.l       d3,(bg2_tilemap_address)
+    add.l       d3,(bg2_tm_vram_ptr)
     add.l       d3,(DAT_00ff054c)
     cmpi.b      #$1f,d2
     bne.b       .L0000c606
-    sub.l       d4,(bg2_tilemap_address)
+    sub.l       d4,(bg2_tm_vram_ptr)
     sub.l       d4,(DAT_00ff054c)
 .L0000c606:
     add.l       d3,(DAT_00ff0550)
@@ -13495,7 +13499,7 @@ scroll_right_bg2:
     move.w      (DAT_00ff0474),d2
     move.l      #$01000000,d3
     move.l      #$00800000,d4
-    move.w      (bg_hscroll_data_index),d5
+    move.w      (bg2_vscroll_data_index),d5
     lsr.w       #$4,d5
     andi.w      #$f,d5
     movea.l     (DAT_00ff0538),a0
@@ -13515,7 +13519,7 @@ scroll_bg2_vertically:
     move.w      (DAT_00ff01aa),d0
     move.w      (DAT_00ff0480),d1
     lsr.w       d1,d0
-    sub.w       (bg_hscroll_data_index),d0
+    sub.w       (bg2_vscroll_data_index),d0
     beq.w       L0000d076           ; rts if d0>>d1 = bg_hscroll_data_index
     bmi.b       .inverted_vscrolling          ; branch if negative
     move.w      d0,(bg2_vscroll_change) ; else save d0 to vscroll
@@ -13524,26 +13528,26 @@ scroll_bg2_vertically:
     neg.w       d0
     move.w      d0,(bg2_vscroll_change) ; save neg d0 to vscroll
 scroll_down_bg2:
-    move.w      (bg_hscroll_data_index),d0
+    move.w      (bg2_vscroll_data_index),d0
     andi.b      #$f,d0
     sub.w       (bg2_vscroll_change),d0
     andi.b      #$f0,d0
     beq.w       .L0000c748
     clr.l       d0
     move.w      (DAT_00ff0474),d0
-    sub.l       d0,(DAT_00ff0530)
+    sub.l       d0,(bg2_tm_rom_ptr)
     sub.l       d0,(DAT_00ff0538)
     sub.l       d0,(DAT_00ff0534)
-    move.w      (bg_hscroll_data_index),d2
+    move.w      (bg2_vscroll_data_index),d2
     lsr.w       #$4,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
 .L0000c6e4:
-    sub.l       d4,(bg2_tilemap_address)
+    sub.l       d4,(bg2_tm_vram_ptr)
     sub.l       d4,(DAT_00ff0550)
     andi.b      #$f,d2
     bne.b       .L0000c702
-    add.l       d3,(bg2_tilemap_address)
+    add.l       d3,(bg2_tm_vram_ptr)
     add.l       d3,(DAT_00ff0550)
 .L0000c702:
     sub.l       d4,(DAT_00ff054c)
@@ -13551,13 +13555,13 @@ scroll_down_bg2:
     bne.b       .L0000c714
     add.l       d3,(DAT_00ff054c)
 .L0000c714:
-    move.l      (bg2_tilemap_address),d1
+    move.l      (bg2_tm_vram_ptr),d1
     move.l      #$00040000,d3
     move.l      #$00800000,d4
     move.w      (DAT_00ff0468),d5
     lsr.w       #$4,d5
     andi.w      #$1f,d5
-    movea.l     (DAT_00ff0530),a0
+    movea.l     (bg2_tm_rom_ptr),a0
     lea         (VDP_CTRL),a1
     lea         (VDP_DATA),a2
     bsr.w       L0000cb28
@@ -13565,30 +13569,30 @@ scroll_down_bg2:
     lea         (bg2_vscroll_value),a0
     move.w      (bg2_vscroll_change),d0
     sub.w       d0,(a0)
-    sub.w       d0,(bg_hscroll_data_index)
+    sub.w       d0,(bg2_vscroll_data_index)
     rts
     
 scroll_up_bg2:
-    move.w      (bg_hscroll_data_index),d2
+    move.w      (bg2_vscroll_data_index),d2
     andi.b      #$f,d2
     add.w       (bg2_vscroll_change),d2
     andi.b      #$f0,d2
     beq.w       .L0000c80c  ; branch sum still les than $10
     clr.l       d0
     move.w      (DAT_00ff0474),d0
-    add.l       d0,(DAT_00ff0530)
+    add.l       d0,(bg2_tm_rom_ptr)
     add.l       d0,(DAT_00ff0538)
     add.l       d0,(DAT_00ff0534)
-    move.w      (bg_hscroll_data_index),d2
+    move.w      (bg2_vscroll_data_index),d2
     lsr.w       #$4,d2
     andi.b      #$f,d2
     move.l      #$10000000,d3
     move.l      #$01000000,d4
-    add.l       d4,(bg2_tilemap_address)
+    add.l       d4,(bg2_tm_vram_ptr)
     add.l       d4,(DAT_00ff0550)
     cmpi.b      #$f,d2
     bne.b       .L0000c7c6
-    sub.l       d3,(bg2_tilemap_address)
+    sub.l       d3,(bg2_tm_vram_ptr)
     sub.l       d3,(DAT_00ff0550)
 .L0000c7c6:
     add.l       d4,(DAT_00ff054c)
@@ -13610,7 +13614,7 @@ scroll_up_bg2:
     lea         (bg2_vscroll_value),a0
     move.w      (bg2_vscroll_change),d0
     add.w       d0,(a0)
-    add.w       d0,(bg_hscroll_data_index)
+    add.w       d0,(bg2_vscroll_data_index)
     rts
 
 update_bg1_bg2_hscroll:  ; update 180 lines from bg1 and bg2
@@ -13714,14 +13718,12 @@ MACRO4 MACRO
 .L3_d:
     MACRO4 $3,$d
 .L2_e:
-    move.w      (a0),d0
-    bsr.w       L0000cf9a
-    adda.w      d2,a0
-    add.l       d3,d1
-    move.w      (a0),d0
-    bsr.w       L0000cf9a
-    adda.w      d2,a0
-    add.l       d3,d1
+    REPT 2
+        move.w      (a0),d0
+        bsr.w       L0000cf9a
+        adda.w      d2,a0
+        add.l       d3,d1
+    ENDR
     subi.l      #$10000000,d1
     MACRO3 $e
     rts
@@ -13870,12 +13872,11 @@ MACRO2 MACRO
 .L3_1d:
     MACRO2 $3,$1d
 .L2_1e:
-    move.w      (a0)+,d0
-    bsr.w       L0000cf9a
-    add.l       d3,d1
-    move.w      (a0)+,d0
-    bsr.w       L0000cf9a
-    add.l       d3,d1
+    REPT 2
+        move.w      (a0)+,d0
+        bsr.w       L0000cf9a
+        add.l       d3,d1
+    ENDR
     sub.l       d4,d1
     MACRO1 $1e
     rts
@@ -13897,12 +13898,12 @@ L0000cf9a:  ; d0=index
     adda.w      d6,a6   ; add offset to table   +$ff8 max
     move.l      d1,(a1)
     andi.w      #$0003,d0
-    beq.b       .L0000cff4
+    beq.b       .L0000cff4  ; 0,2,4,6 (forward)
     cmpi.w      #$0001,d0
-    beq.b       .L0000d01c
+    beq.b       .L0000d01c  ; 2,0,6,4
     cmpi.w      #$0002,d0
-    beq.w       .L0000d04a
-    move.w      #$1c00,d6
+    beq.w       .L0000d04a  ; 4,6,0,2
+    move.w      #$1c00,d6   ; 6,4,2,0 (reverse)
     move.w      ($6,a6),d0
     eor.w       d6,d0
     move.w      d0,(a2)
@@ -13920,7 +13921,7 @@ L0000cf9a:  ; d0=index
     move.l      (SP)+,d1
     ENABLE_INTERRUPTS
     rts
-.L0000cff4:
+.L0000cff4:    ; when "11", order is 0,2,4,6
     move.w      #$0400,d6
     move.w      (a6)+,d0
     eor.w       d6,d0
@@ -13939,7 +13940,7 @@ L0000cf9a:  ; d0=index
     move.l      (SP)+,d1
     ENABLE_INTERRUPTS
     rts
-.L0000d01c:
+.L0000d01c:    ; when "01", order is 2,0,6.4
     move.w      #$0c00,d6
     move.w      ($2,a6),d0
     eor.w       d6,d0
@@ -13958,7 +13959,7 @@ L0000cf9a:  ; d0=index
     move.l      (SP)+,d1
     ENABLE_INTERRUPTS
     rts
-.L0000d04a:
+.L0000d04a:    ; when "10", order is 4,6,0,2
     move.w      #$1400,d6
     move.w      ($4,a6),d0
     eor.w       d6,d0
@@ -13980,7 +13981,7 @@ L0000d076:
     rts
 
 update_hscroll_dma_data_src_ptr:
-    move.w      (bg_hscroll_data_index),d0   ; load offset
+    move.w      (bg2_vscroll_data_index),d0   ; load offset
     add.w       d0,d0               ; x2
     add.w       d0,d0               ; x2    to point  at longwords
     lea         (bg_hscroll_data),a0
@@ -14037,17 +14038,17 @@ L0000d100:
     move.w      (DAT_00ff01aa),d0
     beq.w       L0000d076           ; rts
     move.w      (DAT_00ff0004),-(SP)
-    move.w      (DAT_00ff047c),-(SP)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      (bg1_vscroll_change),-(SP)
+    move.w      #$1,(bg1_vscroll_change)
     bsr.w       L0000c2c4
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
     move.w      (SP)+,(DAT_00ff0004)
     rts
 .L0000d168:
     move.w      (DAT_00ff01aa),d2
     move.w      (DAT_00ff0004),-(SP)
-    move.w      (DAT_00ff047c),-(SP)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      (bg1_vscroll_change),-(SP)
+    move.w      #$1,(bg1_vscroll_change)
     move.w      (DAT_00ff01aa),d1
     move.w      (DAT_00ff005a),d5
     lsr.w       #$4,d1
@@ -14055,7 +14056,7 @@ L0000d100:
     bge.w       .L0000d19a
     bsr.w       L0000c3e0
 .L0000d19a:
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
     move.w      (SP)+,(DAT_00ff0004)
     rts
 .L0000d1a8:
@@ -14100,19 +14101,19 @@ L0000d1da:
     move.w      (DAT_00ff01aa),d0
     beq.b       .L0000d286
     move.w      (DAT_00ff0004),-(SP)
-    move.w      (DAT_00ff047c),-(SP)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      (bg1_vscroll_change),-(SP)
+    move.w      #$1,(bg1_vscroll_change)
     bsr.w       L0000c2c4
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
     move.w      (SP)+,(DAT_00ff0004)
     bra.b       .L0000d286
 .L0000d25c:
     move.w      (DAT_00ff01aa),d2
     move.w      (DAT_00ff0004),-(SP)
-    move.w      (DAT_00ff047c),-(SP)
-    move.w      #$1,(DAT_00ff047c)
+    move.w      (bg1_vscroll_change),-(SP)
+    move.w      #$1,(bg1_vscroll_change)
     bsr.w       L0000c3e0
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
     move.w      (SP)+,(DAT_00ff0004)
 .L0000d286:
     moveq       #-$1,d0
@@ -14482,20 +14483,20 @@ L0000d7e2:
 .L0000d82a:
     move.l      a0,(DAT_00ff0594)
 L0000d830:
-    subq.w      #$1,(DAT_00ff0494)
-    bne.w       L0000d076           ; rts
-    movea.l     (DAT_00ff0518),a0
-    move.w      (a0)+,d0
-    bne.b       .L0000d84c
-    lea         (L000145c0),a0
-    move.w      (a0)+,d0
+    subq.w      #$1,(DAT_00ff0494)          ; dec counter
+    bne.w       L0000d076                   ; rts if not 0
+    movea.l     (DAT_00ff0518),a0           ; get ptr
+    move.w      (a0)+,d0                    ; read next word
+    bne.b       .L0000d84c                  ; skip if not 0
+    lea         (L000145c0),a0              ; move ptr back
+    move.w      (a0)+,d0                    ; get value fom ptr
 .L0000d84c:
-    move.w      (a0)+,(DAT_00ff0494)
-    move.l      a0,(DAT_00ff0518)
-    move.w      d0,(DAT_00ff0482)
-    move.w      #$ba20,(DAT_00ff0482+2)
-    move.w      #$0120,(DAT_00ff0482+4)
-    move.b      #$01,(vram_to_vram_type)   ; will do type1 DMA transfer
+    move.w      (a0)+,(DAT_00ff0494)        ; reload counter
+    move.l      a0,(DAT_00ff0518)           ; save ptr
+    move.w      d0,(DAT_00ff0482)           ; src
+    move.w      #$ba20,(DAT_00ff0482+2)     ; VRAM dst?
+    move.w      #$0120,(DAT_00ff0482+4)     ; length
+    move.b      #$01,(vram_to_vram_type)    ; will do type1 DMA transfer
     rts
 
 L0000d878:
@@ -14511,9 +14512,9 @@ L0000d89a:
     move.w      (DAT_00ff001a),d0
     cmpi.w      #$000f,d0
     bne.b       .L0000d8b4
-    move.w      (DAT_00ff047c),d0
+    move.w      (bg1_vscroll_change),d0
     lsr.w       #$1,d0
-    add.w       d0,(DAT_00ff047c)
+    add.w       d0,(bg1_vscroll_change)
 .L0000d8b4:
     clr.w       (bg1_hscroll_value)
     clr.w       (bg2_hscroll_value)
@@ -14732,20 +14733,20 @@ L0000dc16:
     tst.w       d0
     bmi.b       .L0000dc88
     move.w      (DAT_00ff0004),-(SP)
-    move.w      (DAT_00ff047c),-(SP)
-    move.w      #$0001,(DAT_00ff047c)
+    move.w      (bg1_vscroll_change),-(SP)
+    move.w      #$0001,(bg1_vscroll_change)
     move.w      (DAT_00ff01aa),d0
     bsr.w       L0000c2c4
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
     move.w      (SP)+,(DAT_00ff0004)
     rts
 .L0000dc88:
     move.w      (DAT_00ff0004),-(SP)
-    move.w      (DAT_00ff047c),-(SP)
-    move.w      #$0001,(DAT_00ff047c)
+    move.w      (bg1_vscroll_change),-(SP)
+    move.w      #$0001,(bg1_vscroll_change)
     move.w      (DAT_00ff01aa),d2
     bsr.w       L0000c3e0
-    move.w      (SP)+,(DAT_00ff047c)
+    move.w      (SP)+,(bg1_vscroll_change)
     move.w      (SP)+,(DAT_00ff0004)
     rts
 
@@ -14900,7 +14901,7 @@ L0000dec6:
     move.b      #$01,(DAT_00ff042c)
     neg.w       d0
 .L0000df02:
-    move.w      d0,(DAT_00ff047c)
+    move.w      d0,(bg1_vscroll_change)
     move.w      d0,(bg2_vscroll_change)
     bra.w       L0000d1ba
 
@@ -15326,11 +15327,11 @@ L0000e3d0:
     jsr         change_hud_dragon_bottom_tiles
     addq.w      #$1,(DAT_00ff04bc)
     clr.b       (a6)
-    lea         (palettes_5+$a),a1
+    lea         (palettes_5+$a),a1  ; point at colour 6
     REPT 5
         clr.l       (a1)+
-    ENDR
-    move.w      #CRAM_WHITE,(a1)+
+    ENDR                            ; clear colour 6 to 15
+    move.w      #CRAM_WHITE,(a1)+   ; 16th  colour is white
     moveq       #$1,d2
     jsr         prepare_dma_palette_transfer
     bra.w       .L0000e428
@@ -15512,7 +15513,7 @@ L0000e6d8:
     movem.w     d2-d1,-(SP)
     lsr.w       #$4,d1
     lsr.w       #$4,d2
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     mulu.w      (DAT_00ff0470),d2
     adda.w      d2,a0
     add.w       d1,d1
@@ -15549,7 +15550,7 @@ L0000e73a:
     bne.b       .L0000e7b0
     lsr.w       #$4,d1
     lsr.w       #$4,d2
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     move.w      (DAT_00ff0470),d0
     move.w      d0,d3
     mulu.w      d0,d2
@@ -15591,7 +15592,7 @@ L0000e73a:
 .L0000e7b0:
     lsr.w       #$4,d1
     lsr.w       #$4,d2
-    lea         (bg1_tilemap_data),a0
+    lea         (bg1_tm_data),a0
     mulu.w      (DAT_00ff0470),d2
     adda.w      d2,a0
     add.w       d1,d1
@@ -17401,7 +17402,7 @@ L0000ff36:  ; a0 contains n byte structure (dl length, dl address offset 1, dl a
         rol.l       #$8,d2
         andi.l      #$7,d2
         movea.l     a3,a0
-        andi.l      #$ffffff,d1
+        andi.l      #$00ffffff,d1
         adda.l      d1,a0
         .L0000ff8c:
             move.w      (a0)+,(a1)+
@@ -17422,18 +17423,18 @@ play_intro_credits:  ; (0000ffa6)
     lea         (VDP_CTRL),a0
     lea         (VDP_DATA),a1
     move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
-    move.w      #$0,(a1)    ; no v scrolling
-    move.w      #$0,(a1)    ; no v scrolling
-    move.l      SP,(stack_pointer_during_intro)   ; pull from stack
+    move.w      #$0000,(a1)    ; no v scrolling
+    move.w      #$0000,(a1)    ; no v scrolling
+    move.l      SP,(stack_pointer_during_intro) ; pull from stack
     jsr         jp_read
-    btst.b      #$7,(jp1_result)    ; PAD_START
-    bne.w       start_button_pressed
+    btst.b      #$7,(jp1_result)                ; PAD_START
+    bne.w       start_button_pressed            ; leave now if start already pressed
     move.w      #$0,(start_options_index)       ; start selected by default
     move.w      #$255a,(hv_counter_values)      ; init HV counter values (V=$25;H=$5a)
     bsr.w       load_intro_credits_graphics
     lea         (VDP_CTRL),a0
-    moveq       #$1,d0
-    moveq       #$9,d1
+    moveq       #$1,d0      ; bank 1
+    moveq       #$9,d1      ; song 9    - confirmed by x68000 sound driver test program
     jsr         write_z80_reg4_reg5 ; play intro credits music
     moveq       #$6,d7  ; max possible value
     .intro_fadein:  ; write macro to include parameters?
@@ -17448,7 +17449,7 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       increment_palette_if_palette_target_gt_d7
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         bsr.w       intro_credit_scrolling
         dbf         d7,.intro_fadein
     moveq       #$6,d7
@@ -17459,15 +17460,15 @@ play_intro_credits:  ; (0000ffa6)
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       intro_credit_scrolling
             dbf         d6,.L2
-        lea         (target_title_screen_palette),a3  ; not used?
+        lea         (target_title_screen_palette),a3  ; not used
         lea         (palettes_3),a2
         bsr.w       decrement_palette
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         bsr.w       intro_credit_scrolling
         dbf         d7,.L3
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites)
+    VDP_WVRAM_CMD $f000
     move.w      #$0,(a1)    ; no sprites
     move.w      #$0,(a1)    ; no sprites
     bsr.w       play_intro_credits_for_142_frames   ; start intro credits?
@@ -17504,12 +17505,12 @@ play_intro_credits:  ; (0000ffa6)
         bra.b       .dec_intro_counter
 .intro_counter_match:
     lea         ($0000a76a),a0
-    adda.l      #($0007ace2),a0   ; from $0008544c contains compressed tiles
+    adda.l      #(L0007ace2),a0   ; from $0008544c contains compressed tiles
     moveq       #$0,d1
     move.l      #(DAT_00ff1a48),d2   ; to RAM
     bsr.w       write_tileset
     lea         ($0000cee2),a0
-    adda.l      #($0007ace2),a0   ; from $00087bc4
+    adda.l      #(L0007ace2),a0   ; from $00087bc4
     moveq       #$0,d1
     move.l      #(DAT_00ff3a48),d2   ; to RAM
     bsr.w       write_tileset
@@ -17520,7 +17521,7 @@ play_intro_credits:  ; (0000ffa6)
         .L00010150:
             movem.l     d7-d6,-(SP)
             bsr.w       wait_for_vblank_and_check_pad_start
-            bsr.w       update_cram_with_palettes_0
+            bsr.w       update_cram_with_palettes_0123
             bsr.w       wait_for_vblank_and_check_pad_start
             movem.l     (SP)+,d6-d7
             bsr.w       update_cram_col1_8_with_d7
@@ -17528,7 +17529,7 @@ play_intro_credits:  ; (0000ffa6)
         lea         (L0001163c),a3
         lea         (palettes_0),a2
         bsr.w       increment_half_palette_if_palette_target_gt_d7    ; only called once
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         addq.w      #$1,d7
         cmpi.w      #$7,d7
         bcs.b       .L0001014e
@@ -17539,11 +17540,11 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_col1_8_with_d7
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_blue_col1_8_with_d7
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d6,.L00010190
     moveq       #$6,d7
     .L000101b6:
@@ -17552,18 +17553,18 @@ play_intro_credits:  ; (0000ffa6)
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       update_cram_blue_col1_8_with_d7
             bsr.w       wait_for_vblank_and_check_pad_start
-            bsr.w       update_cram_with_palettes_0
+            bsr.w       update_cram_with_palettes_0123
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       update_cram_blue_col1_8_with_d7
             bsr.w       wait_for_vblank_and_check_pad_start
-            bsr.w       update_cram_with_palettes_0
+            bsr.w       update_cram_with_palettes_0123
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       update_cram_blue_col1_8_with_d7
             dbf         d6,.L000101b8
         lea         (palettes_0),a2
         bsr.w       drecrement_half_palette
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_blue_col1_8_with_d7
         dbf         d7,.L000101b6
@@ -17606,18 +17607,18 @@ play_intro_credits:  ; (0000ffa6)
         bsr.w       decrement_palette
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.dec_palettes
     jsr         disable_display
     moveq       #$0,d0
     rts
     .psb_start_pressed:
-        move.l      #(VDP_VRAM_WADDR+$2c900003),(VDP_CTRL) ; $ec90 VRAM WADDR
+        VDP_WVRAM_CMD $ec90
         moveq       #$18,d0
         .clear_bg1_line1_char:
             move.w      #$0,(a1)
             dbf         d0,.clear_bg1_line1_char
-        move.l      #(VDP_VRAM_WADDR+$2d100003),(VDP_CTRL) ; $ed10 VRAM WADDR
+        VDP_WVRAM_CMD $ed10
         moveq       #$18,d0
         .clear_bg1_line2_char:
             move.w      #$0,(a1)
@@ -17628,7 +17629,7 @@ play_intro_credits:  ; (0000ffa6)
             move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
             move.w      d7,(VDP_DATA)   ; reset v scrolling
             move.w      d7,(VDP_DATA)   ; reset v scrolling
-            move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites?)
+            VDP_WVRAM_CMD $f000
             moveq       #$4f,d6
             lea         (sprite_table_data),a2  ; might be scratch memory not only for sprites
             .transfer_sprite_table_item:
@@ -17641,7 +17642,7 @@ play_intro_credits:  ; (0000ffa6)
             addq.w      #$1,d7  ; row counter++
             cmpi.w      #$18,d7 ; 24 rows
             bcs.b       .set_bg2_tilemap_row
-        move.l      #(VDP_VRAM_WADDR+PRESS_START_BUTTON_POS),(VDP_CTRL)
+        VDP_WVRAM_CMD PRESS_START_BUTTON_POS
         moveq       #$1e,d7     ; message length-1
         .erase_psb_msg:
             move.w      #$0,(VDP_DATA)
@@ -17672,7 +17673,7 @@ stop_intro_credits_or_options_music:
         bsr.w       decrement_palette
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.fade_out
     bsr.w       wait_for_vblank_plus_small_delay
     bsr.w       init_intro_credits_and_title_screen_vdp_regs
@@ -17696,7 +17697,7 @@ stop_intro_credits_or_options_music:
         bsr.w       increment_palette_if_palette_target_gt_d7
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.title_screen_fadein
 start_options_screen:
     movea.l     (stack_pointer_during_intro),SP
@@ -17709,7 +17710,7 @@ start_options_screen:
         nop
         nop
         dbf         d0,.small_delay
-    bsr.w       update_cram_with_palettes_0
+    bsr.w       update_cram_with_palettes_0123
     clr.w       (start_options_index)
     bsr.w       wait_for_vblank_plus_small_delay
     bsr.w       display_title_screen_arrow
@@ -17753,7 +17754,7 @@ start_options_screen:
         bsr.w       decrement_palette
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.title_screen_fadeout
     jsr         disable_display
     move.w      (start_options_index),d0
@@ -17773,22 +17774,22 @@ display_title_screen_arrow:  ;udate arrow
     move.w      #$000a,(a1) ; RED 
     move.w      (start_options_index),d0
     bne.b       .select_options
-    move.l      #(VDP_VRAM_WADDR+$c200003),(VDP_CTRL)   ; $cc20
+    VDP_WVRAM_CMD $cc20
     move.w      #$00e2,(VDP_DATA)                       ; place arrow on start
-    move.l      #(VDP_VRAM_WADDR+$ca00003),(VDP_CTRL)   ; $cca0
+    VDP_WVRAM_CMD $cca0
     move.w      #$0000,(VDP_DATA)                       ; blank on options
     rts
 .select_options:
-    move.l      #(VDP_VRAM_WADDR+$c200003),(VDP_CTRL)   ; $cc20
+    VDP_WVRAM_CMD $cc20
     move.w      #$0000,(VDP_DATA)                       ; blank on start
-    move.l      #(VDP_VRAM_WADDR+$ca00003),(VDP_CTRL)   ; $cca0
+    VDP_WVRAM_CMD $cca0
     move.w      #$00e2,(VDP_DATA)                       ; place arrow on options
     rts
 
 L0001056a:
     move.w      (start_options_index),d1
     lea         (L00011e50),a2
-    move.l      #(VDP_VRAM_WADDR+$c240003),(VDP_CTRL)   ; $cc24 VRAM WADDR
+    VDP_WVRAM_CMD $cc24
     moveq       #$4,d7
     .L00010582:
         move.w      (a2)+,d0
@@ -17798,7 +17799,7 @@ L0001056a:
     .L0001058e:
         move.w      d0,(a1)
         dbf         d7,.L00010582
-    move.l      #(VDP_VRAM_WADDR+$ca40003),(VDP_CTRL)   ; $cca4 VRAM WADDR
+    VDP_WVRAM_CMD $cca4
     moveq       #$6,d7
     .L000105a0:
         move.w      (a2)+,d0
@@ -17816,7 +17817,7 @@ L0001056a:
     move.w      #$7000,d1
     move.w      #$30,d2
     jsr         copy_n_words_to_vram
-    move.l      #(VDP_VRAM_WADDR+$23ba0003),(VDP_CTRL)   ; $e3ba VRAM WADDR
+    VDP_WVRAM_CMD $e3ba
     lea         (L00011e68),a2
     moveq       #$2,d0
     .L000105ec:
@@ -17830,7 +17831,7 @@ L0001056a:
     move.w      #$0aa0,(a1)
     move.w      #$0cc0,(a1)
     move.w      #$0ee0,(a1)
-    move.l      #(VDP_VRAM_WADDR+$2e100003),(VDP_CTRL)   ; $ee10 VRAM WADDR
+    VDP_WVRAM_CMD $ee10
     lea         (L00011e00),a2
     moveq       #$5,d0
     .L0001062a:
@@ -17838,12 +17839,12 @@ L0001056a:
         ori.w       #$6000,d1       ; palette 3
         move.w      d1,(a1)
         dbf         d0,.L0001062a
-    move.l      #(VDP_VRAM_WADDR+$2da00003),(VDP_CTRL)   ; $eda0 VRAM WADDR
+    VDP_WVRAM_CMD $eda0
     moveq       #$10,d0
     .L00010642:
         move.w      (a2)+,(a1)
         dbf         d0,.L00010642
-    move.l      #(VDP_VRAM_WADDR+$2e200003),(VDP_CTRL)   ; $ee20 VRAM WADDR
+    VDP_WVRAM_CMD $ee20
     moveq       #$10,d0
     .L00010654:
         move.w      (a2)+,(a1)
@@ -17859,7 +17860,7 @@ L0001065c:
     move.w      #$7000,d1
     move.w      #$30,d2
     jsr         copy_n_words_to_vram
-    move.l      #(VDP_VRAM_WADDR+$23ba0003),(VDP_CTRL)
+    VDP_WVRAM_CMD $e3ba
     lea         (L00011e68),a2
     moveq       #$2,d0
     .L00010696:
@@ -17867,24 +17868,25 @@ L0001065c:
         dbf         d0,.L00010696
     bsr.w       wait_for_vblank_plus_small_delay
     move.l      #(VDP_CRAM_WADDR+$100000),(VDP_CTRL)    ; colour 8?
+    ; loading first some hard coded colours here
     move.w      #$0440,(a1)
     move.w      #$0660,(a1)
     move.w      #$0880,(a1)
     move.w      #$0aa0,(a1)
     move.w      #$0cc0,(a1)
     move.w      #$0ee0,(a1)
-    move.l      #(VDP_VRAM_WADDR+$2d100003),(VDP_CTRL)
+    VDP_WVRAM_CMD $ed10
     lea         (L00011e00),a2
     moveq       #$5,d0
     .L000106d4:
         move.w      (a2)+,(a1)
         dbf         d0,.L000106d4
-    move.l      #(VDP_VRAM_WADDR+$2ca00003),(VDP_CTRL)
+    VDP_WVRAM_CMD $eca0
     moveq       #$10,d0
     .L000106e6:
         move.w      (a2)+,(a1)
         dbf         d0,.L000106e6
-    move.l      #(VDP_VRAM_WADDR+$2d200003),(VDP_CTRL)
+    VDP_WVRAM_CMD $ed20
     moveq       #$10,d0
     .L000106f8:
         move.w      (a2)+,(a1)
@@ -17899,33 +17901,33 @@ write_z80_reg6_with_c8h:    ;   L00010700
 
 open_title_screen:
     lea         ($0000a76a),a0
-    adda.l      #($0007ace2),a0   ; from $0008544c
+    adda.l      #(L0007ace2),a0   ; from $0008544c
     moveq       #$1,d1
     moveq       #$0,d2   ; VRAM ADDR
     bsr.w       write_tileset
     lea         ($0000cee2),a0
-    adda.l      #($0007ace2),a0   ; from $00087bc4
+    adda.l      #(L0007ace2),a0   ; from $00087bc4
     moveq       #$1,d1
     move.w      #$2000,d2   ; VRAM ADDR
     bsr.w       write_tileset
 L0001074e:
     lea         ($000083f8),a0  ; why this hardcoded value?
-    adda.l      #($0007ace2),a0   ; from $000830da
+    adda.l      #(L0007ace2),a0   ; from $000830da
     moveq       #$1,d1
     move.w      #$a000,d2   ; VRAM ADDR
     bsr.w       write_tileset
-    move.l      #VDP_VRAM_WADDR+$3,(VDP_CTRL)   ; VRAM addr $C000
+    VDP_WVRAM_CMD $c000
     move.w      #$7ff,d0
     .clear_bg1_tilemap:
         move.w      #$0,(a1)
         dbf         d0,.clear_bg1_tilemap
-    move.l      #VDP_VRAM_WADDR+$20000003,(VDP_CTRL) ; BG2 tilemap VRAM addr $E000
+    VDP_WVRAM_CMD $e000
     move.w      #$7ff,d0
     .clear_bg2_tilemap:
         move.w      #$0,(a1)
         dbf         d0,.clear_bg2_tilemap
     lea         (L0008ad84),a2
-    move.l      #VDP_VRAM_WADDR+$20000003,(VDP_CTRL) ; BG2 tilemap VRAM addr $E000
+    VDP_WVRAM_CMD $e000
     move.w      #$18,d0
     .vtiles:
         moveq       #(SCREEN_H_TILES-1),d1
@@ -17937,10 +17939,10 @@ L0001074e:
             move.w      #$0,(a1)
             dbf         d1,.unused_htiles
         dbf         d0,.vtiles
-    move.l      #(VDP_VRAM_WADDR+$34000003),(VDP_CTRL)   ; $f400 VRAM WADDR
+    VDP_WVRAM_CMD $f400
     move.w      #$0,(a1)    ; bg1 hscrolling = 0
     move.w      #$0,(a1)    ; bg2 hscrolling = 0
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR window?
+    VDP_WVRAM_CMD $f000
     move.w      #$0,(a1)        ; no sprites as sprite #0 is set to 0
     move.w      #$0,(a1)
     move.w      #$0,(a1)
@@ -17950,7 +17952,7 @@ L0001074e:
 
 L000107f0:
     lea         (L0008a380),a2
-    move.l      #(VDP_VRAM_WADDR+$3),(VDP_CTRL)   ; VRAM addr $C000
+    VDP_WVRAM_CMD $c000
     move.w      #$16,d0
     .vtiles:
         moveq       #(SCREEN_H_TILES-1),d1
@@ -17964,7 +17966,7 @@ L000107f0:
         dbf         d0,.vtiles
     bsr.w       wait_for_vblank_plus_small_delay
     lea         (title_screen_fianl_sprite_table),a2  ; sprite table from ROM
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+    VDP_WVRAM_CMD $f000
     moveq       #$4f,d6
     .save_sprite_object_to_vram:
         move.w      (a2)+,d0
@@ -17974,14 +17976,14 @@ L000107f0:
         move.w      (a2)+,(a1)
         move.w      (a2)+,(a1)
         dbf         d6,.save_sprite_object_to_vram
-    bsr.w       update_cram_with_palettes_0
+    bsr.w       update_cram_with_palettes_0123
     move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
     move.w      #$17,(VDP_DATA)
     move.w      #$17,(VDP_DATA)
     rts
     
 L00010862:
-    move.l      #VDP_VRAM_WADDR,(VDP_CTRL)
+    VDP_WVRAM_CMD $0000
     lea         (DAT_00ff1a48),a3
     move.w      #$1fff,d0
     .L00010876:
@@ -17993,14 +17995,14 @@ L00010862:
         move.w      #CRAM_WHITE,(a3)+
         dbf         d0,.L00010884
     bsr.w       wait_for_vblank_and_check_pad_start
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR  (sprites)
+    VDP_WVRAM_CMD $f000
     move.w      #$0,(a1)    ; first sprite set to 0
     move.w      #$0,(a1)    ; first sprite set to 0
     move.w      #$0,(a1)    ; first sprite set to 0
     move.w      #$0,(a1)    ; first sprite set to 0
     bsr.w       wait_for_vblank_and_check_pad_start
     jsr         enable_display
-    bsr.w       update_cram_with_palettes_0
+    bsr.w       update_cram_with_palettes_0123
     moveq       #$0,d3
     .L000108ba:
         DEC_N_COLOURS_TO_TARGET title_screen_palette_0,palettes_0,$30
@@ -18011,7 +18013,7 @@ L00010862:
             btst.b      #$7,(jp1_result)    ; PAD_START
             bne.w       start_button_pressed
         ENDR
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         move.l      (SP)+,d3
         addq.w      #$2,d3
         cmpi.w      #$e,d3
@@ -18022,9 +18024,9 @@ L00010862:
         bsr.w       wait_for_vblank_plus_small_delay
         move.w      #$0,(a3)+
         dbf         d0,.L0
-    bsr.w       update_cram_with_palettes_0
+    bsr.w       update_cram_with_palettes_0123
     lea         (L0008a380),a2
-    move.l      #VDP_VRAM_WADDR+$3,(VDP_CTRL)   ; VRAM addr $C000
+    VDP_WVRAM_CMD $c000
     move.w      #$16,d0
     .L0001097e:
         moveq       #(SCREEN_H_TILES-1),d1
@@ -18045,7 +18047,7 @@ L00010862:
         .L000109a8:
             bsr.w       wait_for_vblank_and_check_pad_start
             dbf         d6,.L000109a8
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.L00010996
     moveq       #$5,d6
     .L000109ba:
@@ -18064,7 +18066,7 @@ L00010862:
     .L000109e6:
         bsr.w       wait_for_vblank_and_check_pad_start
         lea         (sprite_table_data),a2
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+        VDP_WVRAM_CMD $f000
         moveq       #$4f,d6
         .L000109fc:
             move.w      (a2)+,(a1)
@@ -18109,7 +18111,7 @@ L00010862:
     move.l      #$0,(a2)+
     bsr.w       wait_for_vblank_and_check_pad_start
     lea         (sprite_table_data),a2
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+    VDP_WVRAM_CMD $f000
     moveq       #$4f,d6
     .L00010a94:
         move.w      (a2)+,(a1)
@@ -18119,14 +18121,14 @@ L00010862:
         dbf         d6,.L00010a94
     moveq       #$6,d7  ; max possible value
     .L00010aa2:
-        lea         (L000116dc),a3
+        lea         (white_palette),a3
         lea         (palettes_1),a2
         bsr.w       increment_palette_if_palette_target_gt_d7
         moveq       #$3,d6
         .L00010ab4:
             bsr.w       wait_for_vblank_and_check_pad_start
             dbf         d6,.L00010ab4
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.L00010aa2
     moveq       #$14,d6
     .L00010ac6:
@@ -18140,7 +18142,7 @@ L00010862:
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         move.l      (SP)+,d3
         addq.w      #$2,d3
         cmpi.w      #$e,d3
@@ -18151,7 +18153,7 @@ L00010b32:
     move.w      #CRAM_WHITE,(palettes_3+$1e)
     move.w      #$0aaa,(palettes_3+$1c)
     move.w      #$0ccc,(palettes_3+$1a)
-    bsr.w       update_cram_with_palettes_0
+    bsr.w       update_cram_with_palettes_0123
     moveq       #$4a,d0
     .L00010b50:
         move.l      d0,-(SP)
@@ -18164,7 +18166,7 @@ L00010b32:
         bsr.w       L00010e48   ; update sprite table?
         lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites)
+        VDP_WVRAM_CMD $f000
         moveq       #$4f,d0
         .save_sprite_table_item_to_vram:
             move.w      (a2)+,(a1)
@@ -18190,7 +18192,7 @@ L00010b32:
         move.l      (SP)+,d7
         lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+        VDP_WVRAM_CMD $f000
         moveq       #$4f,d0
         .L00010bc8:
             move.w      (a2)+,(a1)
@@ -18206,7 +18208,7 @@ L00010b32:
         bsr.w       L00010e48
         lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+        VDP_WVRAM_CMD $f000
         move.w      #$4f,d0
         .L00010c04:
             move.w      (a2)+,(a1)
@@ -18229,14 +18231,14 @@ L00010b32:
         bsr.b       L00010cac
         lea         (sprite_table_data),a2
         bsr.w       wait_for_vblank_and_check_pad_start
-        move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+        VDP_WVRAM_CMD $f000
         move.w      #$4f,d0
         .copy_80_words:
             REPT 4
                 move.w      (a2)+,(a1)
             ENDR
             dbf         d0,.copy_80_words
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         subq.w      #$1,(start_options_index)
         bne.b       .L00010c4a
     lea         (palettes_0),a3
@@ -18245,7 +18247,7 @@ L00010b32:
         move.w      #CRAM_WHITE,(a3)+
         dbf         d0,.L00010c96
     bsr.w       wait_for_vblank_and_check_pad_start
-    bsr.w       update_cram_with_palettes_0
+    bsr.w       update_cram_with_palettes_0123
     jmp         disable_display
     
 L00010cac:  ; d0=bit0 is index (start or options), bit6-5 is palette index TODO
@@ -18316,7 +18318,7 @@ update_psb_msg:  ; (00010d3a) update press start button (title screen); A1=$00C0
     beq.b       .erase_psb_msg          ; when b4=0, erase message
     bra.b       print_psb_msg           ; otherwise display message
 .erase_psb_msg:
-    move.l      #(VDP_VRAM_WADDR+PRESS_START_BUTTON_POS),(VDP_CTRL)
+    VDP_WVRAM_CMD PRESS_START_BUTTON_POS
     moveq       #$14,d0                 ; msg length
 .erase_psb_char:
     move.w      #$0,(a1)            ; write to tilemap pointer
@@ -18324,7 +18326,7 @@ update_psb_msg:  ; (00010d3a) update press start button (title screen); A1=$00C0
     rts
 print_psb_msg:
     lea         (S_PRESS_START_BUTTON),a3  ; press start button string
-    move.l      #(VDP_VRAM_WADDR+PRESS_START_BUTTON_POS),(VDP_CTRL)
+    VDP_WVRAM_CMD PRESS_START_BUTTON_POS
 print_psb_char:
     moveq       #$0,d0
     move.b      (a3)+,d0        ; laod char
@@ -18479,7 +18481,7 @@ process_intro_credits_text_and_graphics:  ; (00010f18)
         bsr.w       increment_palette_if_palette_target_gt_d7
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         bsr.w       intro_credit_scrolling
         moveq       #$0,d6
         .L00010f40:
@@ -18501,10 +18503,10 @@ process_intro_credits_text_and_graphics:  ; (00010f18)
         bsr.w       decrement_palette
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         bsr.w       intro_credit_scrolling
         dbf         d7,.L00010f58
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR
+    VDP_WVRAM_CMD $f000
     move.l      #$0,(a1)    ; sprite 0?
     bra.w       play_intro_credits_for_142_frames   ; why as this is just below?
 
@@ -18537,7 +18539,7 @@ check_alt_intro_credits_sound_pad_key:  ; compare to intro_credits_pad_key
 
 ; (L00010fee) a3=text src, a4=grahics sprite data, d1=text vpos, d6=text hpos
 display_intro_text_and_graphics_sprites:
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR (sprites?)
+    VDP_WVRAM_CMD $f000
     moveq       #$0,d5          ; reset index
     .print_intro_text_char:
         addq.w      #$1,d5
@@ -18612,7 +18614,7 @@ intro_credit_scrolling:  ; (000110b4) a1=?,  intro credit horizontal scrolling
     move.w      (start_options_index),d0
     subq.w      #$1,d0
     move.w      d0,(start_options_index)   ; dec and save start_options_index
-    move.l      #(VDP_VRAM_WADDR+$34000003),(VDP_CTRL)   ; $f400 VRAM WADDR
+    VDP_WVRAM_CMD $f400
     move.w      d0,(a1) ; update bg1 h scrolling
     move.w      d0,(a1) ; update bg2 h scrolling
     move.w      d0,d1
@@ -18638,7 +18640,7 @@ intro_credit_scrolling:  ; (000110b4) a1=?,  intro credit horizontal scrolling
 .exit:
     rts
 
-update_cram_with_palettes_0:  ; (00011122) whole cram filled with data starting from (palettes_0)
+update_cram_with_palettes_0123:  ; (00011122) whole cram filled with data starting from (palettes_0)
     move.l      a2,-(SP)
     move.l      #VDP_CRAM_WADDR,(VDP_CTRL) ; from colour 0
     lea         (palettes_0),a2
@@ -18786,55 +18788,55 @@ init_intro_credits_and_title_screen_vdp_regs:  ;(0001128e)
 load_intro_credits_graphics:  ; load intro credits gfx
     bsr.b       init_intro_credits_and_title_screen_vdp_regs
     lea         (palettes_0),a4
-    moveq       #$17,d0
-    .clear_palettes_0:
+    moveq       #(24-1),d0
+    .clear_palettes_012:
         move.l      #$0,(a4)+
-        dbf         d0,.clear_palettes_0
-    lea         (L000116fc),a3
-    moveq       #$7,d0
-    .write_palettes_0:
+        dbf         d0,.clear_palettes_012
+    lea         (sega_logo_sprites_palette),a3  ; sprite SEGA logo colours in PAL3 instead of 0 for BG
+    moveq       #(8-1),d0
+    .write_palettes_3:
         move.l      (a3)+,(a4)+
-        dbf         d0,.write_palettes_0
-    bsr.w       update_cram_with_palettes_0
+        dbf         d0,.write_palettes_3
+    bsr.w       update_cram_with_palettes_0123
     ; planeA=$e000, window=$0000, planeB=$e000, spritetable=$f000, HSRAM=$f400
-    lea         (L0001171c),a3
-    move.l      #(VDP_VRAM_WADDR+$38000003),(VDP_CTRL)   ; $f800 VRAM WADDR sprite tiles
-    move.w      #$2ff,d0
+    lea         (sega_logo_sprite_tiles),a3
+    VDP_WVRAM_CMD $f800 ; sprite tiles
+    move.w      #($300-1),d0
     .L0:
         move.w      (a3)+,(a1)
         dbf         d0,.L0
-    move.l      #(VDP_VRAM_WADDR+$30000003),(VDP_CTRL)   ; $f000 VRAM WADDR sprite table
-    lea         (intro_credits_sprites),a4
-    moveq       #$11,d0
+    VDP_WVRAM_CMD $f000 ; sprite table
+    lea         (sega_logo_sprite_table),a4 ; SEGA logo as sprites
+    moveq       #($12-1),d0
     .L1:
         move.w      (a4)+,(a1)
         dbf         d0,.L1
-    move.l      #(VDP_VRAM_WADDR+$3f000003),(VDP_CTRL)   ; $ff00 VRAM WADDR - blank BG2 tiles
-    move.w      #$7f,d0
+    VDP_WVRAM_CMD $ff00 ; blank BG2 tiles
+    move.w      #($80-1),d0
     .L2:
         move.w      #$0,(a1)
         dbf         d0,.L2
-    move.l      #(VDP_VRAM_WADDR+$20000003),(VDP_CTRL) ; BG2 tilemap VRAM addr $e000 set with blank values
-    move.w      #$7ff,d0
+    VDP_WVRAM_CMD $e000 ; BG2 tilemap VRAM set with blank values
+    move.w      #($800-1),d0
     .L3:
         move.w      #$07ff,(a1)
         dbf         d0,.L3
     lea         Rom_header.w,a0 ; $0
-    adda.l      #$0007ace2,a0   ; from $0007ace2 - TODO are these constants part of the US port
+    adda.l      #(L0007ace2),a0 ; block39.bin = BG tm part 1
     moveq       #$1,d1
     moveq       #$0,d2          ; VRAM dst addr
     bsr.w       write_tileset
     lea         $434a.w,a0      ; why this hardcoded value?
-    adda.l      #$0007ace2,a0   ; from $0007f02c
+    adda.l      #(L0007ace2),a0 ; L0007f02c - block40.bin = BG tm part 2
     moveq       #$1,d1
     move.w      #$6000,d2       ; VRAM dst addr
     bsr.w       write_tileset
     lea         ($000083f8),a0
-    adda.l      #$0007ace2,a0   ; from $000830da
+    adda.l      #(L0007ace2),a0 ; L000830da - block41.bin = sprite tiles (letters and logos)
     moveq       #$1,d1
     move.w      #$c000,d2       ; VRAM dst addr
     bsr.w       write_tileset
-    move.l      #(VDP_VRAM_WADDR+$22000003),(VDP_CTRL)  ; $e200 VRAM WADDR for bg2
+    VDP_WVRAM_CMD $e200 ; bg2
     lea         (intro_credits_bg2_tilemap),a3  ; ($40+$c0/2)*$13 tile sin total (160x24)
     moveq       #$13,d1 ; 20 rows
     .v_tiles:
@@ -18853,7 +18855,7 @@ write_z80_reg12_alt:  ; (000113ac) d0 is value written to Z80 reg12 - PSG sound
     movea.l     (SP)+,a0
     rts
 
-intro_credits_sprites:  ; 3 sprites
+sega_logo_sprite_table:  ; 3 sprites
     dw $00e0, $0f01, $67c0, $00f0   ; vpos=$e0, hpos=$f0, 32x32/next=#1, pal 3/tile=$7c
     dw $00e0, $0f02, $67d0, $0110   ; vpos=$e0, hpos=$110, 32x32/next=#1, pal 3/tile=$7d
     dw $00e0, $0f00, $67e0, $0130   ; vpos=$e0, hpos=$130, 32x32/next=#1, pal 3/tile=$7e
@@ -18927,8 +18929,7 @@ intro_credits_and_title_screen_vdp_values:  ; vdp reg values during intro and ti
 
 target_title_screen_palette:
     dw $0000, $0466, $0688, $0000, $0000, $0000, $0000, $0000, $0020, $0000, $0000, $0022, $0244, $0466, $0688, $08AA
-    dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+    dcb.w 32
 grey_text_palette:
     dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0CCC, $0AAA, $0EEE
 L0001163c:
@@ -18941,13 +18942,12 @@ title_screen_palette_2:
     dw $0800, $0040, $0060, $0282, $04a4, $0222, $0240, $0460, $08a0, $0AE8, $0000, $0000, $0000, $0000, $0000, $0888
 title_screen_palette_3:
     dw $0600, $0024, $0066, $0088, $02AA, $04CC, $0CEE, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0888
-L000116dc:
+white_palette:
     dw $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE, $0EEE
-L000116fc:
+sega_logo_sprites_palette:  ; same as SEGA logo colours!
     dw $0000, $0EEE, $0EC0, $0Ea0, $0E80, $0E60, $0E40, $0E20, $0E00, $0C00, $0A00, $0800, $0600, $0000, $0000, $0000
-
-L0001171c:  ;   $600 bytes
-    incbin "include/graphics/block1.bin"
+sega_logo_sprite_tiles:  ; $0001171c - $600 bytes of sprite tiles
+    incbin "include/graphics/intro_credits/sega_logo_sprite_tiles.bin"
 
 L00011d1c:  ;   34 words
     dw $0000, $0010, $0001, $0010, $0003, $0010, $0004, $0010, $0006, $000F, $0008, $000E, $0009, $000E, $000A, $000D
@@ -19014,13 +19014,13 @@ S_MUSIC_COMPOSED_BY_HPOS equ $00d8
 S_PRESS_START_BUTTON:
     db "PRESS START BUTTON", $00, "N"
 S_PRESS_START_BUTTON_LEN equ $14
-PRESS_START_BUTTON_POS equ $b960003     ; $ $cb96 VRAM ADDR
+PRESS_START_BUTTON_POS equ $cb96
 ; options menus routine
 ; vint, planeA=$c000, window=$0000, planeB=$e000, spritetable=$f000
 ; fullscreen scrolling, 320p, HSRAM=$f400, +2 autoinc, 512x256
 open_options_menu:  ; (00011f36)
     bsr.w       init_optiopns_menu_phase_1
-    bsr.w       init_optiopns_menu_phase_2
+    bsr.w       init_options_menu_phase_2
     bsr.w       display_options_arrow
     moveq       #$6,d7  ; max possible value
     .options_menu_fadein:
@@ -19038,7 +19038,7 @@ open_options_menu:  ; (00011f36)
         bsr.w       increment_palette_if_palette_target_gt_d7
         bsr.w       wait_for_vblank_plus_small_delay
         bsr.w       wait_for_vblank_plus_small_delay
-        bsr.w       update_cram_with_palettes_0
+        bsr.w       update_cram_with_palettes_0123
         dbf         d7,.options_menu_fadein
     bsr.w       wait_until_no_key_pressed
     .check_options_inputs:
@@ -19253,18 +19253,18 @@ open_options_menu:  ; (00011f36)
             bsr.w       decrement_palette
             bsr.w       wait_for_vblank_plus_small_delay
             bsr.w       wait_for_vblank_plus_small_delay
-            bsr.w       update_cram_with_palettes_0
+            bsr.w       update_cram_with_palettes_0123
             dbf         d7,.options_menu_fadeout
         move.w      (options_normal_hard),(normal_hard)
         move.w      (options_jp1_mode),(jp1_mode)
         bra.w       stop_intro_credits_or_options_music
 
 display_options_arrow:  ; (000122d6) clear allow arrow locations and draw the correct one based on index
-    move.l      #(VDP_VRAM_WADDR+$50e0003),(VDP_CTRL)   ; $c50e
+    VDP_WVRAM_CMD $c50e
     move.w      #$07ff,(a1)
-    move.l      #(VDP_VRAM_WADDR+$68e0003),(VDP_CTRL)   ; $c68e
+    VDP_WVRAM_CMD $c68e
     move.w      #$07ff,(a1)
-    move.l      #(VDP_VRAM_WADDR+$a0e0003),(VDP_CTRL)   ; $ca0e
+    VDP_WVRAM_CMD $ca0e
     move.w      #$07ff,(a1)
     move.w      #$c50e,d0   ; VRAM address for index 0
     move.w      (options_index),d1
@@ -19325,8 +19325,8 @@ init_optiopns_menu_phase_1:
     jsr         disable_display
     ; vint, planeA=$c000, window=$0000, planeB=$e000, spritetable=$f000
     ; fullscreen scrolling, 320p, HSRAM=$f400, +2 autoinc, 512x256
-    move.l      #VDP_VRAM_WADDR+$3,(VDP_CTRL)   ; VRAM addr $c000
-    move.w      #$17ff,d0   ; $c000-$efff will be set to $07ff 
+    VDP_WVRAM_CMD $c000
+    move.w      #$17ff,d0   ; $c000-$efff will be set to $07ff
     .clear_tilemaps:
         move.w      #$07ff,(a1)
         dbf         d0,.clear_tilemaps
@@ -19339,7 +19339,7 @@ init_optiopns_menu_phase_1:
     move.w      #$0,(a1)    ; no v scrolling
     bsr.w       wait_for_vblank_plus_small_delay
     bsr.w       wait_for_vblank_plus_small_delay
-    lea         (options_tilseset),a0
+    lea         (options_tilseset_0000),a0
     moveq       #$1,d1
     move.w      #$a000,d2
     bsr.w       write_tileset
@@ -19356,11 +19356,11 @@ set_options_vdp_regs:
     move.w      (options_vdp_reg_values+2),(vdp_reg_81h_value)
     rts
 
-init_optiopns_menu_phase_2:  ; display options screen
+init_options_menu_phase_2:  ; display options screen
     bsr.w       write_options_tileset
     lea         (options_bg2_tilemap),a2      ; tilemap
     move.w      #$1b,d0
-    move.l      #VDP_VRAM_WADDR+$20000003,(VDP_CTRL) ; BG2 tilemap VRAM addr $e000
+    VDP_WVRAM_CMD $e000
     ; copy bg2 tilemap for options menu - 40x28 words or 2240 bytes
     .vtiles:
         moveq       #(SCREEN_H_TILES-1),d1
@@ -19379,7 +19379,7 @@ init_optiopns_menu_phase_2:  ; display options screen
     move.w      #$c21a,d0           ; VRAM address
     bsr.w       print_options_string
     lea         (init_options_sprite_table),a2  ; options sprite table
-    move.l      #(VDP_VRAM_WADDR+$35000003),(VDP_CTRL)   ; $f500 VRAM WADDR
+    VDP_WVRAM_CMD $f500
     move.w      #$f,d0   ; for 8 sprites
     .L0:
         move.w      (a2)+,(a1)
@@ -19396,11 +19396,11 @@ init_optiopns_menu_phase_2:  ; display options screen
     lea         (S_START_TO_EXIT),a2  ; press start button to exit
     move.w      #$cb8e,d0
     bsr.w       print_selected_string
-    move.l      #(VDP_VRAM_WADDR+$81c0003),(VDP_CTRL)   ; VRAM ADDR $c81c
+    VDP_WVRAM_CMD $c81c
     move.w      #$65e1,(a1)
-    move.l      #(VDP_VRAM_WADDR+$89c0003),(VDP_CTRL)   ; VRAM ADDR $c89c
+    VDP_WVRAM_CMD $c89c
     move.w      #$65e2,(a1)
-    move.l      #(VDP_VRAM_WADDR+$91c0003),(VDP_CTRL)   ; VRAM ADDR $c91c
+    VDP_WVRAM_CMD $c91c
     move.w      #$65e3,(a1)
     clr.w       (options_index)      ; arrow index?
     clr.w       (sound_test_index)
@@ -19485,7 +19485,7 @@ build_sound_test_number_string:  ; hex2dec conversion; a3=dest address
     rts
 
 write_options_tileset:
-    lea         (options_tilseset_0000),a0  ;
+    lea         (options_tilseset_0002),a0  ;
     moveq       #$1,d1
     moveq       #$0,d2
     bsr.w       write_tileset
@@ -20311,10 +20311,10 @@ L0006d42c:
     db $00, $80, $00, $E1, $20, $01, $04, $08, $80, $00, $78, $00, $10, $10, $20, $80
     db $01, $04, $00, $10, $00, $78, $02, $80, $40, $10, $08, $FF
 L0006d5e8:
-    db $00, $00, $00, $00, $00, $0D, $D0, $00, $00, $12, $2C, $00, $0D, $24, $2D, $C0
-    db $0D, $22, $DD, $C0, $00, $CD, $DC, $00, $00, $0C, $C0, $00, $00, $00, $00, $00
-    db $00, $0A, $A0, $00, $09, $AB, $BA, $90, $0A, $FF, $B2, $A0, $AB, $FF, $B2, $5A
-    db $AB, $BB, $22, $5A, $0A, $22, $25, $A0, $09, $A5, $5A, $90, $00, $0A, $A0, $00
+    dw $0000, $0000, $000D, $D000, $0012, $2C00, $0D24, $2DC0
+    dw $0D22, $DDC0, $00CD, $DC00, $000C, $C000, $0000, $0000
+    dw $000A, $A000, $09AB, $BA90, $0AFF, $B2A0, $ABFF, $B25A
+    dw $ABBB, $225A, $0A22, $25A0, $09A5, $5A90, $000A, $A000
 L0006d628:
     dw $0000, $2FF2, $000F, $F002, $002F, $0000, $00FF, $0000
     dw $00FF, $1000, $002F, $F100, $000F, $FFF0, $0000, $2FFF
@@ -20933,21 +20933,25 @@ L0007acc2:
     dl $00001c28        ; offset in L00078b22
     dw $0840, $2003     ; len -
 
+; Intro credits assets which use weird hardcoded values (perhpas linked to US port ut to be confirmed)
     org $7ace2
 L0007ace2:
-    incbin "include/graphics/block39.bin"
+    incbin "include/graphics/intro_credits/block39.bin"
     org $7f02c
 L0007f02c:
-    incbin "include/graphics/block40.bin"
+    incbin "include/graphics/intro_credits/block40.bin"
     org $830da
 L000830da:
-    incbin "include/graphics/block41.bin"
+    incbin "include/graphics/intro_credits/block41.bin"
     org $8426a
-options_tilseset:       ; check $0008544c
+options_tilseset_0000:      ; $0008426a
     incbin "include/graphics/options_tilseset.bin"
-    org $86650
-options_tilseset_0000:
-    incbin "include/graphics/block43.bin"
+options_tilseset_0001:      ; $0008544c - accessed via weird address calculation
+    incbin "include/graphics/options_tilseset_0001.bin"
+options_tilseset_0002:      ; $00086650
+    incbin "include/graphics/options_tilseset_0002.bin"
+options_tilseset_0003:      ; $00087bc4 - accessed via weird address calculation
+    incbin "include/graphics/options_tilseset_0003.bin"
     org $881b8
 intro_credits_bg2_tilemap:
     incbin "include/graphics/intro_credits_bg2_tilemap.bin"
