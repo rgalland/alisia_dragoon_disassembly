@@ -10,26 +10,26 @@ L000129e6:
 ; ==========================================================
 ; Level data structures
 ; ==========================================================
-;  $0 = write primary tileset address
-;  $4 = write secondary tileset address
-;  $8 = write tertiary tileset address
-;  $c => bsr.w       L0000bd82
-; $10 => tilemap address used by L0000ff36
-; $14 = palette primary address
-; $18 = palette seconday address
-; $1c => (DAT_00ff0554) sprite tileset?
-; $20 => (DAT_00ff0480) pallet index?
-; $22 => (DAT_00ff0016) pallet index?
-; $24 => (DAT_00ff0014) number of sprites?
-; $26 => hscroll saved to d4
-; $28 => vscroll saved to d5
+;  $0 - BG1 pattern tiles - write_tileset → VRAM $8000
+;  $4 - BG2 pattern tiles - write_tileset → VRAM $A000
+;  $8 - Sprite pattern tiles - write_tileset → VRAM $4000
+;  $c - BG1 compressed map
+; $10 - BG2 compressed map
+; $14 - palette primary address
+; $18 - palette seconday address
+; $1c - 2×2 metatile stamps
+; $20 - (DAT_00ff0480) palette index?
+; $22 - (DAT_00ff0016) palette index?
+; $24 - Camera / map limit
+; $26 - hscroll saved to d4
+; $28 - vscroll saved to d5
 LEVEL_DATA_SIZE equ 42
 
 LEVEL_DATA_CONSTANTS:
     ; level 1
     dl L0003c03e, $00000000, $00000000, L00015400
     ;dl level1_tileset, $00000000, $00000000, L00015400
-    dl L00016dd8, L00069070, L00069050, L0005f088
+    dl L00016dd8, L00069070, L00069050, level1_metatiles
     dw $0001, $0000, $0090, $0000, $000A
     ; level 2
     dl L00042220, L00043bb6, $00000000, L000199a0
@@ -85,7 +85,7 @@ LEVEL_DATA_CONSTANTS:
     dw $0001, $0000, $0000, $0000, $0000
     ; level 15
     dl L0003c03e, $00000000, $00000000, L0003bcd4
-    dl L00016dd8, L00069070, L00069050, L0005f088
+    dl L00016dd8, L00069070, L00069050, level1_metatiles
     dw $0001, $0000, $0090, $0000, $000A
     ; level 16
     dl L000586be, $00000000, $00000000, L0003348c
@@ -109,7 +109,7 @@ LEVEL_DATA_CONSTANTS:
     dw $0001, $0000, $00A0, $00E6, $000F
     ; level 21
     dl L0003c03e, $00000000, $00000000, L00015400
-    dl L00016dd8, L00069070, L00069050, L0005f088
+    dl L00016dd8, L00069070, L00069050, level1_metatiles
     dw $0001, $0000, $0090, $0064, $0009
 
 DRAGON_DEFAULT_DATA:

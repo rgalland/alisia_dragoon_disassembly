@@ -17965,7 +17965,7 @@ L000107f0:
             dbf         d1,.unused_htiles
         dbf         d0,.vtiles
     bsr.w       wait_for_vblank_plus_small_delay
-    lea         (title_screen_fianl_sprite_table),a2  ; sprite table from ROM
+    lea         (title_screen_final_sprite_table),a2  ; sprite table from ROM
     VDP_WVRAM_CMD $f000
     moveq       #$4f,d6
     .save_sprite_object_to_vram:
@@ -18100,7 +18100,7 @@ L00010862:
     .L00010a54:
         bsr.w       wait_for_vblank_plus_small_delay
         dbf         d7,.L00010a54
-    lea         (title_screen_fianl_sprite_table),a3
+    lea         (title_screen_final_sprite_table),a3
     lea         (sprite_table_data),a2
     moveq       #$1e,d7
     .L00010a6a:
@@ -18855,70 +18855,7 @@ write_z80_reg12_alt:  ; (000113ac) d0 is value written to Z80 reg12 - PSG sound
     movea.l     (SP)+,a0
     rts
 
-sega_logo_sprite_table:  ; 3 sprites
-    dw $00e0, $0f01, $67c0, $00f0   ; vpos=$e0, hpos=$f0, 32x32/next=#1, pal 3/tile=$7c
-    dw $00e0, $0f02, $67d0, $0110   ; vpos=$e0, hpos=$110, 32x32/next=#1, pal 3/tile=$7d
-    dw $00e0, $0f00, $67e0, $0130   ; vpos=$e0, hpos=$130, 32x32/next=#1, pal 3/tile=$7e
-
-title_screen_initial_sprite_table:  ; $19 sprites
-    dw $00b0, $0401, $0100, $0036
-    dw $00b8, $0802, $0102, $002e
-    dw $00c0, $0f03, $0105, $0026
-    dw $00c8, $0004, $0115, $001e
-    dw $00d0, $0905, $0116, $000e
-    dw $00b0, $0706, $011c, $0046
-    dw $00b0, $0007, $0124, $0056
-    dw $00d0, $0108, $0125, $0046
-    dw $00d0, $0d09, $0127, $004e
-    dw $00b0, $070a, $011c, $0068
-    dw $00b0, $000b, $0124, $0078
-    dw $00d0, $010c, $0125, $0068
-    dw $00d0, $050d, $012f, $0070
-    dw $00d0, $070e, $091c, $01e1
-    dw $00d0, $000f, $0924, $01d9
-    dw $00f0, $0110, $0925, $01e9
-    dw $00f0, $0511, $092f, $01d9
-    dw $00d0, $0412, $0900, $01f1
-    dw $00d8, $0813, $0902, $01f1
-    dw $00e0, $0f14, $0905, $01f1
-    dw $00e8, $0015, $0915, $0211
-    dw $00f0, $0916, $0916, $0211
-    dw $017e, $0d17, $2133, $00f0
-    dw $017e, $0d18, $213b, $0110
-    dw $017e, $0d19, $2143, $0130
-
-title_screen_fianl_sprite_table:  ; $20 sprite objects on title screen
-    dw $00b0, $0401, $0100, $00ce
-    dw $00b8, $0802, $0102, $00c6
-    dw $00c0, $0f03, $0105, $00be
-    dw $00c8, $0004, $0115, $00b6
-    dw $00d0, $0905, $0116, $00a6
-    dw $00b0, $0706, $011c, $00de
-    dw $00b0, $0007, $0124, $00ee
-    dw $00d0, $0108, $0125, $00de
-    dw $00d0, $0d09, $0127, $00e6
-    dw $00b0, $070a, $011c, $0100
-    dw $00b0, $000b, $0124, $0110
-    dw $00d0, $010c, $0125, $0100
-    dw $00d0, $050d, $012f, $0108
-    dw $00d0, $070e, $091c, $0149
-    dw $00d0, $000f, $0924, $0141
-    dw $00f0, $0110, $0925, $0151
-    dw $00f0, $0511, $092f, $0141
-    dw $00d0, $0412, $0900, $0159
-    dw $00d8, $0813, $0902, $0159
-    dw $00e0, $0f14, $0905, $0159
-    dw $00e8, $0015, $0915, $0179
-    dw $00f0, $0916, $0916, $0179
-    dw $010c, $0d17, $2133, $00f0
-    dw $010c, $0d18, $213b, $0110
-    dw $010c, $0d19, $2143, $0130
-    dw $00f8, $041a, $214b, $0100
-    dw $0100, $041b, $214d, $00f8
-    dw $0108, $081c, $214f, $00f0
-    dw $0110, $041d, $2152, $00f0
-    dw $0118, $081e, $2154, $00e8
-    dw $0120, $041f, $2157, $00e0
+    include "include/graphics/intro_credits/sprite_tables.asm"
 
 intro_credits_and_title_screen_vdp_values:  ; vdp reg values during intro and title screen
 ; enable display & vint, planeA=$e000, window=$0000, planeB=$e000, spritetable=$f000, fullscreen hv scrolling, 320p
@@ -19339,7 +19276,7 @@ init_optiopns_menu_phase_1:
     move.w      #$0,(a1)    ; no v scrolling
     bsr.w       wait_for_vblank_plus_small_delay
     bsr.w       wait_for_vblank_plus_small_delay
-    lea         (options_tilseset_0000),a0
+    lea         (options_tileset_0000),a0
     moveq       #$1,d1
     move.w      #$a000,d2
     bsr.w       write_tileset
@@ -19485,7 +19422,7 @@ build_sound_test_number_string:  ; hex2dec conversion; a3=dest address
     rts
 
 write_options_tileset:
-    lea         (options_tilseset_0002),a0  ;
+    lea         (options_tileset_0002),a0  ;
     moveq       #$1,d1
     moveq       #$0,d2
     bsr.w       write_tileset
@@ -20154,8 +20091,9 @@ L00059124:  ; LV11 TS1
     incbin "include/graphics/level11/tileset1.bin"
 L0005bda4:  ; LV12 TS1  - End cinematic?
     incbin "include/graphics/level12/tileset1.bin"
-L0005f088:  ; LV1 SP
-    incbin "include/graphics/level1/sprites.bin"
+;L0005f088:  ; LV1 SP
+    ;incbin "include/graphics/level1/sprites.bin"
+    include "include/graphics/level1/level1_metatiles.asm"
 L0005ff20:  ; LV3 SP
     incbin "include/graphics/level3/sprites.bin"
 L00060d40:  ; LV2 SP
@@ -20935,29 +20873,29 @@ L0007acc2:
 
 ; Intro credits assets which use weird hardcoded values (perhpas linked to US port ut to be confirmed)
     org $7ace2
-L0007ace2:
-    incbin "include/graphics/intro_credits/block39.bin"
+L0007ace2:      ; compressed bg tiles saved to RAM $0000
+    incbin "include/graphics/intro_credits/bg2_tileset1.bin"
     org $7f02c
-L0007f02c:
-    incbin "include/graphics/intro_credits/block40.bin"
+L0007f02c:      ; compressed bg tiles saved to RAM $6000
+    incbin "include/graphics/intro_credits/bg2_tileset2.bin"
     org $830da
-L000830da:
-    incbin "include/graphics/intro_credits/block41.bin"
+L000830da:      ; compressed sprite tiles (letters and logos) saved to RAM $C000
+    incbin "include/graphics/intro_credits/sprites_tileset.bin"
     org $8426a
-options_tilseset_0000:      ; $0008426a
-    incbin "include/graphics/options_tilseset.bin"
-options_tilseset_0001:      ; $0008544c - accessed via weird address calculation
-    incbin "include/graphics/options_tilseset_0001.bin"
-options_tilseset_0002:      ; $00086650
-    incbin "include/graphics/options_tilseset_0002.bin"
-options_tilseset_0003:      ; $00087bc4 - accessed via weird address calculation
-    incbin "include/graphics/options_tilseset_0003.bin"
+options_tileset_0000:      ; $0008426a
+    incbin "include/graphics/options/tileset.bin"
+options_tileset_0001:      ; $0008544c - accessed via weird address calculation
+    incbin "include/graphics/options/tileset_0001.bin"
+options_tileset_0002:      ; $00086650
+    incbin "include/graphics/options/tileset_0002.bin"
+options_tileset_0003:      ; $00087bc4 - accessed via weird address calculation
+    incbin "include/graphics/options/tileset_0003.bin"
     org $881b8
 intro_credits_bg2_tilemap:
     incbin "include/graphics/intro_credits_bg2_tilemap.bin"
     org $89abc
 options_bg2_tilemap:
-    incbin "include/graphics/options_bg2_tilemap.bin
+    incbin "include/graphics/options_bg2_tilemap.bin"
     db $00, $28, $00, $20   ; ??
     org $8a380
 L0008a380:
