@@ -1,7 +1,8 @@
-sega_logo_sprite_table:  ; 3 sprites
-    dw $00e0, $0f01, $67c0, $00f0   ; vpos=$e0, hpos=$f0, 32x32/next=#1, pal 3/tile=$7c
-    dw $00e0, $0f02, $67d0, $0110   ; vpos=$e0, hpos=$110, 32x32/next=#1, pal 3/tile=$7d
-    dw $00e0, $0f00, $67e0, $0130   ; vpos=$e0, hpos=$130, 32x32/next=#1, pal 3/tile=$7e
+; 000000YY YYYYYYYY - vertical position
+; 0000XXYY 0NNNNNNN - sizes and next tile
+; PCCVHTTT TTTTTTTT - priority, palette, vertical flip, horizontal flip, tile number
+; 0000000X XXXXXXXX = horizontaol position 
+; vpos, hpos, size32x32/next=#1, pal 3/tile=$7c
 
 title_screen_initial_sprite_table:  ; $19 sprites
     dw $00b0, $0401, $0100, $0036

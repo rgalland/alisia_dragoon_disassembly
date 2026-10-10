@@ -306,14 +306,13 @@ DAT_00ff0dc0 equ $00ff0dc0
 _4bpp_stream_pointer equ $00ff13c0
 sprite_table_data equ $00ff17c0  ; sprite data array stored in ram (78 sprites max?)
 bg1_tm_data equ $00ff1a4c  ; 2240 bytes
-DAT_00ff1a48 equ $00ff1a48  ; $4b12 bytes up to $00ff655a
+scratch_memory equ $00ff1a48  ; $4b12 bytes up to $00ff655a
 DAT_00ff1ab0 equ $00ff1ab0
-DAT_00ff3a48 equ $00ff3a48
 
 DAT_00ff655c equ $00ff655c  ; $4b12 bytes up to $00ffb06e
 bg2_tm_data equ $00ff6560
 
-DAT_00ffb070 equ $00ffb070  ; scratch memory used imn placed for string manipulation
+DAT_00ffb070 equ $00ffb070  ; scratch memory used for string manipulation
 ;DAT_00ffb072 equ $00ffb072
 sound_test_number_string equ $00ffb170  ; at least 3 bytes but perhaps includes 0 at the end
 
@@ -809,8 +808,8 @@ sega_logo_tilemap: ;(00000736)
     dw $0019, $001A, $001B, $001C, $001D, $001E, $001F, $0020, $0021, $0022, $0023, $0024
     dw $0025, $0026, $0027, $0028, $0029, $002A, $002B, $002C, $002D, $002E, $002F, $0030
 
-sega_logo_tiles:
-    incbin "include/graphics/sega_logo_tileset.bin"
+sega_logo_tiles:    ; uncompressed
+    incbin "include/graphics/sega_logo/tileset.bin"
 sega_logo_tiles_end:
 SEGA_LOGO_SIZE equ (sega_logo_tiles_end-sega_logo_tiles)
 ;==== End SEGA LOGO Assets and routines ================================================================================
@@ -2811,7 +2810,7 @@ update_sprite_in_sprite_table: ; (00002904)
     rts
 
 L0000292c:
-    lea         (L0006c5f2),a0
+    lea         (L0006c5f2),a0  ; contains "PAUSE" tiles
     moveq       #$0,d1      ; init d1
     move.l      #(DAT_00ffdd94),d2
     jsr         write_tileset
@@ -3991,6 +3990,7 @@ L00003642:  ; get tilemap address from rom - d1=row, d2=column, a0=current addre
     movem.w     (SP)+,d1-d2
     rts
 
+; a0 stores word offset to index structure in 2kB data block, d1 stored offset within structure
 L00003662:
     movem.w     d2-d0,-(SP)
     bsr.b       L00003642
@@ -4080,7 +4080,7 @@ prepare_dma_palette_transfer:      ; (000036fe) d2=vblank counter
 load_lv1_graphics:  ; never called it would seem
     move.w      #$4000,d1
     move.l      #(level1_tileset),d2
-    move.w      #$0400,d3
+    move.w      #$0400,d3       ; length is $400 words = 2kB
     bsr.w       add_item_to_dma_data_array
     lea         (L00069070),a0   ; lv1 palette?
     moveq       #$2,d0
@@ -5934,7 +5934,7 @@ L000054d4:
 .L00005516:
     bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L00039af8),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     lea         (L00039fe2),a0
     lea         (DAT_00ff655c),a1
@@ -8098,13 +8098,13 @@ L0000737c:
     move.w      (SP)+,d1
     ext.w       d3
     bmi.b       L0000743a
-    beq.b       L000073d6
+    beq.b       .L000073d6
     andi.w      #$f,d2
     sub.w       d2,d3
     subq.w      #$1,d3
     clr.b       d0
     rts
-L000073d6:
+.L000073d6:
     move.w      d2,d0
     andi.w      #$f,d0
     neg.w       d0
@@ -8116,20 +8116,20 @@ L000073d6:
     jsr         L00003662.l
     move.b      ($1,a0),d4
     cmp.b       d4,d3
-    bls.b       L00007402
+    bls.b       .L00007402
     move.b      d4,d3
-L00007402:
+.L00007402:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L0000741e
+    bcc.b       .L0000741e
     sub.w       d7,d1
     jsr         L00003662.l
     move.b      ($3,a0),d4
     cmp.b       d4,d3
-    bls.b       L0000741e
+    bls.b       .L0000741e
     move.b      d4,d3
-L0000741e:
+.L0000741e:
     ext.w       d3
     bmi.b       L00007432
     bne.b       L0000742a
@@ -8158,20 +8158,20 @@ L0000743a:
     jsr         L00003662.l
     move.b      ($1,a0),d4
     cmp.b       d4,d3
-    bls.b       L0000746a
+    bls.b       .L0000746a
     move.b      d4,d3
-L0000746a:
+.L0000746a:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L00007486
+    bcc.b       .L00007486
     sub.w       d7,d1
     jsr         L00003662.l
     move.b      ($3,a0),d4
     cmp.b       d4,d3
-    bls.b       L00007486
+    bls.b       .L00007486
     move.b      d4,d3
-L00007486:
+.L00007486:
     ext.w       d3
     bpl.b       L00007490
 L0000748a:
@@ -8193,49 +8193,49 @@ L00007498:
     bsr.w       L00007350
     moveq       #-$1,d3
     andi.w      #$8000,d5
-    bne.b       L000074be
+    bne.b       .L000074be
     jsr         L00003662.l
     move.b      ($2,a0),d3
-L000074be:
+.L000074be:
     addi.w      #$10,d1
     add.w       d7,d1
     bsr.w       L00007350
     moveq       #-$1,d4
     andi.w      #$8000,d5
-    bne.b       L000074da
+    bne.b       .L000074da
     jsr         L00003662.l
     move.b      ($1,a0),d4
-L000074da:
+.L000074da:
     cmp.b       d4,d3
-    bls.b       L000074e0
+    bls.b       .L000074e0
     move.b      d4,d3
-L000074e0:
+.L000074e0:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L00007508
+    bcc.b       .L00007508
     sub.w       d7,d1
     bsr.w       L00007350
     moveq       #-$1,d4
     andi.w      #$8000,d5
-    bne.b       L00007502
+    bne.b       .L00007502
     jsr         L00003662.l
     move.b      ($3,a0),d4
-L00007502:
+.L00007502:
     cmp.b       d4,d3
-    bls.b       L00007508
+    bls.b       .L00007508
     move.b      d4,d3
-L00007508:
+.L00007508:
     move.w      (SP)+,d1
     ext.w       d3
-    bmi.w       L0000759a
-    beq.b       L0000751e
+    bmi.w       .L0000759a
+    beq.b       .L0000751e
     andi.w      #$f,d2
     sub.w       d2,d3
     subq.w      #$1,d3
     clr.b       d0
     rts
-L0000751e:
+.L0000751e:
     move.w      d2,d0
     andi.w      #$f,d0
     neg.w       d0
@@ -8243,46 +8243,46 @@ L0000751e:
     bsr.w       L00007350
     moveq       #-$1,d3
     andi.w      #$8000,d5
-    bne.b       L00007540
+    bne.b       .L00007540
     jsr         L00003662.l
     move.b      ($2,a0),d3
-L00007540:
+.L00007540:
     addi.w      #$10,d1
     add.w       d7,d1
     bsr.w       L00007350
     moveq       #-$1,d4
     andi.w      #$8000,d5
-    bne.b       L0000755c
+    bne.b       .L0000755c
     jsr         L00003662.l
     move.b      ($1,a0),d4
-L0000755c:
+.L0000755c:
     cmp.b       d4,d3
-    bls.b       L00007562
+    bls.b       .L00007562
     move.b      d4,d3
-L00007562:
+.L00007562:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L0000758a
+    bcc.b       .L0000758a
     sub.w       d7,d1
     bsr.w       L00007350
     moveq       #-$1,d4
     andi.w      #$8000,d5
-    bne.b       L00007584
+    bne.b       .L00007584
     jsr         L00003662.l
     move.b      ($3,a0),d4
-L00007584:
+.L00007584:
     cmp.b       d4,d3
-    bls.b       L0000758a
+    bls.b       .L0000758a
     move.b      d4,d3
-L0000758a:
+.L0000758a:
     ext.w       d3
     bmi.w       L00007432
     bne.w       L0000742a
     moveq       #-$1,d0
     moveq       #-$1,d3
     rts
-L0000759a:
+.L0000759a:
     move.w      d2,d0
     andi.w      #$f,d0
     neg.w       d0
@@ -8291,39 +8291,39 @@ L0000759a:
     bsr.w       L00007350
     moveq       #-$1,d3
     andi.w      #$8000,d5
-    bne.b       L000075c0
+    bne.b       .L000075c0
     jsr         L00003662.l
     move.b      ($2,a0),d3
-L000075c0:
+.L000075c0:
     addi.w      #$10,d1
     add.w       d7,d1
     bsr.w       L00007350
     moveq       #-$1,d4
     andi.w      #$8000,d5
-    bne.b       L000075dc
+    bne.b       .L000075dc
     jsr         L00003662.l
     move.b      ($1,a0),d4
-L000075dc:
+.L000075dc:
     cmp.b       d4,d3
-    bls.b       L000075e2
+    bls.b       .L000075e2
     move.b      d4,d3
-L000075e2:
+.L000075e2:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L0000760a
+    bcc.b       .L0000760a
     sub.w       d7,d1
     bsr.w       L00007350
     moveq       #-$1,d4
     andi.w      #$8000,d5
-    bne.b       L00007604
+    bne.b       .L00007604
     jsr         L00003662.l
     move.b      ($3,a0),d4
-L00007604:
+.L00007604:
     cmp.b       d4,d3
-    bls.b       L0000760a
+    bls.b       .L0000760a
     move.b      d4,d3
-L0000760a:
+.L0000760a:
     ext.w       d3
     bpl.w       L00007490
     moveq       #-$1,d0
@@ -8334,20 +8334,20 @@ L00007616:
     move.w      d1,-(SP)
     bsr.w       L00007350
     andi.w      #$8000,d5
-    beq.b       L00007642
+    beq.b       .L00007642
     addi.w      #$10,d1
     bsr.w       L00007350
     andi.w      #$8000,d5
-    beq.b       L00007642
+    beq.b       .L00007642
     add.w       d7,d1
     bsr.w       L00007350
     andi.w      #$8000,d5
-    beq.b       L00007642
+    beq.b       .L00007642
     move.w      (SP)+,d1
     moveq       #$0,d0
     rts
 
-L00007642:
+.L00007642:
     move.w      (SP)+,d1
     moveq       #-$1,d0
     rts
@@ -8355,11 +8355,11 @@ L00007642:
 L00007648:
     move.w      (DAT_00ff0004),d2
     subi.w      #$19,d2
-    bmi.w       L000076f4
+    bmi.w       .L000076f4
     moveq       #$4,d7
     bsr.b       L00007616
     tst.b       d0
-    beq.w       L000076f4
+    beq.w       .L000076f4
     move.w      d1,-(SP)
     jsr         L00003662.l
     move.b      ($2,a0),d3
@@ -8368,27 +8368,27 @@ L00007648:
     jsr         L00003662.l
     move.b      ($1,a0),d4
     cmp.b       d4,d3
-    bls.b       L00007682
+    bls.b       .L00007682
     move.b      d4,d3
-L00007682:
+.L00007682:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L0000769e
+    bcc.b       .L0000769e
     sub.w       d7,d1
     jsr         L00003662.l
     move.b      ($3,a0),d4
     cmp.b       d4,d3
-    bls.b       L0000769e
+    bls.b       .L0000769e
     move.b      d4,d3
-L0000769e:
+.L0000769e:
     move.w      (SP)+,d1
     ext.w       d3
-    bpl.b       L000076f0
+    bpl.b       .L000076f0
     addi.w      #$10,d2
     bsr.w       L00007616
     tst.b       d0
-    beq.b       L000076f4
+    beq.b       .L000076f4
     jsr         L00003662.l
     move.b      ($2,a0),d3
     addi.w      #$10,d1
@@ -8396,26 +8396,26 @@ L0000769e:
     jsr         L00003662.l
     move.b      ($1,a0),d4
     cmp.b       d4,d3
-    bls.b       L000076d0
+    bls.b       .L000076d0
     move.b      d4,d3
-L000076d0:
+.L000076d0:
     move.w      d1,d6
     andi.w      #$f,d6
     cmp.w       d7,d6
-    bcc.b       L000076ec
+    bcc.b       .L000076ec
     sub.w       d7,d1
     jsr         L00003662.l
     move.b      ($3,a0),d4
     cmp.b       d4,d3
-    bls.b       L000076ec
+    bls.b       .L000076ec
     move.b      d4,d3
-L000076ec:
+.L000076ec:
     ext.w       d3
-    bmi.b       L000076f4
-L000076f0:
+    bmi.b       .L000076f4
+.L000076f0:
     moveq       #-$1,d0
     rts
-L000076f4:
+.L000076f4:
     moveq       #$0,d0
     rts
 
@@ -8425,30 +8425,30 @@ L000076f8:
     addi.w      #$17,d2
     bsr.w       L00007848
     tst.b       d0
-    bpl.b       L0000771a
+    bpl.b       .L0000771a
     tst.w       d3
-    bmi.b       L00007716
-L00007712:
+    bmi.b       .L00007716
+.L00007712:
     moveq       #$0,d0
     rts
-L00007716:
+.L00007716:
     moveq       #-$1,d0
     rts
-L0000771a:
+.L0000771a:
     tst.w       d3
-    beq.b       L00007732
-    bmi.b       L00007736
+    beq.b       .L00007732
+    bmi.b       .L00007736
     cmpi.w      #$4,d3
-    bhi.b       L00007712
+    bhi.b       .L00007712
     clr.b       (DAT_00ff042c)
     move.w      d3,(bg1_vscroll_change)
-L00007732:
+.L00007732:
     moveq       #$1,d0
     rts
-L00007736:
+.L00007736:
     neg.w       d3
     cmpi.w      #$2,d3
-    bhi.b       L00007716
+    bhi.b       .L00007716
     move.b      #$1,(DAT_00ff042c)
     move.w      d3,(bg1_vscroll_change)
     moveq       #$1,d0
@@ -8480,9 +8480,9 @@ L00007750:  ; d0 is return value: -1 if no change and 0 otherwise
 L00007792:
     move.b      (DAT_00ff0435),d7
     cmpi.b      #$40,d7
-    bcc.b       L000077a4
+    bcc.b       .L000077a4
     addq.b      #$1,(DAT_00ff0435)
-L000077a4:
+.L000077a4:
     clr.b       (DAT_00ff042c)
     move.w      d1,-(SP)
     bsr.w       L00007372
@@ -8491,36 +8491,36 @@ L000077a4:
     bsr.w       L00007848
     move.w      (SP)+,d1
     tst.b       d0
-    bmi.b       L000077d6
+    bmi.b       .L000077d6
     tst.w       d3
-    bmi.b       L000077d6
+    bmi.b       .L000077d6
     move.b      (DAT_00ff0435),d0
     lsr.b       #$2,d0
     cmp.b       d3,d0
-    bhi.b       L00007806
-    bra.b       L000077f2
-L000077d6:
+    bhi.b       .L00007806
+    bra.b       .L000077f2
+.L000077d6:
     move.w      d3,-(SP)
     bsr.w       L00007498
     tst.b       d0
-    bmi.b       L000077f0
+    bmi.b       .L000077f0
     tst.w       d3
-    bmi.b       L000077f0
+    bmi.b       .L000077f0
     move.b      (DAT_00ff0435),d0
     lsr.b       #$2,d0
     cmp.b       d3,d0
-    bhi.b       L00007804
-L000077f0:
+    bhi.b       .L00007804
+.L000077f0:
     move.w      (SP)+,d3
-L000077f2:
+.L000077f2:
     move.b      (DAT_00ff0435),d0
     lsr.b       #$2,d0
     ext.w       d0
     move.w      d0,(bg1_vscroll_change)
     rts
-L00007804:
+.L00007804:
     move.w      (SP)+,d3
-L00007806:
+.L00007806:
     move.w      d3,(bg1_vscroll_change)
     moveq       #-$1,d0
     rts
@@ -8535,14 +8535,14 @@ L00007810:
     move.w      (SP)+,d2
     bsr.w       L00007848
     tst.b       d0
-    bmi.b       L00007842
+    bmi.b       .L00007842
     tst.w       d3
-    bpl.b       L00007842
+    bpl.b       .L00007842
     move.w      (SP)+,d3
     move.w      d3,(bg1_vscroll_change)
     moveq       #-$1,d0
     rts
-L00007842:
+.L00007842:
     move.w      (SP)+,d3
     moveq       #$0,d0
     rts
@@ -8560,20 +8560,20 @@ L00007848:
     add.w       d1,d4
     sub.w       d2,d4
     move.w      d4,d1
-    bpl.b       L00007872
+    bpl.b       .L00007872
     neg.w       d1
-L00007872:
+.L00007872:
     cmpi.w      #$10,d1
     bhi.w       L0000717a   ; rts
     tst.b       d0
-    bmi.b       L0000788a
+    bmi.b       .L0000788a
     move.w      d3,d2
-    bpl.b       L00007884
+    bpl.b       .L00007884
     neg.w       d2
-L00007884:
+.L00007884:
     cmp.w       d2,d1
     bhi.w       L0000717a   ; rst
-L0000788a:
+.L0000788a:
     moveq       #$0,d0
     move.w      d4,d3
     move.w      ($4a,a0),(DAT_00ff04b8)
@@ -12038,7 +12038,7 @@ L0000ad44:
     clr.b       (vram_to_vram_type)
     bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L00039af8),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     lea         (L00039fe2),a0
     lea         (DAT_00ff655c),a1
@@ -12399,7 +12399,7 @@ L0000ad44:
     jsr         clear_640_bytes_from_00ff17c0
     bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003a57a),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     VDP_WVRAM_CMD $c000,d0
     lea         (bg1_tm_data),a0
@@ -12448,7 +12448,7 @@ L0000ad44:
     jsr         clear_640_bytes_from_00ff17c0
     bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003aa8a),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     VDP_WVRAM_CMD $c000,d0
     lea         (bg1_tm_data),a0
@@ -12481,7 +12481,7 @@ L0000ad44:
     jsr         clear_640_bytes_from_00ff17c0
     bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003ae80),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     VDP_WVRAM_CMD $c000,d0
     lea         (bg1_tm_data),a0
@@ -12502,7 +12502,7 @@ L0000ad44:
     bsr.w       clear_19218_bytes_from_00ff1a48
     jsr         reset_vram_bg1_tilemap
     lea         (L0003b3e6),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     VDP_WVRAM_CMD $c000,d0
     lea         (bg1_tm_data),a0
@@ -12527,7 +12527,7 @@ L0000ad44:
     jsr         clear_640_bytes_from_00ff17c0
     bsr.w       clear_19218_bytes_from_00ff655c_and_00ff1a48
     lea         (L0003b964),a0
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36
     VDP_WVRAM_CMD $c000,d0
     lea         (bg1_tm_data),a0   ; tilemap data  40x28x2= 2240 bytes
@@ -12606,7 +12606,7 @@ L0000b8b4:
     bsr.w       .L0000bac2
     move.w      #$4000,d1       ; VRAM address
     move.l      #(level1_tileset),d2 ; Level1 related assets
-    move.w      #$0400,d3
+    move.w      #$0400,d3       ; length is $400 words = 2kB
     jsr         add_item_to_dma_data_array
     jmp         dma_copied_or_decompressed_tiles
 
@@ -12928,7 +12928,7 @@ clear_19218_bytes_from_00ff655c_and_00ff1a48:
     bsr.w       clear_19218_bytes_from_00ff655c
 clear_19218_bytes_from_00ff1a48:
     movem.l     a0/d7,-(SP)
-    lea         (DAT_00ff1a48),a0
+    lea         (scratch_memory),a0
     move.w      #$2588,d7
     .clear_tile_row:
         clr.w       (a0)+
@@ -12946,9 +12946,9 @@ clear_19218_bytes_from_00ff655c:
     movem.l     (SP)+,d7/a0
     rts
 
-L0000bd82: ; a1=(DAT_00ff1a48)
+L0000bd82: ; a1=(scratch_memory)
     bsr.b       clear_19218_bytes_from_00ff1a48
-    lea         (DAT_00ff1a48),a1
+    lea         (scratch_memory),a1
     jsr         L0000ff36   ; populate new data from a1?
     move.w      (a1)+,d0
     move.w      d0,d1
@@ -17507,14 +17507,15 @@ play_intro_credits:  ; (0000ffa6)
     lea         ($0000a76a),a0
     adda.l      #(L0007ace2),a0   ; from $0008544c contains compressed tiles
     moveq       #$0,d1
-    move.l      #(DAT_00ff1a48),d2   ; to RAM
+    move.l      #(scratch_memory),d2   ; to RAM
     bsr.w       write_tileset
     lea         ($0000cee2),a0
     adda.l      #(L0007ace2),a0   ; from $00087bc4
     moveq       #$0,d1
-    move.l      #(DAT_00ff3a48),d2   ; to RAM
+    move.l      #(scratch_memory+$2000),d2   ; to RAM
     bsr.w       write_tileset
-    lea         (VDP_CTRL),a0
+    lea         (VDP_CTRL),a0   ; why?
+    ; flashing animation of the disc between the dragon's wings done with palette updates
     moveq       #$0,d7
     .L0001014e:
         moveq       #$3,d6
@@ -17524,9 +17525,9 @@ play_intro_credits:  ; (0000ffa6)
             bsr.w       update_cram_with_palettes_0123
             bsr.w       wait_for_vblank_and_check_pad_start
             movem.l     (SP)+,d6-d7
-            bsr.w       update_cram_col1_8_with_d7
+            bsr.w       update_cram_col1_7_with_d7
             dbf         d6,.L00010150
-        lea         (L0001163c),a3
+        lea         (L0001163c),a3          ; used for comparison in subroutine just below
         lea         (palettes_0),a2
         bsr.w       increment_half_palette_if_palette_target_gt_d7    ; only called once
         bsr.w       update_cram_with_palettes_0123
@@ -17538,11 +17539,11 @@ play_intro_credits:  ; (0000ffa6)
     moveq       #$7,d7
     .L00010190:
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_col1_8_with_d7
+        bsr.w       update_cram_col1_7_with_d7
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_with_palettes_0123
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_blue_col1_8_with_d7
+        bsr.w       update_cram_blue_col1_7_with_d7
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_with_palettes_0123
         dbf         d6,.L00010190
@@ -17551,25 +17552,26 @@ play_intro_credits:  ; (0000ffa6)
         moveq       #$0,d6
         .L000101b8:
             bsr.w       wait_for_vblank_and_check_pad_start
-            bsr.w       update_cram_blue_col1_8_with_d7
+            bsr.w       update_cram_blue_col1_7_with_d7
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       update_cram_with_palettes_0123
             bsr.w       wait_for_vblank_and_check_pad_start
-            bsr.w       update_cram_blue_col1_8_with_d7
+            bsr.w       update_cram_blue_col1_7_with_d7
             bsr.w       wait_for_vblank_and_check_pad_start
             bsr.w       update_cram_with_palettes_0123
             bsr.w       wait_for_vblank_and_check_pad_start
-            bsr.w       update_cram_blue_col1_8_with_d7
+            bsr.w       update_cram_blue_col1_7_with_d7
             dbf         d6,.L000101b8
         lea         (palettes_0),a2
-        bsr.w       drecrement_half_palette
+        bsr.w       decrement_half_palette
         bsr.w       wait_for_vblank_and_check_pad_start
         bsr.w       update_cram_with_palettes_0123
         bsr.w       wait_for_vblank_and_check_pad_start
-        bsr.w       update_cram_blue_col1_8_with_d7
+        bsr.w       update_cram_blue_col1_7_with_d7
         dbf         d7,.L000101b6
-    lea         (DAT_00ff655c),a3
-    moveq       #$4,d0
+    ; disc is black at this stage
+    lea         (DAT_00ff655c),a3   ; scartch memory that will be cleared
+    moveq       #$4,d0        ; clear 5 * $1e * $10 = $960 (2400) bytes from RAM addr $00ff655c
     .L0001020a:
         bsr.w       wait_for_vblank_and_check_pad_start
         moveq       #$1d,d1
@@ -17580,13 +17582,13 @@ play_intro_credits:  ; (0000ffa6)
             move.l      #$0,(a3)+
             dbf         d1,.L00010210
         dbf         d0,.L0001020a
-    bsr.w       L00010b32
-    bsr.w       L0001074e
-    bsr.w       L00010862
-    bsr.w       L0001065c
-    clr.w       (start_options_index)
+    bsr.w       animate_intro_sparks
+    bsr.w       prepare_title_screen_tm 
+    bsr.w       animate_title_screen
+    bsr.w       L0001065c   ; load more title assets?
+    clr.w       (start_options_index)   ; used as counter here
     move.w      #$00a0,d7     ; psb_phase counter
-    psb_phase:
+    psb_phase:  ; flash the PRES START BUTTON message
         move.l      d7,-(SP)
         bsr.w       update_psb_msg
         jsr         jp_read
@@ -17612,42 +17614,43 @@ play_intro_credits:  ; (0000ffa6)
     jsr         disable_display
     moveq       #$0,d0
     rts
-    .psb_start_pressed:
-        VDP_WVRAM_CMD $ec90
-        moveq       #$18,d0
-        .clear_bg1_line1_char:
-            move.w      #$0,(a1)
-            dbf         d0,.clear_bg1_line1_char
-        VDP_WVRAM_CMD $ed10
-        moveq       #$18,d0
-        .clear_bg1_line2_char:
-            move.w      #$0,(a1)
-            dbf         d0,.clear_bg1_line2_char
-        moveq       #$0,d7  ; row counter reset
-        .set_bg2_tilemap_row:
-            bsr.w       wait_for_vblank_plus_small_delay
-            move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
-            move.w      d7,(VDP_DATA)   ; reset v scrolling
-            move.w      d7,(VDP_DATA)   ; reset v scrolling
-            VDP_WVRAM_CMD $f000
-            moveq       #$4f,d6
-            lea         (sprite_table_data),a2  ; might be scratch memory not only for sprites
-            .transfer_sprite_table_item:
-                subq.w      #$1,(a2)        ; vpos_1 is temp sprite table?
-                move.w      (a2)+,(VDP_DATA)
-                move.w      (a2)+,(VDP_DATA)
-                move.w      (a2)+,(VDP_DATA)
-                move.w      (a2)+,(VDP_DATA)
-                dbf         d6,.transfer_sprite_table_item
-            addq.w      #$1,d7  ; row counter++
-            cmpi.w      #$18,d7 ; 24 rows
-            bcs.b       .set_bg2_tilemap_row
-        VDP_WVRAM_CMD PRESS_START_BUTTON_POS
-        moveq       #$1e,d7     ; message length-1
-        .erase_psb_msg:
-            move.w      #$0,(VDP_DATA)
-            dbf         d7,.erase_psb_msg
-        bra.w       start_options_screen
+    
+.psb_start_pressed:
+    VDP_WVRAM_CMD $ec90
+    moveq       #$18,d0
+    .clear_bg1_line1_char:
+        move.w      #$0,(a1)
+        dbf         d0,.clear_bg1_line1_char
+    VDP_WVRAM_CMD $ed10
+    moveq       #$18,d0
+    .clear_bg1_line2_char:
+        move.w      #$0,(a1)
+        dbf         d0,.clear_bg1_line2_char
+    moveq       #$0,d7  ; row counter reset
+    .set_bg2_tilemap_row:
+        bsr.w       wait_for_vblank_plus_small_delay
+        move.l      #VDP_VSRAM_WADDR,(VDP_CTRL)
+        move.w      d7,(VDP_DATA)   ; reset v scrolling
+        move.w      d7,(VDP_DATA)   ; reset v scrolling
+        VDP_WVRAM_CMD $f000
+        moveq       #$4f,d6
+        lea         (sprite_table_data),a2  ; might be scratch memory not only for sprites
+        .transfer_sprite_table_item:
+            subq.w      #$1,(a2)        ; vpos_1 is temp sprite table?
+            move.w      (a2)+,(VDP_DATA)
+            move.w      (a2)+,(VDP_DATA)
+            move.w      (a2)+,(VDP_DATA)
+            move.w      (a2)+,(VDP_DATA)
+            dbf         d6,.transfer_sprite_table_item
+        addq.w      #$1,d7  ; row counter++
+        cmpi.w      #$18,d7 ; 24 rows
+        bcs.b       .set_bg2_tilemap_row
+    VDP_WVRAM_CMD PRESS_START_BUTTON_POS
+    moveq       #$1e,d7     ; message length-1
+    .erase_psb_msg:
+        move.w      #$0,(VDP_DATA)
+        dbf         d7,.erase_psb_msg
+    bra.w       start_options_screen
 
 start_button_pressed:  ;(00010346)
     tst.b       (alt_intro_credits_sound_flag)
@@ -17678,7 +17681,7 @@ stop_intro_credits_or_options_music:
     bsr.w       wait_for_vblank_plus_small_delay
     bsr.w       init_intro_credits_and_title_screen_vdp_regs
     jsr         disable_display
-    bsr.w       open_title_screen
+    bsr.w       load_title_screen
     bsr.w       L000107f0
     jsr         enable_display
     moveq       #$6,d7  ; max possible value
@@ -17899,22 +17902,22 @@ write_z80_reg6_with_c8h:    ;   L00010700
     move.w      #Z80_BUS_RELEASE,(Z80_BUS_REQ)
     rts
 
-open_title_screen:
+load_title_screen:  ; when start is pressed, assets need to be loaded
     lea         ($0000a76a),a0
     adda.l      #(L0007ace2),a0   ; from $0008544c
     moveq       #$1,d1
-    moveq       #$0,d2   ; VRAM ADDR
+    moveq       #$0000,d2   ; VRAM ADDR
     bsr.w       write_tileset
     lea         ($0000cee2),a0
     adda.l      #(L0007ace2),a0   ; from $00087bc4
     moveq       #$1,d1
     move.w      #$2000,d2   ; VRAM ADDR
     bsr.w       write_tileset
-L0001074e:
+prepare_title_screen_tm:   ; $0001074e:          ; joins here directly from inro credits as assets have aleady been loaded 
     lea         ($000083f8),a0  ; why this hardcoded value?
-    adda.l      #(L0007ace2),a0   ; from $000830da
+    adda.l      #(L0007ace2),a0   ; compressed sprite tiles from $000830da
     moveq       #$1,d1
-    move.w      #$a000,d2   ; VRAM ADDR
+    move.w      #$a000,d2   ; VRAM ADDR for sprites
     bsr.w       write_tileset
     VDP_WVRAM_CMD $c000
     move.w      #$7ff,d0
@@ -17926,7 +17929,7 @@ L0001074e:
     .clear_bg2_tilemap:
         move.w      #$0,(a1)
         dbf         d0,.clear_bg2_tilemap
-    lea         (L0008ad84),a2
+    lea         (L0008ad84),a2  ; title screen tilemap
     VDP_WVRAM_CMD $e000
     move.w      #$18,d0
     .vtiles:
@@ -17951,7 +17954,7 @@ L0001074e:
     rts
 
 L000107f0:
-    lea         (L0008a380),a2
+    lea         (L0008a380),a2  ; block45.bin is a tilemap
     VDP_WVRAM_CMD $c000
     move.w      #$16,d0
     .vtiles:
@@ -17981,19 +17984,20 @@ L000107f0:
     move.w      #$17,(VDP_DATA)
     move.w      #$17,(VDP_DATA)
     rts
-    
-L00010862:
+
+; a1 = VDP_DATA    
+animate_title_screen:      ; $00010862
     VDP_WVRAM_CMD $0000
-    lea         (DAT_00ff1a48),a3
+    lea         (scratch_memory),a3   ; scratch memory that contains the dragon, the 'S' amd the sprite tiles
     move.w      #$1fff,d0
-    .L00010876:
-        move.w      (a3)+,(a1)
-        dbf         d0,.L00010876
+.copy_tiles:
+    move.w      (a3)+,(a1)
+    dbf         d0,.copy_tiles
     lea         (palettes_0),a3
     moveq       #$3f,d0
-    .L00010884:
-        move.w      #CRAM_WHITE,(a3)+
-        dbf         d0,.L00010884
+.copy_palettes:
+    move.w      #CRAM_WHITE,(a3)+
+    dbf         d0,.copy_palettes
     bsr.w       wait_for_vblank_and_check_pad_start
     VDP_WVRAM_CMD $f000
     move.w      #$0,(a1)    ; first sprite set to 0
@@ -18004,28 +18008,28 @@ L00010862:
     jsr         enable_display
     bsr.w       update_cram_with_palettes_0123
     moveq       #$0,d3
-    .L000108ba:
-        DEC_N_COLOURS_TO_TARGET title_screen_palette_0,palettes_0,$30
-        move.l      d3,-(SP)
-        REPT 3
-            bsr.w       wait_for_vblank_plus_small_delay
-            jsr         jp_read
-            btst.b      #$7,(jp1_result)    ; PAD_START
-            bne.w       start_button_pressed
-        ENDR
-        bsr.w       update_cram_with_palettes_0123
-        move.l      (SP)+,d3
-        addq.w      #$2,d3
-        cmpi.w      #$e,d3
-        bcs.w       .L000108ba
+.fadein: ; from all white to visible title screen
+    DEC_N_COLOURS_TO_TARGET title_screen_palette_0,palettes_0,$30
+    move.l      d3,-(SP)
+    REPT 3
+        bsr.w       wait_for_vblank_plus_small_delay
+        jsr         jp_read
+        btst.b      #$7,(jp1_result)    ; PAD_START
+        bne.w       start_button_pressed
+    ENDR
+    bsr.w       update_cram_with_palettes_0123
+    move.l      (SP)+,d3
+    addq.w      #$2,d3
+    cmpi.w      #$e,d3
+    bcs.w       .fadein
     lea         (palettes_3),a3
     moveq       #$f,d0
-    .L0:
-        bsr.w       wait_for_vblank_plus_small_delay
-        move.w      #$0,(a3)+
-        dbf         d0,.L0
+.L0:
+    bsr.w       wait_for_vblank_plus_small_delay
+    move.w      #$0,(a3)+
+    dbf         d0,.L0
     bsr.w       update_cram_with_palettes_0123
-    lea         (L0008a380),a2
+    lea         (L0008a380),a2  ; block45.bin is a tilemap
     VDP_WVRAM_CMD $c000
     move.w      #$16,d0
     .L0001097e:
@@ -18053,21 +18057,21 @@ L00010862:
     .L000109ba:
         bsr.w       wait_for_vblank_and_check_pad_start
         dbf         d6,.L000109ba
-    lea         (title_screen_initial_sprite_table),a3  ; more sprites
-    lea         (sprite_table_data),a2
-    moveq       #$18,d7
+    lea         (title_screen_initial_sprite_table),a3  ; load default SAT value for sprite animation
+    lea         (sprite_table_data),a2                  ; update SAT
+    moveq       #$18,d7         ; 25 sprites                     
     .L000109d0:
         move.l      (a3)+,(a2)+
         move.l      (a3)+,(a2)+
         dbf         d7,.L000109d0
+    move.l      #$0,(a2)+   ; reset last sprite to close SAT
     move.l      #$0,(a2)+
-    move.l      #$0,(a2)+
-    moveq       #$13,d7
-    .L000109e6:
+    moveq       #(20-1),d7  ; animation for 20 frames
+    .frame:
         bsr.w       wait_for_vblank_and_check_pad_start
         lea         (sprite_table_data),a2
         VDP_WVRAM_CMD $f000
-        moveq       #$4f,d6
+        moveq       #$4f,d6 ; copy whole SAT
         .L000109fc:
             move.w      (a2)+,(a1)
             move.w      (a2)+,(a1)
@@ -18076,27 +18080,27 @@ L00010862:
             dbf         d6,.L000109fc
         lea         (sprite_table_data),a2
         moveq       #$c,d6
-        .L00010a10:
+        .step_right:
             addq.w      #$8,($6,a2)
             addq.l      #$8,a2
-            dbf         d6,.L00010a10
+            dbf         d6,.step_right
         moveq       #$8,d6
-        .L00010a1c:
+        .step_left:
             subq.w      #$8,($6,a2)
             addq.l      #$8,a2
-            dbf         d6,.L00010a1c
+            dbf         d6,.step_left
         moveq       #$2,d6
-        .L00010a28:
+        .step_up:
             subq.w      #$6,(a2)
             addq.l      #$8,a2
-            dbf         d6,.L00010a28
+            dbf         d6,.step_up
+        move.l      #$0,(a2)+   ; keep clearing the last 2 sprite entries 
         move.l      #$0,(a2)+
         move.l      #$0,(a2)+
         move.l      #$0,(a2)+
-        move.l      #$0,(a2)+
-        suba.l      #$10,a2
-        dbf         d7,.L000109e6
-    moveq       #$a,d7
+        suba.l      #$10,a2     ; why? Is it for a2 to point at the DRAGOON sprite entry during the last loop?
+        dbf         d7,.frame
+    moveq       #10,d7  ; 11 iterations
     .L00010a54:
         bsr.w       wait_for_vblank_plus_small_delay
         dbf         d7,.L00010a54
@@ -18136,7 +18140,6 @@ L00010862:
         dbf         d6,.L00010ac6
     moveq       #$0,d3
     .L00010ad0:
-        ; TODO add macro here
         DEC_N_COLOURS_TO_TARGET title_screen_palette_1,palettes_1,$10
         move.l      d3,-(SP)
         bsr.w       wait_for_vblank_plus_small_delay
@@ -18149,7 +18152,7 @@ L00010862:
         bcs.b       .L00010ad0
     rts
 
-L00010b32:
+animate_intro_sparks:       ; $00010b32
     move.w      #CRAM_WHITE,(palettes_3+$1e)
     move.w      #$0aaa,(palettes_3+$1c)
     move.w      #$0ccc,(palettes_3+$1a)
@@ -18651,7 +18654,7 @@ update_cram_with_palettes_0123:  ; (00011122) whole cram filled with data starti
     movea.l     (SP)+,a2
     rts
 
-update_cram_blue_col1_8_with_d7:
+update_cram_blue_col1_7_with_d7:
     move.l      #(VDP_CRAM_WADDR+$20000),(VDP_CTRL) ; colour 1?
     move.w      d7,d1
     lsl.w       #$8,d1
@@ -18662,8 +18665,8 @@ update_cram_blue_col1_8_with_d7:
         dbf         d0,.L00011152
     rts
     
-update_cram_col1_8_with_d7:
-    move.l      #(VDP_CRAM_WADDR+$20000),(VDP_CTRL) ; colour 1?
+update_cram_col1_7_with_d7:
+    move.l      #(VDP_CRAM_WADDR+$20000),(VDP_CTRL) ; start from colour 1
     moveq       #$6,d0
     .L0001116a:
         move.w      d7,(VDP_DATA)
@@ -18762,7 +18765,7 @@ decrement_palette:      ; (0001122e) + 1 to each colour up to 7
     movea.l     (SP)+,a2    ; restore initial A2 value
     rts
 
-drecrement_half_palette:      ; (0001125e) - 1 to each colour down to 0
+decrement_half_palette:      ; (0001125e) - 1 to each colour down to 0
     move.l      a2,-(SP)
     DEC_N_COLOURS a2,d5,$8
     movea.l     (SP)+,a2
@@ -18855,7 +18858,8 @@ write_z80_reg12_alt:  ; (000113ac) d0 is value written to Z80 reg12 - PSG sound
     movea.l     (SP)+,a0
     rts
 
-    include "include/graphics/intro_credits/sprite_tables.asm"
+    include "include/graphics/intro_credits/sega_logo_sprite_table.asm"
+    include "include/graphics/title/title_sprite_tables.asm"
 
 intro_credits_and_title_screen_vdp_values:  ; vdp reg values during intro and title screen
 ; enable display & vint, planeA=$e000, window=$0000, planeB=$e000, spritetable=$f000, fullscreen hv scrolling, 320p
@@ -20055,7 +20059,7 @@ L0003bcd4:
     incbin "include/graphics/level15/bg1_tilemap.bin"
 L0003c03e:
     incbin "include/graphics/bg1_tilesets.bin"
-level1_tileset:
+level1_tileset: ; uncompressed
     incbin "include/graphics/level1/tileset1.bin"
 L0003fc28:
     incbin "include/graphics/level3/tileset1.bin"
@@ -20094,31 +20098,31 @@ L0005bda4:  ; LV12 TS1  - End cinematic?
 ;L0005f088:  ; LV1 SP
     ;incbin "include/graphics/level1/sprites.bin"
     include "include/graphics/level1/level1_metatiles.asm"
-L0005ff20:  ; LV3 SP
+level3_metatiles:  ; LV3 SP
     incbin "include/graphics/level3/sprites.bin"
-L00060d40:  ; LV2 SP
+level2_metatiles:  ; LV2 SP
     incbin "include/graphics/level2/sprites.bin"
-L000617b0:  ; LV4 SP
+level4_metatiles:  ; LV4 SP
     incbin "include/graphics/level4/sprites.bin"
-L00062360:  ; LV5 SP
+level5_metatiles:  ; LV5 SP
     incbin "include/graphics/level5/sprites.bin"
-L00063218:  ; LV6 SP
+level6_metatiles:  ; LV6 SP
     incbin "include/graphics/level6/sprites.bin"
-L00063ea0:  ; LV7 SP
+level7_metatiles:  ; LV7 SP
     incbin "include/graphics/level7/sprites.bin"
-L00064e10:  ; LV8 SP
+level8_metatiles:  ; LV8 SP
     incbin "include/graphics/level8/sprites.bin"
 L00065dc8:  ; in unused code
     incbin "include/graphics/unused/sprites.bin"
-L00065f80:  ; LV9 SP
+level9_metatiles:  ; LV9 SP
     incbin "include/graphics/level9/sprites.bin"
-L00066a18:  ; LV10 SP
+level10_metatiles:  ; LV10 SP
     incbin "include/graphics/level10/sprites.bin"
-L000677f0:  ; LV13 SP
+level13_metatiles:  ; LV13 SP
     incbin "include/graphics/level13/sprites.bin"
-L00067d10:  ; LV11 SP
+level11_metatiles:  ; LV11 SP
     incbin "include/graphics/level11/sprites.bin"
-L00068a80:  ; LV12 SP
+level12_metatiles:  ; LV12 SP
     incbin "include/graphics/level12/sprites.bin"
 ; palettes
 L00069050:
@@ -20873,13 +20877,13 @@ L0007acc2:
 
 ; Intro credits assets which use weird hardcoded values (perhpas linked to US port ut to be confirmed)
     org $7ace2
-L0007ace2:      ; compressed bg tiles saved to RAM $0000
+L0007ace2:      ; compressed bg tiles saved to VRAM $0000
     incbin "include/graphics/intro_credits/bg2_tileset1.bin"
     org $7f02c
-L0007f02c:      ; compressed bg tiles saved to RAM $6000
+L0007f02c:      ; compressed bg tiles saved to VRAM $6000
     incbin "include/graphics/intro_credits/bg2_tileset2.bin"
     org $830da
-L000830da:      ; compressed sprite tiles (letters and logos) saved to RAM $C000
+L000830da:      ; compressed sprite tiles (letters and logos) saved to VRAM $C000
     incbin "include/graphics/intro_credits/sprites_tileset.bin"
     org $8426a
 options_tileset_0000:      ; $0008426a
@@ -20888,8 +20892,8 @@ options_tileset_0001:      ; $0008544c - accessed via weird address calculation
     incbin "include/graphics/options/tileset_0001.bin"
 options_tileset_0002:      ; $00086650
     incbin "include/graphics/options/tileset_0002.bin"
-options_tileset_0003:      ; $00087bc4 - accessed via weird address calculation
-    incbin "include/graphics/options/tileset_0003.bin"
+title_sprite_tileset:      ; $00087bc4 - accessed via weird address calculation
+    incbin "include/graphics/options/title_sprite_ts.bin"
     org $881b8
 intro_credits_bg2_tilemap:
     incbin "include/graphics/intro_credits_bg2_tilemap.bin"
@@ -20899,7 +20903,7 @@ options_bg2_tilemap:
     db $00, $28, $00, $20   ; ??
     org $8a380
 L0008a380:
-    incbin "include/graphics/block45.bin"
+    incbin "include/graphics/title/block45.bin"
     org $8ad84
 L0008ad84:  ; bg2 tilemap
     incbin "include/graphics/block46.bin"
